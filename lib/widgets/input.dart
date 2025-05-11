@@ -35,6 +35,11 @@ class _InputFormState extends State<InputForm> {
   Sex _selectedSex = Sex.male; // Default to Male
   bool _formSubmitted = false;
 
+  // State variables for the collapsable gestation section
+  bool _showGestationFields = false;
+  int _selectedGestationWeeks = 40; // Default to 40 weeks
+  int _selectedGestationDays = 0;   // Default to 0 days
+
   // Function to show the date picker and update the text field and state
   Future<void> _selectDate(BuildContext context,
       TextEditingController controller, {required bool isDob}) async {
@@ -99,7 +104,10 @@ class _InputFormState extends State<InputForm> {
       final String clinicDate = _observationDateController.text;
       final String observationValue = _measurementController.text;
       final MeasurementMethod measurementMethod = _selectedMeasurementMethod;
-      final Sex selectedSex = _selectedSex; // Access the selected Sex
+      final Sex selectedSex = _selectedSex;
+      // Access gestation values
+      final int gestationWeeks = _selectedGestationWeeks;
+      final int gestationDays = _selectedGestationDays;
 
       // Show a loading indicator (optional, but good for user experience)
       ScaffoldMessenger.of(context).showSnackBar(
@@ -119,6 +127,8 @@ class _InputFormState extends State<InputForm> {
           sex: selectedSex,
           measurementMethod: measurementMethod,
           observationValue: observationValue,
+              gestationWeeks: gestationWeeks,
+          gestationDays: gestationDays,
         );
 
         // If the API call is successful and returns a response, navigate to the results page
@@ -240,6 +250,82 @@ class _InputFormState extends State<InputForm> {
               },
             ),
             const SizedBox(height: 16),
+
+            // --- Start of New Gestation Section ---
+            ExpansionTile(
+              title: const Text('Add Gestation if Known'),
+              onExpansionChanged: (bool expanded) {
+                setState(() {
+                  _showGestationFields = expanded;
+                });
+              },
+              initiallyExpanded: _showGestationFields,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Gestation Weeks:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                      DropdownButtonFormField<int>(
+                        decoration: const InputDecoration(border: OutlineInputBorder()),
+                        value: _selectedGestationWeeks,
+                        items: List.generate(19, (index) => index + 24) // Weeks 24 to 42
+                            .map((int weeks) {
+                          return DropdownMenuItem<int>(
+                            value: weeks,
+                            child: Text('$weeks'),
+                          );
+                        }).toList(),
+                        onChanged: (int? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _selectedGestationWeeks = newValue;
+                            });
+                          }
+                        },
+                        validator: (value) {
+                          // Validation if this section is expanded
+                          if (_showGestationFields && value == null) {
+                            return 'Please select gestation weeks';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Gestation Days:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                      DropdownButtonFormField<int>(
+                        decoration: const InputDecoration(border: OutlineInputBorder()),
+                        value: _selectedGestationDays,
+                        items: List.generate(7, (index) => index) // Days 0 to 6
+                            .map((int days) {
+                          return DropdownMenuItem<int>(
+                            value: days,
+                            child: Text('$days'),
+                          );
+                        }).toList(),
+                        onChanged: (int? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _selectedGestationDays = newValue;
+                            });
+                          }
+                        },
+                        validator: (value) {
+                          // Validation if this section is expanded
+                          if (_showGestationFields && value == null) {
+                            return 'Please select gestation days';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // --- End of New Gestation Section ---
 
             // Sex Radio Buttons
             const Text('Select Sex:',

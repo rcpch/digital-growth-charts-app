@@ -27,20 +27,23 @@ class DGCApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('RCPCH Digital Growth Charts'),
         ),
-        body: Column(
-          children: const [
-            InputForm(),
-            const Padding(
-              padding: EdgeInsets.all(30),
-              child: Image(
-                image: AssetImage('assets/images/pixelated_rcpch_incubator_alpha.png'),
-                fit: BoxFit.fitWidth,
-                width: 150,
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child:Column(
+            children: const [
+              InputForm(),
+              const Padding(
+                padding: EdgeInsets.all(30),
+                child: Image(
+                  image: AssetImage('assets/images/pixelated_rcpch_incubator_alpha.png'),
+                  fit: BoxFit.fitWidth,
+                  width: 150,
+                ),
               ),
-            ),
-          ]
+            ]
+          )
         )
-    )
+      )
     );
   }
 }

@@ -16,6 +16,8 @@ class DigitalGrowthChartsService {
     required Sex sex,
     required MeasurementMethod measurementMethod,
     required String observationValue,
+    required int gestationWeeks,
+    required int gestationDays,
   }) async {
     final url = Uri.parse('$_baseUrl/uk-who/calculation');
     final String sexString = sex == Sex.male ? 'male' : 'female';
@@ -29,7 +31,9 @@ class DigitalGrowthChartsService {
       'observation_date': observationDate,
       'sex': sexString,
       'measurement_method': measurementMethodString,
-      'observation_value': observationValue
+      'observation_value': observationValue,
+      'gestation_weeks': gestationWeeks,
+      'gestation_days': gestationDays,
     };
 
     switch (measurementMethod) {
