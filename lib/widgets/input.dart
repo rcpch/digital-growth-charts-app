@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Import for date formatting
-
-// Enum to represent the different measurement types
-enum MeasurementType { height, weight, headCircumference, bmi }
-// Enum to represent Gender
-enum Gender { male, female }
+import '../services/digital_growth_charts_services.dart';
+import '../classes/digital_growth_charts_api_response.dart';
+import '../definitions/enums.dart';
+import './results.dart';
 
 class InputForm extends StatefulWidget {
   const InputForm({Key? key}) : super(key: key);
@@ -21,9 +16,11 @@ class _InputFormState extends State<InputForm> {
   // A GlobalKey to uniquely identify the Form widget
   final _formKey = GlobalKey<FormState>();
 
+  final DigitalGrowthChartsService _digitalGrowthChartsService = DigitalGrowthChartsService();// API service
+
   // Controllers for the input fields
   final TextEditingController _dobController = TextEditingController();
-  final TextEditingController _clinicDateController = TextEditingController();
+  final TextEditingController _observationDateController = TextEditingController();
   final TextEditingController _measurementController = TextEditingController();
 
   // Variables to hold the selected dates (stored as DateTime objects for comparisons)
@@ -31,11 +28,11 @@ class _InputFormState extends State<InputForm> {
   DateTime? _selectedClinicDate;
 
   // Variable to hold the selected measurement type
-  MeasurementType _selectedMeasurementType = MeasurementType
+  MeasurementMethod _selectedMeasurementMethod = MeasurementMethod
       .height; // Default to Height
 
-  // Variable to hold the selected Gender
-  Gender? _selectedGender; // Gender is required, so nullable initially
+  // Variable to hold the selected Sex
+  Sex _selectedSex = Sex.male; // Default to Male
   bool _formSubmitted = false;
 
   // Function to show the date picker and update the text field and state
@@ -72,14 +69,14 @@ class _InputFormState extends State<InputForm> {
 
   // Function to get the hint text for the measurement input based on the selected type
   String _getMeasurementHintText() {
-    switch (_selectedMeasurementType) {
-      case MeasurementType.height:
+    switch (_selectedMeasurementMethod) {
+      case MeasurementMethod.height:
         return 'Enter height in cm';
-      case MeasurementType.weight:
+      case MeasurementMethod.weight:
         return 'Enter weight in kg';
-      case MeasurementType.headCircumference:
+      case MeasurementMethod.ofc:
         return 'Enter head circumference in cm';
-      case MeasurementType.bmi:
+      case MeasurementMethod.bmi:
         return 'Enter BMI in kg/m²';
       default:
         return 'Enter measurement';
@@ -87,7 +84,7 @@ class _InputFormState extends State<InputForm> {
   }
 
   // Function to handle the submit button press
-  void _submitForm() {
+  void _submitForm() async {
     setState(() {
       _formSubmitted = true;
     });
@@ -99,43 +96,51 @@ class _InputFormState extends State<InputForm> {
 
       // Access the entered values:
       final String dob = _dobController.text;
-      final String clinicDate = _clinicDateController.text;
-      final String measurement = _measurementController.text;
-      final MeasurementType selectedType = _selectedMeasurementType;
-      final Gender? selectedGender = _selectedGender; // Access the selected gender
+      final String clinicDate = _observationDateController.text;
+      final String observationValue = _measurementController.text;
+      final MeasurementMethod measurementMethod = _selectedMeasurementMethod;
+      final Sex selectedSex = _selectedSex; // Access the selected Sex
 
-      // You can now process this data. For example, print it:
-      print('Date of Birth: $dob');
-      print('Clinic Date: $clinicDate');
-      print('Gender: ${selectedGender?.name}'); // Print gender name
-      print('Measurement Type: $selectedType');
-      print('Measurement Value: $measurement');
-
-      // You would typically perform more advanced processing here,
-      // like calculating the child's age, plotting on growth charts, etc.
-
-      // For demonstration, show a success message:
+      // Show a loading indicator (optional, but good for user experience)
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Form submitted successfully!'),
-          backgroundColor: Colors.green,
+          content: Text('Submitting data...'),
+          backgroundColor: Colors.blueAccent,
+          duration: Duration(seconds: 2), // Keep it brief
         ),
       );
 
-      // You might clear the form or navigate to a new screen here.
-      // _formKey.currentState?.reset(); // Resets the form fields (doesn't reset controllers or other state)
-      // To clear everything, you would need to manually clear controllers and reset state variables:
-      // _dobController.clear();
-      // _clinicDateController.clear();
-      // _measurementController.clear();
-      // setState(() {
-      //   _selectedDob = null;
-      //   _selectedClinicDate = null;
-      //   _selectedMeasurementType = MeasurementType.height;
-      //   _selectedGender = null; // Reset gender selection
-      // });
+      try {
+        // Call the API service method
+        final GrowthDataResponse apiResponse =
+            await _digitalGrowthChartsService.submitGrowthData(
+          birthDate: dob,
+          observationDate: clinicDate,
+          sex: selectedSex,
+          measurementMethod: measurementMethod,
+          observationValue: observationValue,
+        );
+
+        // If the API call is successful and returns a response, navigate to the results page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ResultsPage(growthData: apiResponse),
+          ),
+        );
+
+      } catch (e) {
+        // Handle API call errors
+        print('Error during API submission: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to submit data: ${e.toString()}'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     } else {
-      // If the form is invalid, show an error message (optional, as error text appears on fields)
+      // If the form is invalid, show an error message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fix the errors in the form.'),
@@ -143,13 +148,26 @@ class _InputFormState extends State<InputForm> {
         ),
       );
     }
+      // You might clear the form or navigate to a new screen here.
+      // _formKey.currentState?.reset(); // Resets the form fields (doesn't reset controllers or other state)
+      // To clear everything, you would need to manually clear controllers and reset state variables:
+      // _dobController.clear();
+      // _observationDateController.clear();
+      // _measurementController.clear();
+      // setState(() {
+      //   _selectedDob = null;
+      //   _selectedClinicDate = null;
+      //   _selectedMeasurementMethod = MeasurementMethod.height;
+      //   _selectedSex = null; // Reset Sex selection
+      // });
+    
   }
 
   @override
   void dispose() {
     // Clean up the controllers when the widget is disposed
     _dobController.dispose();
-    _clinicDateController.dispose();
+    _observationDateController.dispose();
     _measurementController.dispose();
     super.dispose();
   }
@@ -186,18 +204,18 @@ class _InputFormState extends State<InputForm> {
 
             // Clinic Date Field
             TextFormField(
-              controller: _clinicDateController,
+              controller: _observationDateController,
               decoration: const InputDecoration(
-                labelText: 'Clinic Date',
+                labelText: 'Measurement Date',
                 suffixIcon: Icon(Icons.calendar_today),
                 border: OutlineInputBorder(),
               ),
               readOnly: true,
               onTap: () =>
-                  _selectDate(context, _clinicDateController, isDob: false),
+                  _selectDate(context, _observationDateController, isDob: false),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please select a Clinic Date';
+                  return 'Please select a Measurement Date';
                 }
                 if (_selectedDob == null) {
                   // This case should ideally be caught by the DOB validator, but is a safeguard
@@ -223,33 +241,33 @@ class _InputFormState extends State<InputForm> {
             ),
             const SizedBox(height: 16),
 
-            // Gender Radio Buttons
-            const Text('Select Gender:',
+            // Sex Radio Buttons
+            const Text('Select Sex:',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             Row(
               children: <Widget>[
                 Expanded( // Use Expanded to make the RadioListTiles take up available space
-                  child: RadioListTile<Gender>(
+                  child: RadioListTile<Sex>(
                     title: const Text('Male'),
-                    value: Gender.male,
-                    groupValue: _selectedGender,
-                    // This variable holds the currently selected Gender
-                    onChanged: (Gender? value) {
+                    value: Sex.male,
+                    groupValue: _selectedSex,
+                    // This variable holds the currently selected Sex
+                    onChanged: (Sex? value) {
                       setState(() {
-                        _selectedGender =
-                            value; // Update the state with the selected gender
+                        _selectedSex =
+                            value!; // Update the state with the selected Sex
                       });
                     },
                   ),
                 ),
                 Expanded( // Use Expanded for the Female radio button as well
-                  child: RadioListTile<Gender>(
+                  child: RadioListTile<Sex>(
                     title: const Text('Female'),
-                    value: Gender.female,
-                    groupValue: _selectedGender, // Use the same groupValue
-                    onChanged: (Gender? value) {
+                    value: Sex.female,
+                    groupValue: _selectedSex, // Use the same groupValue
+                    onChanged: (Sex? value) {
                       setState(() {
-                        _selectedGender = value; // Update the state
+                        _selectedSex = value!; // Update the state
                       });
                     },
                   ),
@@ -259,21 +277,21 @@ class _InputFormState extends State<InputForm> {
             // Add a SizedBox for spacing below the radio buttons
             const SizedBox(height: 16),
 
-            // You need a TextFormField or a custom widget to handle the validation display for gender
+            // You need a TextFormField or a custom widget to handle the validation display for Sex
             // Since RadioListTile doesn't have a built-in validator text,
             // we can add a small helper widget or a Text below the Row.
             Builder( // Use Builder to get a context that can find the Form ancestor
               builder: (BuildContext context) {
-                // We can't directly validate RadioListTile, so we check the _selectedGender state
+                // We can't directly validate RadioListTile, so we check the _selectedSex state
                 // and display an error message if needed.
                 // This is a common workaround for widgets without a built-in validator.
-                if (_selectedGender == null &&
+                if (_selectedSex == null &&
                     _formSubmitted) {
-                  // Only show error if validation has been triggered and gender is null
+                  // Only show error if validation has been triggered and Sex is null
                   return Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text(
-                      'Please select a gender',
+                      'Please select a Sex',
                       style: TextStyle(color: Theme
                           .of(context)
                           .colorScheme
@@ -282,11 +300,11 @@ class _InputFormState extends State<InputForm> {
                   );
                 }
                 return const SizedBox
-                    .shrink(); // Hide the error message when a gender is selected or form not validated yet
+                    .shrink(); // Hide the error message when a Sex is selected or form not validated yet
               },
             ),
             const SizedBox(height: 16),
-            // Spacing after gender validation
+            // Spacing after Sex validation
 
             // Measurement Type Radio Buttons
             const Text('Select Measurement Type:',
@@ -294,13 +312,13 @@ class _InputFormState extends State<InputForm> {
             Row(
               children: <Widget>[
                 Expanded(
-                  child: RadioListTile<MeasurementType>(
+                  child: RadioListTile<MeasurementMethod>(
                     title: const Text('Height'),
-                    value: MeasurementType.height,
-                    groupValue: _selectedMeasurementType,
-                    onChanged: (MeasurementType? value) {
+                    value: MeasurementMethod.height,
+                    groupValue: _selectedMeasurementMethod,
+                    onChanged: (MeasurementMethod? value) {
                       setState(() {
-                        _selectedMeasurementType = value!;
+                        _selectedMeasurementMethod = value!;
                         _measurementController
                             .clear(); // Clear input when type changes
                       });
@@ -308,13 +326,13 @@ class _InputFormState extends State<InputForm> {
                   ),
                 ),
                 Expanded(
-                  child: RadioListTile<MeasurementType>(
+                  child: RadioListTile<MeasurementMethod>(
                     title: const Text('Weight'),
-                    value: MeasurementType.weight,
-                    groupValue: _selectedMeasurementType,
-                    onChanged: (MeasurementType? value) {
+                    value: MeasurementMethod.weight,
+                    groupValue: _selectedMeasurementMethod,
+                    onChanged: (MeasurementMethod? value) {
                       setState(() {
-                        _selectedMeasurementType = value!;
+                        _selectedMeasurementMethod = value!;
                         _measurementController
                             .clear(); // Clear input when type changes
                       });
@@ -326,13 +344,13 @@ class _InputFormState extends State<InputForm> {
             Row( // New row for the remaining radio buttons
               children: <Widget>[
                 Expanded(
-                  child: RadioListTile<MeasurementType>(
+                  child: RadioListTile<MeasurementMethod>(
                     title: const Text('Head Circ.'),
-                    value: MeasurementType.headCircumference,
-                    groupValue: _selectedMeasurementType,
-                    onChanged: (MeasurementType? value) {
+                    value: MeasurementMethod.ofc,
+                    groupValue: _selectedMeasurementMethod,
+                    onChanged: (MeasurementMethod? value) {
                       setState(() {
-                        _selectedMeasurementType = value!;
+                        _selectedMeasurementMethod = value!;
                         _measurementController
                             .clear(); // Clear input when type changes
                       });
@@ -340,13 +358,13 @@ class _InputFormState extends State<InputForm> {
                   ),
                 ),
                 Expanded(
-                  child: RadioListTile<MeasurementType>(
+                  child: RadioListTile<MeasurementMethod>(
                     title: const Text('BMI'),
-                    value: MeasurementType.bmi,
-                    groupValue: _selectedMeasurementType,
-                    onChanged: (MeasurementType? value) {
+                    value: MeasurementMethod.bmi,
+                    groupValue: _selectedMeasurementMethod,
+                    onChanged: (MeasurementMethod? value) {
                       setState(() {
-                        _selectedMeasurementType = value!;
+                        _selectedMeasurementMethod = value!;
                         _measurementController
                             .clear(); // Clear input when type changes
                       });
@@ -371,7 +389,7 @@ class _InputFormState extends State<InputForm> {
                 if (value == null || value.isEmpty) {
                   return 'Please enter a measurement value';
                 }
-                // You could add more specific validation here based on MeasurementType (e.g., check if it's a valid number, within a reasonable range)
+                // You could add more specific validation here based on MeasurementMethod (e.g., check if it's a valid number, within a reasonable range)
                 // Example: check if it's a number
                 if (double.tryParse(value) == null) {
                   return 'Please enter a valid number';

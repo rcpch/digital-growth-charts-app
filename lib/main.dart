@@ -1,8 +1,13 @@
+// libraries
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+// RCPCH imports
 import './themes/colours.dart';
 import './widgets/input.dart';
 
-void main() {
+void main() async{
+  await dotenv.load();
   runApp(const MyApp());
 }
 
