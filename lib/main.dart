@@ -8,11 +8,11 @@ import './widgets/input.dart';
 
 void main() async{
   await dotenv.load();
-  runApp(const MyApp());
+  runApp(const DGCApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class DGCApp extends StatelessWidget {
+  const DGCApp({super.key});
 
   // This widget is the root of your application.
   @override
@@ -27,8 +27,18 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('RCPCH Digital Growth Charts'),
         ),
-        body: Center(
-          child: InputForm()
+        body: Column(
+          children: const [
+            InputForm(),
+            const Padding(
+              padding: EdgeInsets.all(30),
+              child: Image(
+                image: AssetImage('assets/images/pixelated_rcpch_incubator_alpha.png'),
+                fit: BoxFit.fitWidth,
+                width: 150,
+              ),
+            ),
+          ]
         )
     )
     );
