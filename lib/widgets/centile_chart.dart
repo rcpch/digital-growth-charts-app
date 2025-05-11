@@ -4,17 +4,17 @@ import 'package:fl_chart/fl_chart.dart';
 import '../definitions/enums.dart'; // Your enums
 
 class CentileChart extends StatelessWidget {
-  final List<List<Map<double, double>>> chartData;
+  final List<List<Map<String, double>>> chartData;
   final MeasurementMethod measurementMethod;
   final Sex sex;
-  final List<Map<double?, double?>>? scatterData; // New: Optional scatter plot data
+  final List<Map<double?, double?>>? scatterData;
 
   const CentileChart({
     Key? key,
     required this.chartData,
     required this.measurementMethod,
     required this.sex,
-    this.scatterData, // New: Added to the constructor
+    this.scatterData,
   }) : super(key: key);
 
   @override
@@ -70,7 +70,6 @@ class CentileChart extends StatelessWidget {
             if (scatterData != null && scatterData!.isNotEmpty)
               ScatterChart(
                 ScatterChartData(
-                  //  gridData: const FlGridData(show: true),  //You can add a grid to the scatter chart if you want
                   scatterSpots: _generateScatterSpots(),
                   titlesData: FlTitlesData(show: false), //hide the titles
                   borderData: FlBorderData(show: false), //hide the border
@@ -93,15 +92,22 @@ class CentileChart extends StatelessWidget {
   }
 
   List<LineChartBarData> _generateLineBarsData() {
+    const dashedValues = [0.4, 9, 50, 91, 99.6];
     return chartData.map((line) {
       final List<FlSpot> spots = line.map((point) {
-        return FlSpot(point.keys.first, point.values.first);
+        final x = point['x'] ?? 0.0;
+        final y = point['y'] ?? 0.0;
+        return FlSpot(x, y);
       }).toList();
 
-      // Customize the appearance of each line (e.g., color, stroke width)
+      // Determine if the line should be dashed based on the 'l' value.
+      final isDashed = dashedValues.contains(line.first['l']);
+      final lValue = line.first['l']; // Get the l value
+
       return LineChartBarData(
         spots: spots,
         isCurved: true,
+        dashArray: isDashed ? [5, 5] : null, // Use null for solid line
         barWidth: 2,
         isStrokeCapRound: true,
         dotData: const FlDotData(show: false),
@@ -122,8 +128,8 @@ class CentileChart extends StatelessWidget {
           ),
         );
       }
-      // If x or y is null, we skip this point.  You might want to log this.
     }
     return spots;
   }
 }
+

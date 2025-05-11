@@ -208,11 +208,11 @@ class _ResultsPageState extends State<ResultsPage> {
   }
 }
 
-List<List<Map<double, double>>> _prepareChartData(
+List<List<Map<String, double>>> _prepareChartData(
     List<ReferenceData> allReferenceData,
     MeasurementMethod method,
-    Sex sex,) {
-  List<List<Map<double, double>>> allLinesData = [];
+    Sex sex) {
+  List<List<Map<String, double>>> allLinesData = [];
 
   for (final referenceData in allReferenceData) {
     SexMeasurementData? sexMeasurementData;
@@ -262,11 +262,16 @@ List<List<Map<double, double>>> _prepareChartData(
 
       if (measurementDataPoints != null) {
         for (final centileDataPoint in measurementDataPoints) {
-          List<Map<double, double>> lineData = [];
+          List<Map<String, double>> lineData = [];
           if (centileDataPoint.data != null) {
             for (final dataPoint in centileDataPoint.data!) {
               if (dataPoint.x != null && dataPoint.y != null) {
-                lineData.add({dataPoint.x!: dataPoint.y!});
+                // Include the 'l' value in the map, defaulting to 0 if null
+                lineData.add({
+                  'x': dataPoint.x!,
+                  'y': dataPoint.y!,
+                  'l': dataPoint.l ?? 0.0,
+                });
               }
             }
             if (lineData.isNotEmpty) {
@@ -279,3 +284,4 @@ List<List<Map<double, double>>> _prepareChartData(
   }
   return allLinesData;
 }
+
