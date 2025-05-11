@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/digital_growth_charts_services.dart';
 import '../classes/digital_growth_charts_api_response.dart';
+import '../classes/digital_growth_charts_chart_coordinates_response.dart';
 import '../definitions/enums.dart';
 import './results.dart';
 
@@ -131,11 +132,18 @@ class _InputFormState extends State<InputForm> {
           gestationDays: gestationDays,
         );
 
+        // get the chart coordinates
+        final DigitalGrowthChartsCentileLines chartData =
+        await _digitalGrowthChartsService.getChartCoordinates(
+          sex: selectedSex,
+          measurementMethod: measurementMethod,
+        );
+
         // If the API call is successful and returns a response, navigate to the results page
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ResultsPage(growthData: apiResponse),
+            builder: (context) => ResultsPage(growthData: apiResponse, chartData: chartData, sex: selectedSex, measurementMethod: measurementMethod),
           ),
         );
 
@@ -360,17 +368,10 @@ class _InputFormState extends State<InputForm> {
                 ),
               ],
             ),
-            // Add a SizedBox for spacing below the radio buttons
             const SizedBox(height: 16),
 
-            // You need a TextFormField or a custom widget to handle the validation display for Sex
-            // Since RadioListTile doesn't have a built-in validator text,
-            // we can add a small helper widget or a Text below the Row.
             Builder( // Use Builder to get a context that can find the Form ancestor
               builder: (BuildContext context) {
-                // We can't directly validate RadioListTile, so we check the _selectedSex state
-                // and display an error message if needed.
-                // This is a common workaround for widgets without a built-in validator.
                 if (_selectedSex == null &&
                     _formSubmitted) {
                   // Only show error if validation has been triggered and Sex is null
