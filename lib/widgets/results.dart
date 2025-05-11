@@ -70,6 +70,9 @@ class _ResultsPageState extends State<ResultsPage> {
                   chartData: _prepareChartData(widget.chartData.centileData!, widget.measurementMethod, widget.sex),
                   measurementMethod: widget.measurementMethod,
                   sex: widget.sex,
+                  scatterData: [{
+                    widget.growthData.measurementDates?.chronologicalDecimalAge: widget.growthData.childObservationValue?.observationValue ?? 0.0,
+                  },]
                 ),
                 // Second Page: Result TextSpans
                 SingleChildScrollView(
