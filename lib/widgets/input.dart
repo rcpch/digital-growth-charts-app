@@ -89,6 +89,18 @@ class _InputFormState extends State<InputForm> {
     }
   }
 
+  void _resetForm() {
+    _formKey.currentState?.reset(); // Resets the form fields (doesn't reset controllers or other state)
+    _dobController.clear();
+    _observationDateController.clear();
+    _measurementController.clear();
+    setState(() {
+      _selectedDob = null;
+      _selectedClinicDate = null;
+      _selectedMeasurementMethod = MeasurementMethod.height;
+    });
+  }
+
   // Function to handle the submit button press
   void _submitForm() async {
     setState(() {
@@ -139,6 +151,8 @@ class _InputFormState extends State<InputForm> {
           measurementMethod: measurementMethod,
         );
 
+        _resetForm();
+
         // If the API call is successful and returns a response, navigate to the results page
         Navigator.push(
           context,
@@ -166,18 +180,6 @@ class _InputFormState extends State<InputForm> {
         ),
       );
     }
-      // You might clear the form or navigate to a new screen here.
-      // _formKey.currentState?.reset(); // Resets the form fields (doesn't reset controllers or other state)
-      // To clear everything, you would need to manually clear controllers and reset state variables:
-      // _dobController.clear();
-      // _observationDateController.clear();
-      // _measurementController.clear();
-      // setState(() {
-      //   _selectedDob = null;
-      //   _selectedClinicDate = null;
-      //   _selectedMeasurementMethod = MeasurementMethod.height;
-      //   _selectedSex = null; // Reset Sex selection
-      // });
     
   }
 
