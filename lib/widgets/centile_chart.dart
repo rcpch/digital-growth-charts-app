@@ -1,21 +1,30 @@
 import 'package:digital_growth_charts_app/themes/colours.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../definitions/enums.dart'; // Your enums
+import '../definitions/enums.dart';
 import '../classes/digital_growth_charts_api_response.dart';
+import 'package:digital_growth_charts_app/services/centile_chart_data_utils.dart';
+import '../classes/digital_growth_charts_chart_coordinates_response.dart';
 
 class CentileChart extends StatefulWidget {
-  final List<List<Map<String, double>>> chartData;
+  final OrganizedCentileLines organizedCentileLines;
   final MeasurementMethod measurementMethod;
   final Sex sex;
-  final List<GrowthDataResponse> growthData;
+  final List<GrowthDataResponse> growthDataForMethod;
+  final DateTime dob;
+  final int? gestationWeeks;
+  final int? gestationDays;
+
 
   const CentileChart({
     Key? key,
-    required this.chartData,
+    required this.organizedCentileLines,
     required this.measurementMethod,
     required this.sex,
-    required this.growthData,
+    required this.growthDataForMethod,
+    required this.dob,
+    this.gestationWeeks,
+    this.gestationDays,
   }) : super(key: key);
 
   @override
@@ -23,7 +32,167 @@ class CentileChart extends StatefulWidget {
 }
 
 class _CentileChartState extends State<CentileChart> {
-  AgeCorrectionMethod selectedPlotType = AgeCorrectionMethod.chronological;
+  AgeCorrectionMethod _selectedPlotType = AgeCorrectionMethod.chronological;
+
+  List<LineChartBarData> _generateLineBarsData() {
+    final List<LineChartBarData> centileLines = [];
+
+    // Get the centile data for the specific sex and measurement method from the organized cache
+    final List<CentileDataPoint>? centileDataPoints =
+    widget.organizedCentileLines[widget.sex]?[widget.measurementMethod];
+
+    // These are the centile values that should have dashed lines
+    const dashedCentileValues = [0.4, 9.0, 50.0, 91.0, 99.6];
+
+    if (centileDataPoints != null) {
+      centileDataPoints.sort((a, b) => (a.centile ?? 0).compareTo(b.centile ?? 0));
+
+      for (final centileDataPoint in centileDataPoints) {
+        if (centileDataPoint.data != null) {
+          final List<FlSpot> spots = centileDataPoint.data!.map((dataPoint) {
+            // Assuming dataPoint.x is the age and dataPoint.y is the measurement value.
+            final double xValue = dataPoint.x ?? 0.0;
+            final double yValue = dataPoint.y ?? 0.0;
+            return FlSpot(xValue, yValue);
+          }).toList();
+
+          if (spots.isNotEmpty) {
+            final isDashed = dashedCentileValues.contains(centileDataPoint.centile);
+
+            centileLines.add(
+              LineChartBarData(
+                spots: spots,
+                isCurved: true,
+                color: AppColours.centileLineColor(centileDataPoint.centile),
+                dashArray: isDashed ? [5, 5] : null,
+                barWidth: 2,
+                isStrokeCapRound: true,
+                dotData: const FlDotData(show: false),
+                belowBarData: BarAreaData(show: false),
+              ),
+            );
+          }
+        }
+      }
+    }
+    return centileLines;
+  }
+
+  // Helper to prepare the individual growth data points for fl_chart
+  List<ScatterSpot> _generateScatterSpots() {
+    final List<ScatterSpot> spots = [];
+
+    for (final response in widget.growthDataForMethod) {
+      final chronologicalData = response.plottableData?.centileData?.chronologicalDecimalAgeData;
+      final correctedData = response.plottableData?.centileData?.correctedDecimalAgeData;
+
+      // Add chronological point if selected to show or if 'both' is selected
+      if (_selectedPlotType == AgeCorrectionMethod.chronological || _selectedPlotType == AgeCorrectionMethod.both) {
+        if (chronologicalData?.x != null && chronologicalData?.y != null) {
+          spots.add(
+            ScatterSpot(
+              chronologicalData!.x!,
+              chronologicalData.y!,
+              // Use a distinct painter for chronological points
+              dotPainter: FlDotCirclePainter(
+                radius: 6,
+                color: AppColours.chronologicalPointColor, // Use a specific color for chronological points
+              ),
+            ),
+          );
+        }
+      }
+
+      // Add corrected point if selected to show or if 'both' is selected
+      if (_selectedPlotType == AgeCorrectionMethod.corrected || _selectedPlotType == AgeCorrectionMethod.both) {
+        if (correctedData?.x != null && correctedData?.y != null) {
+          spots.add(
+            ScatterSpot(
+              correctedData!.x!,
+              correctedData.y!,
+              // Use a distinct painter for corrected points
+              dotPainter: FlDotCrossPainter(
+                size: 12,
+                color: AppColours.correctedPointColor, // Use a specific color for corrected points
+                width: 2.0,
+              ),
+            ),
+          );
+        }
+      }
+    }
+
+    return spots;
+  }
+
+  // Determine the appropriate title for the axes based on the measurement method
+  String _getXAxisTitle() {
+    // Assuming the x-axis unit is consistent across all charts and is age in days/months/years
+    // If your API provides age in different units, you might need to adjust this.
+    return 'Age (Days)'; // Adjust based on your API's x-axis units
+  }
+
+  String _getYAxisTitle() {
+    switch (widget.measurementMethod) {
+      case MeasurementMethod.height:
+        return 'Height (cm)';
+      case MeasurementMethod.weight:
+        return 'Weight (kg)';
+      case MeasurementMethod.ofc:
+        return 'Head Circumference (cm)';
+      case MeasurementMethod.bmi:
+        return 'BMI (kg/m²)';
+      default: // Should not happen with the enum
+        return 'Measurement Value';
+    }
+  }
+
+  SideTitles _getBottomTitles() {
+    // This needs to align with the x-axis unit of your data (e.g., days, months, years)
+    // And should consider the age range covered by the data.
+
+    // Example: If x-axis is in days, show labels every year
+    const double intervalInDays = 365.25; // Approximate days in a year
+
+    return SideTitles(
+      showTitles: true,
+      reservedSize: 30,
+      interval: intervalInDays, // Show labels every year
+      getTitlesWidget: (value, meta) {
+        // Customize the title text based on the value (age in days)
+        final int years = (value / intervalInDays).round();
+        return SideTitleWidget(
+          space: 8.0, // Space between the title and the axis line
+          meta: meta, // Pass the meta object here
+          child: Text('${years}y'),
+        );
+      },
+    );
+  }
+
+  // Function to get Y-axis side titles (labels)
+  SideTitles _getLeftTitles() {
+    return SideTitles(
+      showTitles: true,
+      reservedSize: 40, // Adjust reserved size for the labels
+      getTitlesWidget: (value, meta) {
+        // Customize the title text based on the value (measurement)
+        // You might want to format the number of decimal places based on the measurement type
+        String text;
+        if (value == 0) {
+          text = '0';
+        } else {
+          // Simple example: show 1 decimal place for non-zero values
+          text = value.toStringAsFixed(1);
+        }
+        return SideTitleWidget(
+          space: 8.0, // Space between the title and the axis line
+          meta: meta, // Pass the meta object here
+          child: Text(text),
+        );
+      },
+    );
+  }
 
 
   @override
@@ -55,13 +224,13 @@ class _CentileChartState extends State<CentileChart> {
             // Toggle buttons
             ToggleButtons(
               isSelected: [
-                selectedPlotType == AgeCorrectionMethod.chronological,
-                selectedPlotType == AgeCorrectionMethod.corrected,
-                selectedPlotType == AgeCorrectionMethod.both,
+                _selectedPlotType == AgeCorrectionMethod.both,
+                _selectedPlotType == AgeCorrectionMethod.corrected,
+                _selectedPlotType == AgeCorrectionMethod.chronological,
               ],
               onPressed: (int index) {
                 setState(() {
-                  selectedPlotType = AgeCorrectionMethod.values[index];
+                  _selectedPlotType = AgeCorrectionMethod.values[index];
                 });
               },
               children: const [
@@ -136,76 +305,6 @@ class _CentileChartState extends State<CentileChart> {
           ]
       ),
     );
-  }
-
-  List<LineChartBarData> _generateLineBarsData() {
-    const dashedValues = [0.4, 9, 50, 91, 99.6];
-    return widget.chartData.map((line) {
-      final List<FlSpot> spots = line.map((point) {
-        final x = point['x'] ?? 0.0;
-        final y = point['y'] ?? 0.0;
-        return FlSpot(x, y);
-      }).toList();
-
-      // Determine if the line should be dashed based on the 'l' value.
-      final isDashed = dashedValues.contains(line.first['l']);
-      final lValue = line.first['l']; // Get the l value
-
-      return LineChartBarData(
-        spots: spots,
-        isCurved: true,
-        dashArray: isDashed ? [5, 5] : null, // Use null for solid line
-        barWidth: 2,
-        isStrokeCapRound: true,
-        dotData: const FlDotData(show: false),
-      );
-    }).toList();
-  }
-
-  List<ScatterSpot> _generateScatterSpots() {
-    List<ScatterSpot> spots = [];
-
-    final relevantGrowthData = widget.growthData.where((response) {
-      return response.childObservationValue?.measurementMethod == widget.measurementMethod.toString().split('.').last.toLowerCase();
-    }).toList();
-
-    for (final response in relevantGrowthData) {
-      final chronological = response.plottableData?.centileData?.chronologicalDecimalAgeData;
-      final corrected = response.plottableData?.centileData?.correctedDecimalAgeData;
-
-      if (selectedPlotType == AgeCorrectionMethod.chronological || selectedPlotType == AgeCorrectionMethod.both) {
-        if (chronological?.x != null && chronological?.y != null) {
-          spots.add(
-            ScatterSpot(
-              chronological!.x!,
-              chronological.y!,
-              dotPainter: FlDotCirclePainter(
-                radius: 6,
-                color: Theme.of(context).primaryColor,
-              ),
-            ),
-          );
-        }
-      }
-
-      if (selectedPlotType == AgeCorrectionMethod.corrected || selectedPlotType == AgeCorrectionMethod.both) {
-        if (corrected?.x != null && corrected?.y != null) {
-          spots.add(
-            ScatterSpot(
-              corrected!.x!,
-              corrected.y!,
-              dotPainter: FlDotCrossPainter(
-                size: 12,
-                color: Theme.of(context).primaryColor,
-                width: 2.0
-              ),
-            ),
-          );
-        }
-      }
-    }
-
-    return spots;
   }
 
 }

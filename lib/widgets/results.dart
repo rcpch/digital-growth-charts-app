@@ -11,19 +11,27 @@ import '../classes/digital_growth_charts_chart_coordinates_response.dart';
 import '../definitions/enums.dart';
 import './centile_chart.dart';
 import './results_data_table.dart';
+import '../services/centile_chart_data_utils.dart';
 
 class ResultsPage extends StatefulWidget {
-  final List<GrowthDataResponse> growthDataList;
-  final DigitalGrowthChartsCentileLines chartData;
+  final Map<MeasurementMethod, List<GrowthDataResponse>> organizedGrowthData;
+  final OrganizedCentileLines organizedCentileLines;
+
   final Sex sex;
   final MeasurementMethod measurementMethod;
+  final DateTime dob;
+  final int? gestationWeeks;
+  final int? gestationDays;
 
   const ResultsPage({
     Key? key,
-    required this.growthDataList,
-    required this.chartData,
+    required this.organizedGrowthData,
+    required this.organizedCentileLines,
     required this.sex,
+    required this.dob,
     required this.measurementMethod,
+    this.gestationWeeks,
+    this.gestationDays
   }) : super(key: key);
 
   @override
@@ -31,16 +39,59 @@ class ResultsPage extends StatefulWidget {
 }
 
 class _ResultsPageState extends State<ResultsPage> {
-  final PageController _pageController = PageController(initialPage: 0);
+  late PageController _pageController;
   int _currentPage = 0;
-  final int _numPages = 2;
+  // List of MeasurementMethods for which we have growth data
+  List<MeasurementMethod> _availableCharts = [];
+
 
   @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    // Determine which charts are available based on the growth data
+    _availableCharts = widget.organizedGrowthData.keys.toList();
+
+    // Initialize PageController with the initial page set to the first available chart
+    _pageController = PageController(initialPage: 0);
   }
 
+  // Helper to get the chart title based on MeasurementMethod and Sex
+  String _getChartTitle(MeasurementMethod method, Sex sex) {
+    switch (method) {
+      case MeasurementMethod.height:
+        return 'Height for ${sex == Sex.male ? 'Boys' : 'Girls'}';
+      case MeasurementMethod.weight:
+        return 'Weight for ${sex == Sex.male ? 'Boys' : 'Girls'}';
+      case MeasurementMethod.ofc:
+        return 'Head Circumference for ${sex == Sex.male ? 'Boys' : 'Girls'}';
+      case MeasurementMethod.bmi:
+        return 'BMI for ${sex == Sex.male ? 'Boys' : 'Girls'}';
+    }
+  }
+
+  // Get the title for the current page
+  String _getCurrentPageTitle() {
+    if (_availableCharts.isEmpty) {
+      return 'Growth Chart Results'; // Default title if no data
+    }
+    if (_currentPage < _availableCharts.length) {
+      // It's a chart page
+      final currentMeasurementMethod = _availableCharts[_currentPage];
+      return _getChartTitle(currentMeasurementMethod, widget.sex);
+    } else {
+      // It's the data table page
+      return 'Measurement Data';
+    }
+  }
+
+  // Add a page for the data table
+  static const int _dataTablePageIndex = -1; // Use a sentinel value for the data table page
+
+  // Calculate the total number of pages (charts + data table)
+  int get _numPages => _availableCharts.length + (_availableCharts.isNotEmpty ? 1 : 0);
+  // Only add the data table page if there is at least one chart
+
+  // Function to navigate to a specific page
   void _goToPage(int page) {
     _pageController.animateToPage(
       page,
@@ -50,34 +101,77 @@ class _ResultsPageState extends State<ResultsPage> {
   }
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // If no growth data, show a message
+    if (_availableCharts.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Growth Chart Results'),
+        ),
+        body: const Center(
+          child: Text('No growth data available to display charts.'),
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text('Growth Chart Results'),
+        // Display the title of the currently visible page in the AppBar
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(30.0),
+          child: Container(
+            alignment: Alignment.center,
+            child: Text(
+              // Use _getCurrentPageTitle() here to handle both chart and data table titles
+              _getCurrentPageTitle(),
+              style: const TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.white, // Adjust color as needed
+              ),
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [
           Expanded(
-            child: PageView(
+            child: PageView.builder(
               controller: _pageController,
+              itemCount: _numPages, // Total number of pages (charts + data table)
               onPageChanged: (index) {
                 setState(() {
                   _currentPage = index;
                 });
               },
-              children: [
-                // First Page: Centile Chart
-                CentileChart(
-                  chartData: _prepareChartData(widget.chartData.centileData!, widget.measurementMethod, widget.sex),
-                  measurementMethod: widget.measurementMethod,
-                  sex: widget.sex,
-                  growthData: widget.growthDataList,
-                ),
-                // Second Page: Result TextSpans
-                ResultsDataTable(
-                  growthDataList: widget.growthDataList,
-                ),
-              ],
+              itemBuilder: (context, index) {
+                if (index < _availableCharts.length) {
+                  // This index corresponds to a chart page
+                  final currentMeasurementMethod = _availableCharts[index];
+                  final growthDataForThisChart = widget.organizedGrowthData[currentMeasurementMethod] ?? [];
+
+                  // Build a CentileChart for the current measurement method
+                  return CentileChart(
+                    organizedCentileLines: widget.organizedCentileLines, // Pass the full centile data cache
+                    measurementMethod: currentMeasurementMethod, // Pass the specific method for this page
+                    sex: widget.sex, // Pass the fixed sex
+                    growthDataForMethod: growthDataForThisChart, // Pass filtered growth data
+                    dob: widget.dob, // Pass fixed DOB
+                    gestationWeeks: widget.gestationWeeks, // Pass fixed gestation
+                    gestationDays: widget.gestationDays,   // Pass fixed gestation
+                  );
+                } else {
+                  // This index corresponds to the data table page (_numPages - 1)
+                  // Build the ResultsDataTable
+                  return ResultsDataTable(organizedGrowthData: widget.organizedGrowthData);
+                }
+              },
             ),
           ),
           Padding(
@@ -103,11 +197,13 @@ class _ResultsPageState extends State<ResultsPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     TextButton(
+                      // Enable/disable based on whether the current page is the first chart page
                       onPressed: _currentPage > 0 ? () => _goToPage(0) : null,
                       child: const Text('Chart'),
                     ),
                     TextButton(
-                      onPressed: _currentPage < _numPages - 1 ? () => _goToPage(1) : null,
+                      // Enable/disable based on whether the current page is the data table page
+                      onPressed: _currentPage < _numPages - 1 ? () => _goToPage(_numPages - 1) : null,
                       child: const Text('Details'),
                     ),
                   ],
