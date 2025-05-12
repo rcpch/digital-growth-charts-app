@@ -18,6 +18,7 @@ class _InputFormState extends State<InputForm> {
   final _formKey = GlobalKey<FormState>();
 
   final DigitalGrowthChartsService _digitalGrowthChartsService = DigitalGrowthChartsService();// API service
+  List<GrowthDataResponse> _growthDataList = []; // list to store growth calculation API responses
 
   // Controllers for the input fields
   final TextEditingController _dobController = TextEditingController();
@@ -144,6 +145,9 @@ class _InputFormState extends State<InputForm> {
           gestationDays: gestationDays,
         );
 
+        // store the response
+        _growthDataList.add(apiResponse);
+
         // get the chart coordinates
         final DigitalGrowthChartsCentileLines chartData =
         await _digitalGrowthChartsService.getChartCoordinates(
@@ -157,7 +161,7 @@ class _InputFormState extends State<InputForm> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ResultsPage(growthData: apiResponse, chartData: chartData, sex: selectedSex, measurementMethod: measurementMethod),
+            builder: (context) => ResultsPage(growthDataList: _growthDataList, chartData: chartData, sex: selectedSex, measurementMethod: measurementMethod),
           ),
         );
 

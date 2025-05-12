@@ -10,16 +10,17 @@ import '../classes/digital_growth_charts_api_response.dart';
 import '../classes/digital_growth_charts_chart_coordinates_response.dart';
 import '../definitions/enums.dart';
 import './centile_chart.dart';
+import './results_data_table.dart';
 
 class ResultsPage extends StatefulWidget {
-  final GrowthDataResponse growthData;
+  final List<GrowthDataResponse> growthDataList;
   final DigitalGrowthChartsCentileLines chartData;
   final Sex sex;
   final MeasurementMethod measurementMethod;
 
   const ResultsPage({
     Key? key,
-    required this.growthData,
+    required this.growthDataList,
     required this.chartData,
     required this.sex,
     required this.measurementMethod,
@@ -70,79 +71,11 @@ class _ResultsPageState extends State<ResultsPage> {
                   chartData: _prepareChartData(widget.chartData.centileData!, widget.measurementMethod, widget.sex),
                   measurementMethod: widget.measurementMethod,
                   sex: widget.sex,
-                  scatterData: [{
-                    widget.growthData.measurementDates?.chronologicalDecimalAge: widget.growthData.childObservationValue?.observationValue ?? 0.0,
-                  },]
+                  growthData: widget.growthDataList,
                 ),
                 // Second Page: Result TextSpans
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Divider(height: 20, thickness: 5, indent: 0, endIndent: 0, color: primaryColour),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Ages',
-                        style: TextStyle(color: secondaryColour, fontSize: 16),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildRichText('Date of Birth: ', '${widget.growthData.birthData?.birthDate ?? 'N/A'}'),
-                      const SizedBox(height: 8),
-                      _buildRichText('Measurement Date: ', '${widget.growthData.measurementDates?.observationDate ?? 'N/A'}'),
-                      const SizedBox(height: 8),
-                      _buildRichText('Chronological Age: ', '${widget.growthData.measurementDates?.chronologicalCalendarAge ?? 'N/A'}'),
-                      const SizedBox(height: 8),
-                      _buildRichText(
-                          'Corrected Age: ',
-                          '${widget.growthData.measurementDates?.correctedCalendarAge ?? 'N/A'} (${widget.growthData.measurementDates?.comments?.clinicianCorrectedDecimalAgeComment})'),
-                      const SizedBox(height: 16),
-                      const Divider(height: 20, thickness: 5, indent: 0, endIndent: 0, color: primaryColour),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Measurements',
-                        style: TextStyle(
-                          color: secondaryColour,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildRichText('${widget.growthData.childObservationValue?.measurementMethod ?? 'N/A'}: ',
-                          '${widget.growthData.childObservationValue?.observationValue ?? 'N/A'}'),
-                      const SizedBox(height: 16),
-                      const Divider(height: 20, thickness: 5, indent: 0, endIndent: 0, color: primaryColour),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Sex',
-                        style: TextStyle(
-                          color: secondaryColour,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildRichText('Sex: ', '${widget.growthData.birthData?.sex ?? 'N/A'}'),
-                      const SizedBox(height: 16),
-                      const Divider(height: 20, thickness: 5, indent: 0, endIndent: 0, color: primaryColour),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Centiles/SDS',
-                        style: TextStyle(
-                          color: secondaryColour,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildRichText('Chronological Centile: ', '${widget.growthData.measurementCalculatedValues?.chronologicalCentile ?? 'N/A'}'),
-                      const SizedBox(height: 8),
-                      _buildRichText('Chronological SDS: ', '${widget.growthData.measurementCalculatedValues?.chronologicalSds ?? 'N/A'}'),
-                      const SizedBox(height: 8),
-                      _buildRichText('Corrected Centile: ', '${widget.growthData.measurementCalculatedValues?.correctedCentile ?? 'N/A'}'),
-                      const SizedBox(height: 8),
-                      _buildRichText('Interpretation: ', '${widget.growthData.measurementCalculatedValues?.correctedCentileBand ?? 'N/A'}'),
-                      const SizedBox(height: 8),
-                      _buildRichText('Corrected SDS: ', '${widget.growthData.measurementCalculatedValues?.correctedSds ?? 'N/A'}'),
-                    ],
-                  ),
+                ResultsDataTable(
+                  growthDataList: widget.growthDataList,
                 ),
               ],
             ),
@@ -181,26 +114,6 @@ class _ResultsPageState extends State<ResultsPage> {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  RichText _buildRichText(String label, String value) {
-    return RichText(
-      text: TextSpan(
-        style: TextStyle(
-          color: Theme.of(context).primaryColor,
-          fontSize: 16,
-        ),
-        children: <TextSpan>[
-          TextSpan(
-            text: label,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          TextSpan(
-            text: value,
           ),
         ],
       ),
