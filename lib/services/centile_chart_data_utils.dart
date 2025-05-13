@@ -1,5 +1,8 @@
 import 'package:digital_growth_charts_app/definitions/enums.dart';
 import 'package:digital_growth_charts_app/classes/digital_growth_charts_chart_coordinates_response.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:digital_growth_charts_app/classes/digital_growth_charts_api_response.dart';
+
 
 // Define a type for the organized chart data
 // Map: Sex -> Map: MeasurementMethod -> List of CentileDataPoint
@@ -75,4 +78,14 @@ OrganizedCentileLines organizeCentileLines(DigitalGrowthChartsCentileLines centi
 
 
   return organizedData;
+}
+
+class GrowthDataScatterData {
+  final ScatterSpot spot;
+  final GrowthDataResponse originalData; // Store the original data
+
+  GrowthDataScatterData({
+    required this.spot,
+    required this.originalData,
+  });
 }

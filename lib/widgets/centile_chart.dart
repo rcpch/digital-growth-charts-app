@@ -1,3 +1,4 @@
+import 'package:digital_growth_charts_app/definitions/helpers.dart';
 import 'package:digital_growth_charts_app/themes/colours.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -178,8 +179,8 @@ class _CentileChartState extends State<CentileChart> {
   }
 
   // Helper to prepare the individual growth data points for fl_chart
-  List<ScatterSpot> _generateScatterSpots() {
-    final List<ScatterSpot> spots = [];
+  List<Map<String, dynamic>> _generateScatterSpots() {
+    final List<Map<String, dynamic>> spots = [];
 
     for (final response in widget.growthDataForMethod) {
       final chronologicalData = response.plottableData?.centileData?.chronologicalDecimalAgeData;
@@ -188,35 +189,37 @@ class _CentileChartState extends State<CentileChart> {
       // Add chronological point if selected to show or if 'both' is selected
       if (_selectedPlotType == AgeCorrectionMethod.chronological || _selectedPlotType == AgeCorrectionMethod.both) {
         if (chronologicalData?.x != null && chronologicalData?.y != null) {
-          spots.add(
-            ScatterSpot(
+          spots.add({
+            'spot': ScatterSpot( // Store the ScatterSpot
               chronologicalData!.x!,
               chronologicalData.y!,
-              // Use a distinct painter for chronological points
               dotPainter: FlDotCirclePainter(
                 radius: 6,
-                color: AppColours.chronologicalPointColor, // Use a specific color for chronological points
+                color: AppColours.chronologicalPointColor,
               ),
             ),
-          );
+            'originalData': response, // Store the original response separately
+            'ageType': AgeCorrectionMethod.chronological, // Add age type for differentiation
+          });
         }
       }
 
       // Add corrected point if selected to show or if 'both' is selected
       if (_selectedPlotType == AgeCorrectionMethod.corrected || _selectedPlotType == AgeCorrectionMethod.both) {
         if (correctedData?.x != null && correctedData?.y != null) {
-          spots.add(
-            ScatterSpot(
+          spots.add({
+            'spot': ScatterSpot( // Store the ScatterSpot
               correctedData!.x!,
               correctedData.y!,
-              // Use a distinct painter for corrected points
               dotPainter: FlDotCrossPainter(
                 size: 12,
-                color: AppColours.correctedPointColor, // Use a specific color for corrected points
+                color: AppColours.correctedPointColor,
                 width: 2.0,
               ),
             ),
-          );
+            'originalData': response, // Store the original response separately
+            'ageType': AgeCorrectionMethod.corrected, // Add age type for differentiation
+          });
         }
       }
     }
@@ -312,8 +315,9 @@ class _CentileChartState extends State<CentileChart> {
         break;
     }
 
-    // useCorrectedAge is not used in this snippet, remove if unnecessary.
-    // final bool useCorrectedAge;
+    final List<Map<String, dynamic>> scatterDataWithDetails = _generateScatterSpots();
+    final List<ScatterSpot> scatterSpots = scatterDataWithDetails.map((data) => data['spot'] as ScatterSpot).toList();
+
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -396,13 +400,63 @@ class _CentileChartState extends State<CentileChart> {
                       ScatterChart(
                         ScatterChartData(
                           gridData: const FlGridData(show: false),
-                          scatterSpots: _generateScatterSpots(),
+                          scatterSpots: scatterSpots,
                           titlesData: FlTitlesData(show: false),
                           borderData: FlBorderData(show: false),
                           minX: _minX,
                           maxX: _maxX,
                           minY: _minY,
                           maxY: _maxY,
+                          scatterTouchData: ScatterTouchData(
+                            enabled: true,
+
+                            handleBuiltInTouches: true,
+                            mouseCursorResolver: (FlTouchEvent, ScatterTouchResponse) {
+                              return SystemMouseCursors.click;
+                            },
+                            touchTooltipData: ScatterTouchTooltipData(
+                              getTooltipItems: (ScatterSpot spot) {
+                                // Find the original data
+                                Map<String, dynamic>? touchedData;
+                                for (final data in scatterDataWithDetails) {
+                                  if (data['spot'].x == spot.x && data['spot'].y == spot.y) {
+                                    touchedData = data;
+                                    break; // Found the match, exit the loop
+                                  }
+                                }
+
+                                if (touchedData != null) {
+                                  // Now you have access to the original data and age type
+                                  final GrowthDataResponse originalResponse = touchedData['originalData'] as GrowthDataResponse;
+                                  final AgeCorrectionMethod ageType = touchedData['ageType'] as AgeCorrectionMethod;
+
+                                  // Build your tooltip string with meaningful data
+                                  String tooltipText = "${originalResponse.measurementDates?.observationDate ?? 'N/A'}\n${originalResponse.childObservationValue?.observationValue  ?? 'N/A'} ${getMeasurementMethodUnits(originalResponse.childObservationValue?.measurementMethod) ?? 'N/A'}";
+
+                                  // Add age and centile/SDS based on age type
+                                  if (ageType == AgeCorrectionMethod.chronological || ageType == AgeCorrectionMethod.both) {
+                                    tooltipText += "\nChronological Age: ${originalResponse.measurementDates?.chronologicalCalendarAge ?? 'N/A'}\nChronological Centile: ${originalResponse.measurementCalculatedValues?.chronologicalCentile ?? 'N/A'}";
+                                  }
+
+                                  if (ageType == AgeCorrectionMethod.corrected || ageType == AgeCorrectionMethod.both) {
+                                    tooltipText += "\nCorrected Age: ${originalResponse.measurementDates?.correctedCalendarAge ?? 'N/A'}\nCorrected Centile: ${originalResponse.measurementCalculatedValues?.correctedCentile ?? 'N/A'}\nInterpretation: ${originalResponse.measurementCalculatedValues?.correctedCentileBand ?? 'N/A'}";
+                                  }
+
+                                  return ScatterTooltipItem(
+                                    tooltipText,
+                                    textStyle: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10, // Adjust font size for modal
+                                    ),
+                                    textDirection: TextDirection.ltr,
+                                    textAlign: TextAlign.left,
+                                  );
+                }
+                                return null; // Returning null means no tooltip will be shown
+                              },
+                            ),
+                          ),
                         ),
                       ),
                     // Labels along the right axis
