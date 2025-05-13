@@ -122,6 +122,27 @@ class _InputFormState extends State<InputForm> {
     });
   }
 
+  void _hardResetForm() {
+    _observationDateController.clear();
+    _measurementController.clear();
+    _dobController.clear();
+    _selectedClinicDate = null;
+    _selectedDob = null;
+    _selectedMeasurementMethod = MeasurementMethod.height;
+    _selectedSex = Sex.male;
+    _formSubmitted = false;
+    setState(() {
+      _selectedClinicDate = null;
+      _selectedMeasurementMethod = MeasurementMethod.height;
+      _formSubmitted = false;
+      _organizedGrowthData = {};
+      _organizedCentileLines = {
+        Sex.male: {},
+        Sex.female: {},
+      };
+    });
+  }
+
   // Function to handle the submit button press
   void _submitForm() async {
     setState(() {
@@ -581,9 +602,33 @@ class _InputFormState extends State<InputForm> {
             ),
             // Reset Button
             ElevatedButton(
-              onPressed: _resetForm,
+              onPressed: _hardResetForm,
               child: const Text('Reset'),
             ),
+          // Conditionally visible button to navigate to ResultsPage
+          if (_organizedGrowthData.isNotEmpty) // Check if there's data
+            ElevatedButton(
+              child: const Text('View Results'),
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ResultsPage(
+                            organizedGrowthData: _organizedGrowthData,
+                            organizedCentileLines: _organizedCentileLines,
+                            sex: _fixedSex!,
+                            // Make sure these are not null if data exists
+                            dob: _fixedDob!,
+                            gestationWeeks: _fixedGestationWeeks,
+                            gestationDays: _fixedGestationDays,
+                            // You might need to decide which measurement method to show by default
+                            measurementMethod: _organizedGrowthData.keys
+                                .first, // Example: show the first available method
+                          ),
+                    )
+                );
+              })
           ],
         ),
       ),
