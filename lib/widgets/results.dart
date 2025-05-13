@@ -122,22 +122,6 @@ class _ResultsPageState extends State<ResultsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Growth Chart Results'),
-        // Display the title of the currently visible page in the AppBar
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(30.0),
-          child: Container(
-            alignment: Alignment.center,
-            child: Text(
-              // Use _getCurrentPageTitle() here to handle both chart and data table titles
-              _getCurrentPageTitle(),
-              style: const TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.white, // Adjust color as needed
-              ),
-            ),
-          ),
-        ),
       ),
       body: Column(
         children: [

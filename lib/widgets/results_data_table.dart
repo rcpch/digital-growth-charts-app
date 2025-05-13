@@ -144,22 +144,16 @@ class ResultsDataTable extends StatelessWidget {
 
     // Handle the case where there's no data to display in the table.
     if (firstGrowthData == null) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Growth Data Results'),
-        ),
-        body: const Center(
-          child: Text('No growth data available to display.'),
-        ),
+      // You might want to return a simple widget indicating no data,
+      // NOT a full Scaffold here. The outer Scaffold in ResultsPage
+      // will provide the app bar and overall structure.
+      return const Center(
+        child: Text('No growth data available to display.'),
       );
     }
 
     // If there is data, build the table view.
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Growth Data Results'),
-      ),
-      body: SingleChildScrollView(
+    return SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,8 +251,7 @@ class ResultsDataTable extends StatelessWidget {
             ),
             const SizedBox(height: 16)
           ],
-        ),
-      ),
+        )
     );
   }
 

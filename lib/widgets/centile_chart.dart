@@ -5,6 +5,7 @@ import '../definitions/enums.dart';
 import '../classes/digital_growth_charts_api_response.dart';
 import 'package:digital_growth_charts_app/services/centile_chart_data_utils.dart';
 import '../classes/digital_growth_charts_chart_coordinates_response.dart';
+import '../classes/centile_labels.dart';
 
 class CentileChart extends StatefulWidget {
   final OrganizedCentileLines organizedCentileLines;
@@ -34,6 +35,101 @@ class CentileChart extends StatefulWidget {
 class _CentileChartState extends State<CentileChart> {
   AgeCorrectionMethod _selectedPlotType = AgeCorrectionMethod.chronological;
 
+  double get _minX => _getCentileXValues().reduce((a, b) => a < b ? a : b);
+  double get _maxX => _getCentileXValues().reduce((a, b) => a > b ? a : b);
+  double get _minY => _getCentileYValues().reduce((a, b) => a < b ? a : b);
+  double get _maxY => _getCentileYValues().reduce((a, b) => a > b ? a : b);
+
+  List<double> _getCentileXValues() {
+    final centilePoints = widget.organizedCentileLines[widget.sex]?[widget.measurementMethod];
+    return centilePoints
+        ?.expand((cp) => cp.data?.map((p) => p.x ?? 0.0).cast<double>() ?? const <double>[])
+        .toList() ??
+        <double>[0.0];
+  }
+
+  List<double> _getCentileYValues() {
+    final centilePoints = widget.organizedCentileLines[widget.sex]?[widget.measurementMethod];
+    return centilePoints
+        ?.expand((cp) => cp.data?.map((p) => p.y ?? 0.0).cast<double>() ?? const <double>[])
+        .toList() ??
+        <double>[0.0];
+  }
+
+  List<Widget> _buildRightAxisLabels(BoxConstraints constraints) {
+    final List<Widget> labels = [];
+
+    final centilePoints = widget.organizedCentileLines[widget.sex]?[widget.measurementMethod];
+    if (centilePoints == null || centilePoints.isEmpty) return labels;
+
+    final chartHeight = constraints.maxHeight;
+
+    // Group centile lines by centile value
+    final Map<double, List<CentileDataPoint>> grouped = {};
+    for (final centile in centilePoints) {
+      final key = centile.centile ?? 0.0;
+      grouped.putIfAbsent(key, () => []).add(centile);
+    }
+
+    for (final entry in grouped.entries) {
+      final lines = entry.value;
+
+      // Pick the line with the highest max x (i.e., most rightward)
+      CentileDataPoint? rightmostLine;
+      double highestX = double.negativeInfinity;
+
+      for (final line in lines) {
+        final data = line.data;
+        if (data == null || data.isEmpty) continue;
+
+        final List<FlSpot> spots = data
+            .map((p) => FlSpot(p.x ?? 0.0, p.y ?? 0.0))
+            .toList();
+
+        final FlSpot maxXSpot = spots.reduce((a, b) => a.x > b.x ? a : b);
+        if (maxXSpot.x > highestX) {
+          highestX = maxXSpot.x;
+          rightmostLine = line;
+        }
+      }
+
+
+      // Build label for the rightmost line (if any)
+      if (rightmostLine != null && rightmostLine.data != null && rightmostLine.data!.isNotEmpty) {
+        final List<FlSpot> spots = rightmostLine.data!
+            .map((p) => FlSpot(p.x ?? 0.0, p.y ?? 0.0))
+            .toList();
+
+        final FlSpot rightmostSpot = spots.reduce((a, b) => a.x > b.x ? a : b);
+        final double normalizedY = (rightmostSpot.y - _minY) / (_maxY - _minY);
+        final double topOffset = chartHeight * (1 - normalizedY);
+
+        labels.add(
+          Positioned(
+            right: 50,
+            top: (topOffset - 10).clamp(0.0, chartHeight - 20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              color: Colors.white.withOpacity(0.8),
+              child: Text(
+                '${rightmostLine.centile?.toStringAsFixed(1)}%',
+                style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w500, color: primaryColour),
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    return labels;
+  }
+
+
+
+
+
+
+
   List<LineChartBarData> _generateLineBarsData() {
     final List<LineChartBarData> centileLines = [];
 
@@ -45,10 +141,10 @@ class _CentileChartState extends State<CentileChart> {
     const dashedCentileValues = [0.4, 9.0, 50.0, 91.0, 99.6];
 
     if (centileDataPoints != null) {
-      centileDataPoints.sort((a, b) => (a.centile ?? 0).compareTo(b.centile ?? 0));
 
       for (final centileDataPoint in centileDataPoints) {
         if (centileDataPoint.data != null) {
+
           final List<FlSpot> spots = centileDataPoint.data!.map((dataPoint) {
             // Assuming dataPoint.x is the age and dataPoint.y is the measurement value.
             final double xValue = dataPoint.x ?? 0.0;
@@ -125,11 +221,12 @@ class _CentileChartState extends State<CentileChart> {
     return spots;
   }
 
+
+
   // Determine the appropriate title for the axes based on the measurement method
   String _getXAxisTitle() {
-    // Assuming the x-axis unit is consistent across all charts and is age in days/months/years
-    // If your API provides age in different units, you might need to adjust this.
-    return 'Age (Days)'; // Adjust based on your API's x-axis units
+
+    return 'Age (years)'; // Adjust based on your API's x-axis units
   }
 
   String _getYAxisTitle() {
@@ -220,91 +317,87 @@ class _CentileChartState extends State<CentileChart> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
-          children: [
-            // Toggle buttons
-            ToggleButtons(
-              isSelected: [
-                _selectedPlotType == AgeCorrectionMethod.both,
-                _selectedPlotType == AgeCorrectionMethod.corrected,
-                _selectedPlotType == AgeCorrectionMethod.chronological,
-              ],
-              onPressed: (int index) {
-                setState(() {
-                  _selectedPlotType = AgeCorrectionMethod.values[index];
-                });
-              },
-              children: const [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('Chronological'),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('Corrected'),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('Both'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // centile chart
-            Expanded( // Wrap the chart area in Expanded
-              child: AspectRatio(
-                aspectRatio: 1.6,
-                child: Stack(
+        children: [
+          // Toggle buttons
+          ToggleButtons(
+            isSelected: [
+              _selectedPlotType == AgeCorrectionMethod.chronological,
+              _selectedPlotType == AgeCorrectionMethod.corrected,
+              _selectedPlotType == AgeCorrectionMethod.both,
+            ],
+            onPressed: (int index) {
+              setState(() {
+                _selectedPlotType = AgeCorrectionMethod.values[index];
+              });
+            },
+            children: const [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Text('Chronological'),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Text('Corrected'),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Text('Both'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Chart area
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Stack(
                   children: [
                     LineChart(
                       LineChartData(
                         gridData: const FlGridData(show: false),
                         titlesData: FlTitlesData(
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: true),
-                          ),
-                          topTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
-                          ),
-                          leftTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                  showTitles: false
-                              )
-                          ),
+                          bottomTitles: AxisTitles(sideTitles: _getBottomTitles()),
+                          leftTitles: AxisTitles(sideTitles: _getLeftTitles()),
+                          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                         ),
-                        borderData: FlBorderData(show: true, border: Border.all(color: const Color(0xff37434d))),
-                        minX: 0, // Adjust based on your age range
-                        maxX: 20, // Adjust based on your age range
-                        minY: 0, // Adjust based on your observation value range
-                        maxY: 210, // Adjust based on your observation value range
+                        borderData: FlBorderData(
+                          show: true,
+                          border: Border.all(color: const Color(0xff37434d)),
+                        ),
+                        minX: _minX,
+                        maxX: _maxX,
+                        minY: _minY,
+                        maxY: _maxY,
                         lineBarsData: _generateLineBarsData(),
                       ),
                     ),
-                    // Add the scatter plot layer if scatterData is provided
                     if (_generateScatterSpots().isNotEmpty)
                       ScatterChart(
                         ScatterChartData(
                           scatterSpots: _generateScatterSpots(),
-                          titlesData: FlTitlesData(show: false), //hide the titles
-                          borderData: FlBorderData(show: false), //hide the border
-                          minX: 0,
-                          maxX: 20,
-                          minY: 0,
-                          maxY: 210,
+                          titlesData: FlTitlesData(show: false),
+                          borderData: FlBorderData(show: false),
+                          minX: _minX,
+                          maxX: _maxX,
+                          minY: _minY,
+                          maxY: _maxY,
                         ),
                       ),
-                    Positioned( // position the title
-                      top: 8,
-                      left: 0,
-                      right: 0,
-                      child: Center(child: Text(chartTitle, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
-                    )
+                    // Labels along the right axis
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        return Stack(children: _buildRightAxisLabels(constraints));
+                      },
+                    ),
                   ],
-                ),
-              ),
-            ), // Closing bracket for Expanded
-          ]
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
+
   }
 
 }
