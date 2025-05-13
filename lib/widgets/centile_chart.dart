@@ -106,11 +106,14 @@ class _CentileChartState extends State<CentileChart> {
 
         labels.add(
           Positioned(
-            right: 50,
+            right: 20,
             top: (topOffset - 10).clamp(0.0, chartHeight - 20),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              color: Colors.white.withOpacity(0.8),
+              decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white),
+                  color: Colors.white
+              ),
               child: Text(
                 '${rightmostLine.centile?.toStringAsFixed(1)}%',
                 style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w500, color: primaryColour),
@@ -245,23 +248,21 @@ class _CentileChartState extends State<CentileChart> {
   }
 
   SideTitles _getBottomTitles() {
-    // This needs to align with the x-axis unit of your data (e.g., days, months, years)
-    // And should consider the age range covered by the data.
 
     // Example: If x-axis is in days, show labels every year
     const double intervalInDays = 365.25; // Approximate days in a year
 
     return SideTitles(
       showTitles: true,
-      reservedSize: 30,
-      interval: intervalInDays, // Show labels every year
+      reservedSize: 40,
+      interval: 4, // Show labels every year
       getTitlesWidget: (value, meta) {
         // Customize the title text based on the value (age in days)
         final int years = (value / intervalInDays).round();
         return SideTitleWidget(
           space: 8.0, // Space between the title and the axis line
           meta: meta, // Pass the meta object here
-          child: Text('${years}y'),
+          child: Text('${value}y'),
         );
       },
     );
@@ -271,7 +272,7 @@ class _CentileChartState extends State<CentileChart> {
   SideTitles _getLeftTitles() {
     return SideTitles(
       showTitles: true,
-      reservedSize: 40, // Adjust reserved size for the labels
+      reservedSize: 50, // Adjust reserved size for the labels
       getTitlesWidget: (value, meta) {
         // Customize the title text based on the value (measurement)
         // You might want to format the number of decimal places based on the measurement type
@@ -318,6 +319,11 @@ class _CentileChartState extends State<CentileChart> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
+          Text(
+            chartTitle,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
           // Toggle buttons
           ToggleButtons(
             isSelected: [
@@ -356,13 +362,28 @@ class _CentileChartState extends State<CentileChart> {
                       LineChartData(
                         gridData: const FlGridData(show: false),
                         titlesData: FlTitlesData(
-                          bottomTitles: AxisTitles(sideTitles: _getBottomTitles()),
-                          leftTitles: AxisTitles(sideTitles: _getLeftTitles()),
+                          bottomTitles: AxisTitles(
+                            sideTitles: _getBottomTitles(), // This will need to be adjusted when we scope the x-axis to the data
+                            axisNameWidget: Text(
+                              _getXAxisTitle(),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 12), // Customize style
+                            ),
+                            axisNameSize: 20,
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: _getLeftTitles(),
+                            axisNameWidget: Text(
+                              _getYAxisTitle(),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 12), // Customize style
+                            ),
+                            axisNameSize: 20,
+                          ),
+                          rightTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
                           topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        ),
-                        borderData: FlBorderData(
-                          show: true,
-                          border: Border.all(color: const Color(0xff37434d)),
                         ),
                         minX: _minX,
                         maxX: _maxX,
@@ -374,6 +395,7 @@ class _CentileChartState extends State<CentileChart> {
                     if (_generateScatterSpots().isNotEmpty)
                       ScatterChart(
                         ScatterChartData(
+                          gridData: const FlGridData(show: false),
                           scatterSpots: _generateScatterSpots(),
                           titlesData: FlTitlesData(show: false),
                           borderData: FlBorderData(show: false),

@@ -579,6 +579,11 @@ class _InputFormState extends State<InputForm> {
               onPressed: _submitForm,
               child: const Text('Submit'),
             ),
+            // Reset Button
+            ElevatedButton(
+              onPressed: _resetForm,
+              child: const Text('Reset'),
+            ),
           ],
         ),
       ),
