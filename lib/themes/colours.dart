@@ -19,8 +19,8 @@ class AppColours {
   static const Color centileLineColorSDS = Colors.red; // Distinct color for extreme centiles (e.g., 0.4th, 99.6th)
 
   // Colors for growth data points
-  static const Color chronologicalPointColor = Colors.green; // Color for chronological measurement points
-  static const Color correctedPointColor = secondaryColour; // Using your secondary color for corrected points
+  static const Color chronologicalPointColor = Colors.black; // Color for chronological measurement points
+  static const Color correctedPointColor = Colors.black; // Using your secondary color for corrected points
 
   // Utility function to get color based on centile value
   static Color centileLineColor(double? centile) {

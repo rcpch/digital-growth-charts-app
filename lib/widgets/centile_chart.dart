@@ -513,10 +513,6 @@ class _CentileChartState extends State<CentileChart> {
 
     final List<Map<String, dynamic>> scatterDataWithDetails = _generateScatterSpots();
     final List<ScatterSpot> scatterSpots = scatterDataWithDetails.map((data) => data['spot'] as ScatterSpot).toList();
-    final currentMinX = minX; // Assuming minX is a getter
-    final currentMaxX = maxX;
-    final currentMinY = minY;
-    final currentMaxY = maxY;
 
     final baseData = FlBorderData(
       show: true,
@@ -595,10 +591,10 @@ class _CentileChartState extends State<CentileChart> {
                           ),
                           topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                         ),
-                        minX: currentMinX,
-                        maxX: currentMaxX,
-                        minY: currentMinY,
-                        maxY: currentMaxY,
+                        minX: minX,
+                        maxX: maxX,
+                        minY: minY,
+                        maxY: maxY,
                         lineBarsData: _generateLineBarsData(),
                         clipData: const FlClipData.all(),
                       ),
@@ -613,7 +609,7 @@ class _CentileChartState extends State<CentileChart> {
                           titlesData: FlTitlesData(
                             show: true,
                             bottomTitles: AxisTitles(
-                              sideTitles: _getBottomTitles(), // This will need to be adjusted when we scope the x-axis to the data
+                              sideTitles: _getBottomTitles(),
                               axisNameWidget: Text(
                                 _getXAxisTitle(),
                                 style: const TextStyle(
@@ -636,10 +632,10 @@ class _CentileChartState extends State<CentileChart> {
                             topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                           ),
                           borderData: FlBorderData(show: false),
-                          minX: currentMinX,
-                          maxX: currentMaxX,
-                          minY: currentMinY,
-                          maxY: currentMaxY,
+                          minX: minX,
+                          maxX: maxX,
+                          minY: minY,
+                          maxY: maxY,
                            scatterTouchData: ScatterTouchData(
                              enabled: true,
                              handleBuiltInTouches: true,
@@ -647,6 +643,10 @@ class _CentileChartState extends State<CentileChart> {
                                return SystemMouseCursors.click;
                              },
                              touchTooltipData: ScatterTouchTooltipData(
+                               tooltipBorderRadius: BorderRadius.only(topLeft: Radius.zero, topRight: Radius.zero,bottomLeft: Radius.zero, bottomRight: Radius.zero),
+                               getTooltipColor: (ScatterSpot spot) {
+                                  return primaryColour;
+                              },
                                getTooltipItems: (ScatterSpot spot) {
                                  // Find the original data
                                  Map<String, dynamic>? touchedData;
