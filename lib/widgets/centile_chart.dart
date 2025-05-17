@@ -381,25 +381,26 @@ class _CentileChartState extends State<CentileChart> {
 
   // Helper to prepare the individual growth data points for fl_chart
   List<Map<String, dynamic>> _generateScatterSpots() {
-    final List<Map<String, dynamic>> spots = [];
+    final List<Map<String, dynamic>> spotsOutput = []; // Renamed to avoid conflict if we were to combine
 
     for (final response in widget.growthDataForMethod) {
       final chronologicalData = response.plottableData?.centileData?.chronologicalDecimalAgeData;
       final correctedData = response.plottableData?.centileData?.correctedDecimalAgeData;
+
       // Add chronological point if selected to show or if 'both' is selected
       if (_selectedPlotType == AgeCorrectionMethod.chronological || _selectedPlotType == AgeCorrectionMethod.both) {
         if (chronologicalData?.x != null && chronologicalData?.y != null) {
-          spots.add({
-            'spot': ScatterSpot( // Store the ScatterSpot
+          spotsOutput.add({
+            'spot': ScatterSpot(
               chronologicalData!.x!,
               chronologicalData.y!,
               dotPainter: FlDotCirclePainter(
                 radius: 6,
-                color: AppColours.chronologicalPointColor,
+                color: AppColours.chronologicalPointColor, // Make sure AppColours is accessible
               ),
             ),
-            'originalData': response, // Store the original response separately
-            'ageType': AgeCorrectionMethod.chronological, // Add age type for differentiation
+            'originalData': response,
+            'ageType': AgeCorrectionMethod.chronological,
           });
         }
       }
@@ -407,26 +408,65 @@ class _CentileChartState extends State<CentileChart> {
       // Add corrected point if selected to show or if 'both' is selected
       if (_selectedPlotType == AgeCorrectionMethod.corrected || _selectedPlotType == AgeCorrectionMethod.both) {
         if (correctedData?.x != null && correctedData?.y != null) {
-          spots.add({
-            'spot': ScatterSpot( // Store the ScatterSpot
+          spotsOutput.add({
+            'spot': ScatterSpot(
               correctedData!.x!,
               correctedData.y!,
               dotPainter: FlDotCrossPainter(
                 size: 12,
-                color: AppColours.correctedPointColor,
+                color: AppColours.correctedPointColor, // Make sure AppColours is accessible
                 width: 1.0,
               ),
             ),
-            'originalData': response, // Store the original response separately
-            'ageType': AgeCorrectionMethod.corrected, // Add age type for differentiation
+            'originalData': response,
+            'ageType': AgeCorrectionMethod.corrected,
           });
         }
       }
     }
-
-    return spots;
+    return spotsOutput;
   }
 
+  List<LineChartBarData> _generateConnectingMeasurementLines() {
+    final List<LineChartBarData> connectingLines = [];
+
+    // Only generate these lines if 'both' is selected
+    if (_selectedPlotType == AgeCorrectionMethod.both) {
+      for (final response in widget.growthDataForMethod) {
+        final chronologicalData = response.plottableData?.centileData?.chronologicalDecimalAgeData;
+        final correctedData = response.plottableData?.centileData?.correctedDecimalAgeData;
+
+        // Ensure both points exist to draw a line between them
+        if (chronologicalData?.x != null && chronologicalData?.y != null &&
+            correctedData?.x != null && correctedData?.y != null) {
+
+          // Optional: If chronological and corrected points are identical,
+          // you might not want to draw a line (it would be a dot).
+          if (chronologicalData!.x == correctedData!.x && chronologicalData.y == correctedData.y) {
+            continue; // Skip if points are the same
+          }
+
+          final List<FlSpot> connectionSpots = [
+            FlSpot(chronologicalData.x!, chronologicalData.y!),
+            FlSpot(correctedData.x!, correctedData.y!),
+          ];
+
+          connectingLines.add(
+            LineChartBarData(
+              spots: connectionSpots,
+              isCurved: false,        // Straight line
+              color: Colors.black,    // Black color for the line
+              dashArray: [5, 5],      // Dash pattern: 5 pixels drawn, 5 pixels skipped
+              barWidth: 1.5,          // Adjust line thickness as desired
+              isStrokeCapRound: false, // Use butt caps for dashed lines for sharpness
+              dotData: const FlDotData(show: false), // No extra dots on this line itself
+            ),
+          );
+        }
+      }
+    }
+    return connectingLines;
+  }
 
   // Determine the appropriate title for the axes based on the measurement method
   String _getXAxisTitle() {
@@ -490,6 +530,7 @@ class _CentileChartState extends State<CentileChart> {
     );
   }
 
+  // callback from toggle buttons
   void _handlePlotTypeChanged(AgeCorrectionMethod newPlotType) {
     if (_selectedPlotType != newPlotType) {
       setState(() {
@@ -521,6 +562,14 @@ class _CentileChartState extends State<CentileChart> {
 
     final List<Map<String, dynamic>> scatterDataWithDetails = _generateScatterSpots();
     final List<ScatterSpot> scatterSpots = scatterDataWithDetails.map((data) => data['spot'] as ScatterSpot).toList();
+    final List<LineChartBarData> connectingMeasurementLines = _generateConnectingMeasurementLines();
+    final List<LineChartBarData> centileLines = _generateLineBarsData();
+    // slightly untidy but we are using the LineChart to plot the lines that connect chronological and corrected measurements
+    // this means that the connecting lines, if present, need to be bundled with the centile line data
+    final List<LineChartBarData> allLineBarsData = [
+      ...centileLines,
+      ...connectingMeasurementLines,
+    ];
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -576,7 +625,7 @@ class _CentileChartState extends State<CentileChart> {
                         maxX: maxX,
                         minY: minY,
                         maxY: maxY,
-                        lineBarsData: _generateLineBarsData(),
+                        lineBarsData: allLineBarsData,
                         clipData: const FlClipData.all(),
                       ),
                     ),
@@ -683,4 +732,7 @@ class _CentileChartState extends State<CentileChart> {
 
   }
 }
+
+
+
 
