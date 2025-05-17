@@ -16,7 +16,7 @@ const textColor = Color(0xFF000000);
 // New class for colors used specifically in the app, including chart colors
 class AppColours {
   // Colors for centile lines
-  static const Color centileLineColorNormal = primaryColour; // Using your primary color for normal lines
+  static const Color centileLineColorNormal = Color(0xFFFF8000);
   static const Color centileLineColorSDS = Colors.red; // Distinct color for extreme centiles (e.g., 0.4th, 99.6th)
 
   // Colors for growth data points

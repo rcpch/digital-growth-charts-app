@@ -394,7 +394,7 @@ class _CentileChartState extends State<CentileChart> {
               dotPainter: FlDotCrossPainter(
                 size: 12,
                 color: AppColours.correctedPointColor, // Make sure AppColours is accessible
-                width: 1.0,
+                width: 2.0,
               ),
             ),
             'originalData': response,
