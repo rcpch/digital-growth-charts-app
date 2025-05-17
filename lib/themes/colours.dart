@@ -8,6 +8,7 @@ const primaryColourLight = Color(0xFFf0fafe);
 const primaryColourDark = Color(0xFF3366cc);
 const secondaryColour = Color(0xFFe00087);
 const secondaryColourLight = Color(0xFFFFDEEA);
+const transitionLineColour = Colors.grey;
 
 const background = Color(0xFFFFFFFF);
 const textColor = Color(0xFF000000);

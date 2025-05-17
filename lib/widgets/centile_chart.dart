@@ -8,6 +8,7 @@ import '../classes/digital_growth_charts_api_response.dart';
 import 'package:digital_growth_charts_app/services/centile_chart_data_utils.dart';
 import '../classes/digital_growth_charts_chart_coordinates_response.dart';
 import './segmented_buttons.dart';
+import '../classes/vertical_lines.dart';
 
 class CentileChart extends StatefulWidget {
   final OrganizedCentileLines organizedCentileLines;
@@ -517,6 +518,58 @@ class _CentileChartState extends State<CentileChart> {
     }
   }
 
+  List<VerticalLine> _generateUKWHOLines(Sex sex) {
+    List<VerticalLine> ukWHOVerticalLines = [];
+    List<VerticalUKWHOLine> pubertalUKWHOVerticalLines = [];
+    List<VerticalLine> pubertalVerticalLines = [];
+    if (sex == Sex.female) {
+      pubertalUKWHOVerticalLines = girlPubertalCutoffs;
+    } else if (sex == Sex.male) {
+      pubertalUKWHOVerticalLines = boyPubertalCutoffs;
+    }
+    ukWHOVerticalLines = ukWHOVerticalLinesBaseData.map((ukWHODataLine){
+      return VerticalLine(
+        x: ukWHODataLine.decimal_age, // Use decimal_age for the x-coordinate
+        strokeWidth: 1.5,
+        color: ukWHODataLine.lineColor, // Use color from your custom object
+        label: VerticalLineLabel(
+          show: true,
+          labelResolver: (value) {
+            // This function is called for each VerticalLine.
+            // We use the 'comment' from the corresponding customLineData.
+            return ukWHODataLine.comment;
+          },
+          direction: LabelDirection.vertical,
+          style: TextStyle(
+            fontSize: 10,
+            color: ukWHODataLine.lineColor,
+          ),
+        ),
+      );
+    }).toList();
+
+    pubertalVerticalLines = pubertalUKWHOVerticalLines.map((pubertalDataLine){
+      return VerticalLine(
+        x: pubertalDataLine.decimal_age, // Use decimal_age for the x-coordinate
+        strokeWidth: 1.5,
+        color: pubertalDataLine.lineColor, // Use color from your custom object
+        label: VerticalLineLabel(
+          show: true,
+          labelResolver: (value) {
+            // This function is called for each VerticalLine.
+            // We use the 'comment' from the corresponding customLineData.
+            return pubertalDataLine.comment;
+          },
+          direction: LabelDirection.vertical,
+          style: TextStyle(
+            fontSize: 10,
+            color: pubertalDataLine.lineColor,
+          ),
+        ),
+      );
+    }).toList();;
+    return ukWHOVerticalLines + pubertalVerticalLines;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -605,6 +658,10 @@ class _CentileChartState extends State<CentileChart> {
                         maxY: maxY,
                         lineBarsData: allLineBarsData,
                         clipData: const FlClipData.all(),
+                        extraLinesData: ExtraLinesData(
+                          verticalLines: _generateUKWHOLines(widget.sex),
+                        ),
+                        borderData: FlBorderData(show: false),
                       ),
                     ),
                     // Labels along the right axis
