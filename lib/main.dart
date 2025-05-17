@@ -26,6 +26,9 @@ class DGCApp extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(
           title: const Text('RCPCH Digital Growth Charts'),
+          centerTitle: true,
+          backgroundColor: seedColor,
+          foregroundColor: Colors.white,
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -35,7 +38,7 @@ class DGCApp extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.all(30),
                 child: Image(
-                  image: AssetImage('assets/images/pixelated_rcpch_incubator_alpha.png'),
+                  image: AssetImage('assets/images/incubator_alpha.png'),
                   fit: BoxFit.fitWidth,
                   width: 150,
                 ),

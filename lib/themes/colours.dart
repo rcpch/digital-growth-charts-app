@@ -62,7 +62,10 @@ class DigitalGrowthChartsTheme {
       ),
       // You can add other theme properties here, like typography, shapes, etc.
       // textTheme: const TextTheme(...),
-      // appBarTheme: const AppBarTheme(...),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: seedColor,
+        foregroundColor: Colors.white,
+      ),
       // buttonTheme: const ButtonThemeData(...),
     );
   }

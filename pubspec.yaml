@@ -69,6 +69,7 @@ flutter:
   assets:
     - .env  # Dash is indented under assets, path is indented two spaces from dash
     - assets/images/pixelated_rcpch_incubator_alpha.png
+    - assets/images/incubator_alpha.png
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
