@@ -449,26 +449,22 @@ class _CentileChartState extends State<CentileChart> {
     }
   }
 
-  // SideTitles _getBottomTitles() {
-  //
-  //   // Example: If x-axis is in days, show labels every year
-  //   const double intervalInDays = 365.25; // Approximate days in a year
-  //
-  //   return SideTitles(
-  //     showTitles: true,
-  //     reservedSize: 40,
-  //     interval: 4, // Show labels every year
-  //     getTitlesWidget: (value, meta) {
-  //       // Customize the title text based on the value (age in days)
-  //       final int years = (value / intervalInDays).round();
-  //       return SideTitleWidget(
-  //         space: 8.0, // Space between the title and the axis line
-  //         meta: meta, // Pass the meta object here
-  //         child: Text('${value}y'),
-  //       );
-  //     },
-  //   );
-  // }
+  SideTitles _getBottomTitles() {
+
+    return SideTitles(
+      showTitles: true,
+      reservedSize: 40,
+      interval: 1, // Show labels every year
+      getTitlesWidget: (value, meta) {
+        // Customize the title text based on the value (age in days)
+        return SideTitleWidget(
+          space: 8.0, // Space between the title and the axis line
+          meta: meta, // Pass the meta object here
+          child: value % 1 == 0 ? Text('${value.toString()} y') : Text(''),
+        );
+      },
+    );
+  }
 
   // Function to get Y-axis side titles (labels)
   SideTitles _getLeftTitles() {
@@ -576,15 +572,15 @@ class _CentileChartState extends State<CentileChart> {
                       LineChartData(
                         gridData: const FlGridData(show: false),
                         titlesData: FlTitlesData(
-                          // bottomTitles: AxisTitles(
-                          //   sideTitles: _getBottomTitles(), // This will need to be adjusted when we scope the x-axis to the data
-                          //   axisNameWidget: Text(
-                          //     _getXAxisTitle(),
-                          //     style: const TextStyle(
-                          //         fontWeight: FontWeight.bold, fontSize: 12), // Customize style
-                          //   ),
-                          //   axisNameSize: 20,
-                          // ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: _getBottomTitles(), // This will need to be adjusted when we scope the x-axis to the data
+                            axisNameWidget: Text(
+                              _getXAxisTitle(),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 12), // Customize style
+                            ),
+                            axisNameSize: 20,
+                          ),
                           leftTitles: AxisTitles(
                             sideTitles: _getLeftTitles(),
                             axisNameWidget: Text(
@@ -607,6 +603,7 @@ class _CentileChartState extends State<CentileChart> {
                         clipData: const FlClipData.all(),
                       ),
                     ),
+                    // Labels along the right axis
                     if (_generateScatterSpots().isNotEmpty)
                       ScatterChart(
                         ScatterChartData(
@@ -615,15 +612,15 @@ class _CentileChartState extends State<CentileChart> {
                           scatterSpots: scatterSpots,
                           titlesData: FlTitlesData(
                             show: true,
-                            // bottomTitles: AxisTitles(
-                            //   sideTitles: _getBottomTitles(), // This will need to be adjusted when we scope the x-axis to the data
-                            //   axisNameWidget: Text(
-                            //     _getXAxisTitle(),
-                            //     style: const TextStyle(
-                            //         fontWeight: FontWeight.bold, fontSize: 12), // Customize style
-                            //   ),
-                            //   axisNameSize: 20,
-                            // ),
+                            bottomTitles: AxisTitles(
+                              sideTitles: _getBottomTitles(), // This will need to be adjusted when we scope the x-axis to the data
+                              axisNameWidget: Text(
+                                _getXAxisTitle(),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 12, color: Colors.transparent), // Customize style
+                              ),
+                              axisNameSize: 20,
+                            ),
                             leftTitles: AxisTitles(
                               sideTitles: _getLeftTitles(),
                               axisNameWidget: Text(
@@ -694,12 +691,6 @@ class _CentileChartState extends State<CentileChart> {
                            ),
                         ),
                       ),
-                     // Labels along the right axis
-                     LayoutBuilder(
-                       builder: (context, constraints) {
-                         return Stack(children: _buildRightAxisLabels(constraints));
-                       },
-                     ),
                   ],
                 );
               },
