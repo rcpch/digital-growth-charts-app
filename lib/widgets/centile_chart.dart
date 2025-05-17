@@ -63,6 +63,14 @@ class _CentileChartState extends State<CentileChart> {
 
   static const double _paddingFactor = 0.05; // 5% padding
 
+  bool _isLifeCourseView = false; // Default to not life course view (zoomed in)
+
+  void _toggleLifeCourseView() {
+    setState(() {
+      _isLifeCourseView = !_isLifeCourseView;
+    });
+  }
+
   List<double> _getMeasurementXValues() {
     final List<double> measurementX = [];
     for (final response in widget.growthDataForMethod) {
@@ -116,7 +124,7 @@ class _CentileChartState extends State<CentileChart> {
 
     final measurementXValues = _getMeasurementXValues();
 
-    if (measurementXValues.isEmpty) {
+    if (measurementXValues.isEmpty || _isLifeCourseView) {
       // NO MEASUREMENTS: Default to a view of the start of centiles.
       final allCentileX = _getCentileXValues();
       if (allCentileX.isEmpty) return -0.5; // Absolute default if no data at all
@@ -137,23 +145,17 @@ class _CentileChartState extends State<CentileChart> {
   }
 
   double get maxX {
-    // if (_isZoomedToFullLifeCourse) {
-    //   final allCentileX = _getCentileXValues();
-    //   if (allCentileX.isEmpty) return 20.0; // Or your chart's absolute latest X
-    //   return allCentileX.reduce((a, b) => a > b ? a : b) + 0.1; // Buffer for full view
-    // }
 
     final measurementXValues = _getMeasurementXValues();
 
-    if (measurementXValues.isEmpty) {
+    if (measurementXValues.isEmpty || _isLifeCourseView) {
       // NO MEASUREMENTS:
       final allCentileX = _getCentileXValues();
-      if (allCentileX.isEmpty) return 2.0; // Absolute default
+      if (allCentileX.isEmpty) return 20.0; // Absolute default
 
       final double centileDataStart = allCentileX.reduce((a, b) => a < b ? a : b);
-      // Default view shows, for example, up to 2 years from the centile data start,
-      // but not exceeding a max like 20. Ensure a minimum window.
-      return (centileDataStart + 2.0).clamp(centileDataStart + 0.5, 20.0);
+      // Default view
+      return (centileDataStart + 20.0).clamp(centileDataStart + 0.5, 20.0);
     }
 
     // HAVE MEASUREMENTS:
@@ -166,18 +168,6 @@ class _CentileChartState extends State<CentileChart> {
   }
 
   double get minY {
-    // if (_isZoomedToFullLifeCourse) {
-    //   // Logic for full Y range of all centiles and measurements
-    //   final allCentileY = _getCentileYValues();
-    //   final allMeasurementY = _getMeasurementYValues();
-    //   final allY = [...allCentileY, ...allMeasurementY];
-    //   if (allY.isEmpty) return 0.0;
-    //   final double dataMinY = allY.reduce((a, b) => a < b ? a : b);
-    //   final double dataMaxY = allY.reduce((a, b) => a > b ? a : b);
-    //   final double range = dataMaxY - dataMinY;
-    //   final double padding = (range > 0) ? range * _paddingFactor : 1.0;
-    //   return (dataMinY - padding).clamp(0.0, double.infinity);
-    // }
 
     // For the focused view, consider Y values of measurements and visible centile segments
     final currentMinX = minX; // Get the already calculated minX for the current view
@@ -201,7 +191,7 @@ class _CentileChartState extends State<CentileChart> {
       }
     }
 
-    if (relevantYValues.isEmpty) {
+    if (relevantYValues.isEmpty || _isLifeCourseView) {
       final allCentileY = _getCentileYValues();
       if (allCentileY.isEmpty) return 0.0; // Absolute default min Y
       relevantYValues.addAll(allCentileY); // Broaden to all centiles if focused view yields nothing
@@ -218,18 +208,6 @@ class _CentileChartState extends State<CentileChart> {
   }
 
   double get maxY {
-    // if (_isZoomedToFullLifeCourse) {
-    //   // Logic for full Y range of all centiles and measurements
-    //   final allCentileY = _getCentileYValues();
-    //   final allMeasurementY = _getMeasurementYValues();
-    //   final allY = [...allCentileY, ...allMeasurementY];
-    //   if (allY.isEmpty) return 100.0; // Arbitrary default max Y
-    //   final double dataMinY = allY.reduce((a, b) => a < b ? a : b);
-    //   final double dataMaxY = allY.reduce((a, b) => a > b ? a : b);
-    //   final double range = dataMaxY - dataMinY;
-    //   final double padding = (range > 0) ? range * _paddingFactor : 1.0;
-    //   return dataMaxY + padding;
-    // }
 
     final currentMinX = minX;
     final currentMaxX = maxX;
@@ -248,7 +226,7 @@ class _CentileChartState extends State<CentileChart> {
       }
     }
 
-    if (relevantYValues.isEmpty) {
+    if (relevantYValues.isEmpty || _isLifeCourseView) {
       final allCentileY = _getCentileYValues();
       if (allCentileY.isEmpty) return 100.0; // Absolute default max Y
       relevantYValues.addAll(allCentileY);
@@ -721,6 +699,25 @@ class _CentileChartState extends State<CentileChart> {
                            ),
                         ),
                       ),
+                    Align(
+                        alignment: Alignment.bottomLeft,
+                        child: Padding( // Optional padding around the button itself
+                          padding: const EdgeInsets.all(10.0),
+                          child: IconButton(
+                              icon: Icon(
+                                _isLifeCourseView ? Icons.zoom_in_map : Icons.zoom_out_map,
+                                semanticLabel: _isLifeCourseView ? "Zoom to data" : "Show full life course",
+                              ),
+                              tooltip: _isLifeCourseView ? "Zoom to fit data" : "Show full life course view",
+                              onPressed: _toggleLifeCourseView,
+                              iconSize: 30.0,
+                              style: ButtonStyle(
+                                backgroundColor: WidgetStateProperty.all<Color>(primaryColour),
+                              ),
+                              color: Colors.white,
+
+                            ),
+                ))
                   ],
                 );
               },
