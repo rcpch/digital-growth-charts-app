@@ -449,8 +449,12 @@ class _CentileChartState extends State<CentileChart> {
 
   // Determine the appropriate title for the axes based on the measurement method
   String _getXAxisTitle() {
-
-    return 'Age (years)'; // Adjust based on your API's x-axis units
+    if (maxX <= 0.0383){
+      return 'Gestational age (weeks)';
+    } else if (maxX <= 2) {
+      return 'Age (months/years)';
+    }
+    return 'Age (years)';
   }
 
   String _getYAxisTitle() {
@@ -473,13 +477,32 @@ class _CentileChartState extends State<CentileChart> {
     return SideTitles(
       showTitles: true,
       reservedSize: 40,
-      interval: 1, // Show labels every year
       getTitlesWidget: (value, meta) {
-        // Customize the title text based on the value (age in days)
+        // Customize the title text based on age
+        Widget titleWidget = Text('');
+        if (value == meta.min || value == meta.max) {
+          titleWidget = Text('');
+        }
+        else if (value < 0.0383){
+          const one_week = 0.0191;
+          titleWidget = Text('${(40+(value / one_week)).toStringAsFixed(0)} w');
+        }
+        else if (value < 2) {
+          if (value % 1 == 0){
+            titleWidget = Text('${value.toString()} yrs');
+          } else if (value * 12 % 1 == 0){
+            titleWidget = Text('${(value).toStringAsFixed(1)} mths');
+          }
+        } else if (value % 1 == 0){
+          titleWidget = Text('${value.toString()} yrs');
+        }
+        else {
+          titleWidget = Text('');
+        }
         return SideTitleWidget(
           space: 8.0, // Space between the title and the axis line
           meta: meta, // Pass the meta object here
-          child: value % 1 == 0 ? Text('${value.toString()} y') : Text(''),
+          child: titleWidget
         );
       },
     );
@@ -519,6 +542,7 @@ class _CentileChartState extends State<CentileChart> {
   }
 
   List<VerticalLine> _generateUKWHOLines(Sex sex) {
+    // creates vertical line cut offs for UK-WHO chart
     List<VerticalLine> ukWHOVerticalLines = [];
     List<VerticalUKWHOLine> pubertalUKWHOVerticalLines = [];
     List<VerticalLine> pubertalVerticalLines = [];
@@ -661,7 +685,15 @@ class _CentileChartState extends State<CentileChart> {
                         extraLinesData: ExtraLinesData(
                           verticalLines: _generateUKWHOLines(widget.sex),
                         ),
-                        borderData: FlBorderData(show: false),
+                        borderData: FlBorderData(
+                            show: true,
+                            border: Border(
+                                bottom: BorderSide(color: Colors.grey.shade300, width: 1),
+                                left: BorderSide(color: Colors.grey.shade300, width: 1),
+                                right: BorderSide(color: Colors.transparent, width: 1),
+                                top: BorderSide(color: Colors.transparent, width: 1),
+                            )
+                        ),
                       ),
                     ),
                     // Labels along the right axis
