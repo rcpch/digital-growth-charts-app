@@ -5,6 +5,7 @@ import '../definitions/enums.dart';
 
 class ResultsDataTable extends StatelessWidget {
   // The list of API response objects
+
   final Map<MeasurementMethod, List<GrowthDataResponse>> organizedGrowthData;
 
   const ResultsDataTable({Key? key, required this.organizedGrowthData})

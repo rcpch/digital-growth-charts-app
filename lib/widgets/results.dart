@@ -43,16 +43,36 @@ class _ResultsPageState extends State<ResultsPage> {
   int _currentPage = 0;
   // List of MeasurementMethods for which we have growth data
   List<MeasurementMethod> _availableCharts = [];
+  late final List<Widget> _pageViewChildren; // holds the actual pages
+  // Add a page for the data table
+  static const int _dataTablePageIndex = -1; // Use a sentinel value for the data table page
+
+
+  // Calculate the total number of pages (charts + data table)
+  int get _numPages => _availableCharts.length + (_availableCharts.isNotEmpty ? 1 : 0);
+  // Only add the data table page if there is at least one chart
 
 
   @override
   void initState() {
     super.initState();
-    // Determine which charts are available based on the growth data
-    _availableCharts = widget.organizedGrowthData.keys.toList();
-
-    // Initialize PageController with the initial page set to the first available chart
     _pageController = PageController(initialPage: 0);
+    _buildAvailableCharts();  // Changed from _buildPageViewChildren
+  }
+
+  @override
+  void didUpdateWidget(covariant ResultsPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    bool growthDataChanged = widget.organizedGrowthData != oldWidget.organizedGrowthData;
+
+    if (growthDataChanged) {
+      setState(() {
+        _buildAvailableCharts();  // Changed from _buildPageViewChildren
+        if (_currentPage >= _numPages) {
+          _currentPage = _numPages - 1;
+        }
+      });
+    }
   }
 
   // Helper to get the chart title based on MeasurementMethod and Sex
@@ -84,12 +104,6 @@ class _ResultsPageState extends State<ResultsPage> {
     }
   }
 
-  // Add a page for the data table
-  static const int _dataTablePageIndex = -1; // Use a sentinel value for the data table page
-
-  // Calculate the total number of pages (charts + data table)
-  int get _numPages => _availableCharts.length + (_availableCharts.isNotEmpty ? 1 : 0);
-  // Only add the data table page if there is at least one chart
 
   // Function to navigate to a specific page
   void _goToPage(int page) {
@@ -106,10 +120,59 @@ class _ResultsPageState extends State<ResultsPage> {
     super.dispose();
   }
 
+  void _buildAvailableCharts() {
+    _availableCharts = widget.organizedGrowthData.entries
+        .where((entry) => entry.value.isNotEmpty)
+        .map((entry) => entry.key)
+        .toList();
+  }
+
+  Widget _buildPageViewItem(int index) {
+    // If it's the last page and we have charts, it's the data table
+    if (index == _availableCharts.length && _availableCharts.isNotEmpty) {
+      return ResultsDataTable(
+        key: const PageStorageKey('data_table'),
+        organizedGrowthData: widget.organizedGrowthData,
+      );
+    }
+
+
+
+    // Otherwise it's a chart
+    final method = _availableCharts[index];
+    // Debug print the actual data points
+    return CentileChart(
+      key: PageStorageKey('chart_$method'),
+      organizedCentileLines: widget.organizedCentileLines,
+      measurementMethod: method,
+      sex: widget.sex,
+      growthDataForMethod: widget.organizedGrowthData[method]!,
+      dob: widget.dob,
+      gestationWeeks: widget.gestationWeeks,
+      gestationDays: widget.gestationDays,
+    );
+  }
+
+  Widget _buildPageView() {
+    return PageView.builder(
+      key: const ValueKey('pageView'),
+      controller: _pageController,
+      itemCount: _numPages,
+      itemBuilder: (context, index) {
+        return _buildPageViewItem(index);
+      },
+      onPageChanged: (index) {
+        setState(() {
+          _currentPage = index;
+        });
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // If no growth data, show a message
-    if (_availableCharts.isEmpty) {
+    if (_availableCharts.isEmpty) {  // Changed from _pageViewChildren.isEmpty
       return Scaffold(
         appBar: AppBar(
           title: const Text('Growth Chart Results'),
@@ -119,6 +182,7 @@ class _ResultsPageState extends State<ResultsPage> {
         ),
       );
     }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Growth Chart Results'),
@@ -126,75 +190,44 @@ class _ResultsPageState extends State<ResultsPage> {
       body: Column(
         children: [
           Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: _numPages, // Total number of pages (charts + data table)
-              onPageChanged: (index) {
-                setState(() {
-                  _currentPage = index;
-                });
-              },
-              itemBuilder: (context, index) {
-                if (index < _availableCharts.length) {
-                  // This index corresponds to a chart page
-                  final currentMeasurementMethod = _availableCharts[index];
-                  final growthDataForThisChart = widget.organizedGrowthData[currentMeasurementMethod] ?? [];
-
-                  // Build a CentileChart for the current measurement method
-                  return CentileChart(
-                    organizedCentileLines: widget.organizedCentileLines, // Pass the full centile data cache
-                    measurementMethod: currentMeasurementMethod, // Pass the specific method for this page
-                    sex: widget.sex, // Pass the fixed sex
-                    growthDataForMethod: growthDataForThisChart, // Pass filtered growth data
-                    dob: widget.dob, // Pass fixed DOB
-                    gestationWeeks: widget.gestationWeeks, // Pass fixed gestation
-                    gestationDays: widget.gestationDays,   // Pass fixed gestation
-                  );
-                } else {
-                  // This index corresponds to the data table page (_numPages - 1)
-                  // Build the ResultsDataTable
-                  return ResultsDataTable(organizedGrowthData: widget.organizedGrowthData);
-                }
-              },
-            ),
+              child: _buildPageView()
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Column(
-              children: [
-                SmoothPageIndicator(
-                  controller: _pageController,
-                  count: _numPages,
-                  effect: WormEffect(
-                    dotColor: Colors.grey,
-                    activeDotColor: Theme.of(context).primaryColor,
-                    dotHeight: 8.0,
-                    dotWidth: 8.0,
-                    spacing: 5.0,
+          if (_availableCharts.isNotEmpty)  // Changed from _pageViewChildren.isNotEmpty
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Column(
+                children: [
+                  SmoothPageIndicator(
+                    controller: _pageController,
+                    count: _numPages,
+                    effect: WormEffect(
+                      dotColor: Colors.grey,
+                      activeDotColor: Theme.of(context).primaryColor,
+                      dotHeight: 8.0,
+                      dotWidth: 8.0,
+                      spacing: 5.0,
+                    ),
+                    onDotClicked: (index) {
+                      _goToPage(index);
+                    },
                   ),
-                  onDotClicked: (index) {
-                    _goToPage(index);
-                  },
-                ),
-                const SizedBox(height: 8.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    TextButton(
-                      // Enable/disable based on whether the current page is the first chart page
-                      onPressed: _currentPage > 0 ? () => _goToPage(0) : null,
-                      child: const Text('Chart'),
-                    ),
-                    TextButton(
-                      // Enable/disable based on whether the current page is the data table page
-                      onPressed: _currentPage < _numPages - 1 ? () => _goToPage(_numPages - 1) : null,
-                      child: const Text('Details'),
-                    ),
-                  ],
-                ),
-              ],
+                  const SizedBox(height: 8.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      TextButton(
+                        onPressed: _currentPage > 0 ? () => _goToPage(0) : null,
+                        child: const Text('Chart'),
+                      ),
+                      TextButton(
+                        onPressed: _currentPage < _numPages - 1 ? () => _goToPage(_numPages - 1) : null,
+                        child: const Text('Details'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );

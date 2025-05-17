@@ -106,7 +106,6 @@ class DigitalGrowthChartsService {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
-        print('Response data: $responseData');
         return DigitalGrowthChartsCentileLines.fromJson(responseData);
       } else {
         throw Exception('Failed to load chart coordinates: ${response.statusCode}');

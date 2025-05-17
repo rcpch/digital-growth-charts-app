@@ -1,12 +1,12 @@
 import 'package:digital_growth_charts_app/definitions/helpers.dart';
 import 'package:digital_growth_charts_app/themes/colours.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../definitions/enums.dart';
 import '../classes/digital_growth_charts_api_response.dart';
 import 'package:digital_growth_charts_app/services/centile_chart_data_utils.dart';
 import '../classes/digital_growth_charts_chart_coordinates_response.dart';
-import '../classes/centile_labels.dart';
 
 class CentileChart extends StatefulWidget {
   final OrganizedCentileLines organizedCentileLines;
@@ -16,7 +16,6 @@ class CentileChart extends StatefulWidget {
   final DateTime dob;
   final int? gestationWeeks;
   final int? gestationDays;
-
 
   const CentileChart({
     Key? key,
@@ -31,30 +30,236 @@ class CentileChart extends StatefulWidget {
 
   @override
   State<CentileChart> createState() => _CentileChartState();
+
+  @override
+  bool operator == (Object other) {
+    if (identical(this, other)) return true;
+    return other is CentileChart &&
+        other.measurementMethod == measurementMethod &&
+        other.sex == sex &&
+        other.dob == dob &&
+        other.gestationWeeks == gestationWeeks &&
+        other.gestationDays == gestationDays &&
+        listEquals(other.growthDataForMethod, growthDataForMethod) &&
+        other.organizedCentileLines == organizedCentileLines;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    measurementMethod,
+    sex,
+    dob,
+    gestationWeeks,
+    gestationDays,
+    Object.hashAll(growthDataForMethod),
+    organizedCentileLines,
+  );
 }
 
 class _CentileChartState extends State<CentileChart> {
+
   AgeCorrectionMethod _selectedPlotType = AgeCorrectionMethod.chronological;
 
-  double get _minX => _getCentileXValues().reduce((a, b) => a < b ? a : b);
-  double get _maxX => _getCentileXValues().reduce((a, b) => a > b ? a : b);
-  double get _minY => _getCentileYValues().reduce((a, b) => a < b ? a : b);
-  double get _maxY => _getCentileYValues().reduce((a, b) => a > b ? a : b);
+  static const double _paddingFactor = 0.05; // 5% padding
+
+  List<double> _getMeasurementXValues() {
+    final List<double> measurementX = [];
+    for (final response in widget.growthDataForMethod) {
+      final chronologicalX = response.plottableData?.centileData?.chronologicalDecimalAgeData?.x;
+      final correctedX = response.plottableData?.centileData?.correctedDecimalAgeData?.x;
+      if (chronologicalX != null) measurementX.add(chronologicalX);
+      if (correctedX != null) measurementX.add(correctedX);
+    }
+    return measurementX;
+  }
+
+// Helper to get Y values *only* from the scatter spots
+  List<double> _getMeasurementYValues() {
+    final List<double> measurementY = [];
+    for (final response in widget.growthDataForMethod) {
+      final chronologicalY = response.plottableData?.centileData?.chronologicalDecimalAgeData?.y;
+      final correctedY = response.plottableData?.centileData?.correctedDecimalAgeData?.y;
+      if (chronologicalY != null) measurementY.add(chronologicalY);
+      if (correctedY != null) measurementY.add(correctedY);
+    }
+    return measurementY;
+  }
 
   List<double> _getCentileXValues() {
     final centilePoints = widget.organizedCentileLines[widget.sex]?[widget.measurementMethod];
+    if (centilePoints == null || centilePoints.isEmpty) {
+      return <double>[];
+    }
     return centilePoints
-        ?.expand((cp) => cp.data?.map((p) => p.x ?? 0.0).cast<double>() ?? const <double>[])
-        .toList() ??
-        <double>[0.0];
+        .expand((cp) => cp.data?.map((p) => p.x).whereType<double>() ?? const <double>[])
+        .toList();
   }
 
   List<double> _getCentileYValues() {
     final centilePoints = widget.organizedCentileLines[widget.sex]?[widget.measurementMethod];
+    if (centilePoints == null || centilePoints.isEmpty) {
+      return <double>[];
+    }
     return centilePoints
-        ?.expand((cp) => cp.data?.map((p) => p.y ?? 0.0).cast<double>() ?? const <double>[])
-        .toList() ??
-        <double>[0.0];
+        .expand((cp) => cp.data?.map((p) => p.y).whereType<double>() ?? const <double>[])
+        .toList();
+  }
+
+  double get minX {
+    // When _isZoomedToFullLifeCourse is true, this will be different
+    // if (_isZoomedToFullLifeCourse) {
+    //   final allCentileX = _getCentileXValues();
+    //   if (allCentileX.isEmpty) return -0.5; // Or your chart's absolute earliest X
+    //   return allCentileX.reduce((a, b) => a < b ? a : b) - 0.1; // Buffer for full view
+    // }
+
+    final measurementXValues = _getMeasurementXValues();
+
+    if (measurementXValues.isEmpty) {
+      // NO MEASUREMENTS: Default to a view of the start of centiles.
+      final allCentileX = _getCentileXValues();
+      if (allCentileX.isEmpty) return -0.5; // Absolute default if no data at all
+      // Show a small window from the very beginning of the centile data.
+      // This ensures even preterm centiles are visible if no measurements exist.
+      final double centileDataStart = allCentileX.reduce((a, b) => a < b ? a : b);
+      // You might want a fixed default window, e.g., centileDataStart to centileDataStart + 2
+      return centileDataStart - 0.1; // Small padding before the earliest centile data
+    }
+
+    // HAVE MEASUREMENTS: Base the view on the measurement range.
+    final double dataMinX = measurementXValues.reduce((a, b) => a < b ? a : b);
+    final double dataMaxX = measurementXValues.reduce((a, b) => a > b ? a : b);
+    final double range = dataMaxX - dataMinX;
+    // Padding: 5% of range, or 0.5 units (e.g., years) if single point/no range.
+    final double padding = (range > 0) ? range * _paddingFactor : 0.5;
+    return dataMinX - padding; // Ensure this allows negative values if dataMinX is negative
+  }
+
+  double get maxX {
+    // if (_isZoomedToFullLifeCourse) {
+    //   final allCentileX = _getCentileXValues();
+    //   if (allCentileX.isEmpty) return 20.0; // Or your chart's absolute latest X
+    //   return allCentileX.reduce((a, b) => a > b ? a : b) + 0.1; // Buffer for full view
+    // }
+
+    final measurementXValues = _getMeasurementXValues();
+
+    if (measurementXValues.isEmpty) {
+      // NO MEASUREMENTS:
+      final allCentileX = _getCentileXValues();
+      if (allCentileX.isEmpty) return 2.0; // Absolute default
+
+      final double centileDataStart = allCentileX.reduce((a, b) => a < b ? a : b);
+      // Default view shows, for example, up to 2 years from the centile data start,
+      // but not exceeding a max like 20. Ensure a minimum window.
+      return (centileDataStart + 2.0).clamp(centileDataStart + 0.5, 20.0);
+    }
+
+    // HAVE MEASUREMENTS:
+    final double dataMinX = measurementXValues.reduce((a, b) => a < b ? a : b); // Recalculate for clarity
+    final double dataMaxX = measurementXValues.reduce((a, b) => a > b ? a : b);
+    final double range = dataMaxX - dataMinX;
+    final double padding = (range > 0) ? range * _paddingFactor : 0.5;
+
+    return dataMaxX + padding;
+  }
+
+  double get minY {
+    // if (_isZoomedToFullLifeCourse) {
+    //   // Logic for full Y range of all centiles and measurements
+    //   final allCentileY = _getCentileYValues();
+    //   final allMeasurementY = _getMeasurementYValues();
+    //   final allY = [...allCentileY, ...allMeasurementY];
+    //   if (allY.isEmpty) return 0.0;
+    //   final double dataMinY = allY.reduce((a, b) => a < b ? a : b);
+    //   final double dataMaxY = allY.reduce((a, b) => a > b ? a : b);
+    //   final double range = dataMaxY - dataMinY;
+    //   final double padding = (range > 0) ? range * _paddingFactor : 1.0;
+    //   return (dataMinY - padding).clamp(0.0, double.infinity);
+    // }
+
+    // For the focused view, consider Y values of measurements and visible centile segments
+    final currentMinX = minX; // Get the already calculated minX for the current view
+    final currentMaxX = maxX; // Get the already calculated maxX for the current view
+
+    final List<double> relevantYValues = [];
+
+    // Add Y values from all child measurements
+    relevantYValues.addAll(_getMeasurementYValues());
+
+    // Add Y values from centile line segments that fall within the current X-axis view
+    final centileLineSeries = widget.organizedCentileLines[widget.sex]?[widget.measurementMethod];
+    if (centileLineSeries != null) {
+      for (final centileLine in centileLineSeries) {
+        centileLine.data?.forEach((point) {
+          // Check if the centile point's X value is within the visible range
+          if (point.x != null && point.y != null && point.x! >= currentMinX && point.x! <= currentMaxX) {
+            relevantYValues.add(point.y!);
+          }
+        });
+      }
+    }
+
+    if (relevantYValues.isEmpty) {
+      final allCentileY = _getCentileYValues();
+      if (allCentileY.isEmpty) return 0.0; // Absolute default min Y
+      relevantYValues.addAll(allCentileY); // Broaden to all centiles if focused view yields nothing
+      if (relevantYValues.isEmpty) return 0.0; // Still empty? Absolute default
+    }
+
+
+    final double dataMinY = relevantYValues.reduce((a, b) => a < b ? a : b);
+    final double dataMaxY = relevantYValues.reduce((a, b) => a > b ? a : b);
+    final double range = dataMaxY - dataMinY;
+    final double padding = (range > 0) ? range * _paddingFactor : 1.0; // 1.0 unit fixed padding for Y if single point or flat
+
+    return (dataMinY - padding).clamp(0.0, double.infinity); // Clamp Y at 0, common for growth charts
+  }
+
+  double get maxY {
+    // if (_isZoomedToFullLifeCourse) {
+    //   // Logic for full Y range of all centiles and measurements
+    //   final allCentileY = _getCentileYValues();
+    //   final allMeasurementY = _getMeasurementYValues();
+    //   final allY = [...allCentileY, ...allMeasurementY];
+    //   if (allY.isEmpty) return 100.0; // Arbitrary default max Y
+    //   final double dataMinY = allY.reduce((a, b) => a < b ? a : b);
+    //   final double dataMaxY = allY.reduce((a, b) => a > b ? a : b);
+    //   final double range = dataMaxY - dataMinY;
+    //   final double padding = (range > 0) ? range * _paddingFactor : 1.0;
+    //   return dataMaxY + padding;
+    // }
+
+    final currentMinX = minX;
+    final currentMaxX = maxX;
+    final List<double> relevantYValues = [];
+
+    relevantYValues.addAll(_getMeasurementYValues());
+
+    final centileLineSeries = widget.organizedCentileLines[widget.sex]?[widget.measurementMethod];
+    if (centileLineSeries != null) {
+      for (final centileLine in centileLineSeries) {
+        centileLine.data?.forEach((point) {
+          if (point.x != null && point.y != null && point.x! >= currentMinX && point.x! <= currentMaxX) {
+            relevantYValues.add(point.y!);
+          }
+        });
+      }
+    }
+
+    if (relevantYValues.isEmpty) {
+      final allCentileY = _getCentileYValues();
+      if (allCentileY.isEmpty) return 100.0; // Absolute default max Y
+      relevantYValues.addAll(allCentileY);
+      if (relevantYValues.isEmpty) return 100.0; // Still empty? Absolute default
+    }
+
+    final double dataMinY = relevantYValues.reduce((a, b) => a < b ? a : b);
+    final double dataMaxY = relevantYValues.reduce((a, b) => a > b ? a : b);
+    final double range = dataMaxY - dataMinY;
+    final double padding = (range > 0) ? range * _paddingFactor : 1.0;
+
+    return dataMaxY + padding;
   }
 
   List<Widget> _buildRightAxisLabels(BoxConstraints constraints) {
@@ -102,7 +307,7 @@ class _CentileChartState extends State<CentileChart> {
             .toList();
 
         final FlSpot rightmostSpot = spots.reduce((a, b) => a.x > b.x ? a : b);
-        final double normalizedY = (rightmostSpot.y - _minY) / (_maxY - _minY);
+        final double normalizedY = (rightmostSpot.y - minY) / (maxY - minY);
         final double topOffset = chartHeight * (1 - normalizedY);
 
         labels.add(
@@ -127,11 +332,6 @@ class _CentileChartState extends State<CentileChart> {
 
     return labels;
   }
-
-
-
-
-
 
 
   List<LineChartBarData> _generateLineBarsData() {
@@ -185,7 +385,6 @@ class _CentileChartState extends State<CentileChart> {
     for (final response in widget.growthDataForMethod) {
       final chronologicalData = response.plottableData?.centileData?.chronologicalDecimalAgeData;
       final correctedData = response.plottableData?.centileData?.correctedDecimalAgeData;
-
       // Add chronological point if selected to show or if 'both' is selected
       if (_selectedPlotType == AgeCorrectionMethod.chronological || _selectedPlotType == AgeCorrectionMethod.both) {
         if (chronologicalData?.x != null && chronologicalData?.y != null) {
@@ -214,7 +413,7 @@ class _CentileChartState extends State<CentileChart> {
               dotPainter: FlDotCrossPainter(
                 size: 12,
                 color: AppColours.correctedPointColor,
-                width: 2.0,
+                width: 1.0,
               ),
             ),
             'originalData': response, // Store the original response separately
@@ -250,26 +449,26 @@ class _CentileChartState extends State<CentileChart> {
     }
   }
 
-  SideTitles _getBottomTitles() {
-
-    // Example: If x-axis is in days, show labels every year
-    const double intervalInDays = 365.25; // Approximate days in a year
-
-    return SideTitles(
-      showTitles: true,
-      reservedSize: 40,
-      interval: 4, // Show labels every year
-      getTitlesWidget: (value, meta) {
-        // Customize the title text based on the value (age in days)
-        final int years = (value / intervalInDays).round();
-        return SideTitleWidget(
-          space: 8.0, // Space between the title and the axis line
-          meta: meta, // Pass the meta object here
-          child: Text('${value}y'),
-        );
-      },
-    );
-  }
+  // SideTitles _getBottomTitles() {
+  //
+  //   // Example: If x-axis is in days, show labels every year
+  //   const double intervalInDays = 365.25; // Approximate days in a year
+  //
+  //   return SideTitles(
+  //     showTitles: true,
+  //     reservedSize: 40,
+  //     interval: 4, // Show labels every year
+  //     getTitlesWidget: (value, meta) {
+  //       // Customize the title text based on the value (age in days)
+  //       final int years = (value / intervalInDays).round();
+  //       return SideTitleWidget(
+  //         space: 8.0, // Space between the title and the axis line
+  //         meta: meta, // Pass the meta object here
+  //         child: Text('${value}y'),
+  //       );
+  //     },
+  //   );
+  // }
 
   // Function to get Y-axis side titles (labels)
   SideTitles _getLeftTitles() {
@@ -299,6 +498,7 @@ class _CentileChartState extends State<CentileChart> {
   @override
   Widget build(BuildContext context) {
     // Determine chart title based on measurementMethod and sex
+
     String chartTitle = '';
     switch (widget.measurementMethod) {
       case MeasurementMethod.height:
@@ -317,7 +517,15 @@ class _CentileChartState extends State<CentileChart> {
 
     final List<Map<String, dynamic>> scatterDataWithDetails = _generateScatterSpots();
     final List<ScatterSpot> scatterSpots = scatterDataWithDetails.map((data) => data['spot'] as ScatterSpot).toList();
+    final currentMinX = minX; // Assuming minX is a getter
+    final currentMaxX = maxX;
+    final currentMinY = minY;
+    final currentMaxY = maxY;
 
+    final baseData = FlBorderData(
+      show: true,
+      border: Border.all(color: Colors.transparent),
+    );
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -361,20 +569,22 @@ class _CentileChartState extends State<CentileChart> {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return Stack(
+                  alignment: Alignment.center,
+                  fit: StackFit.expand,
                   children: [
                     LineChart(
                       LineChartData(
                         gridData: const FlGridData(show: false),
                         titlesData: FlTitlesData(
-                          bottomTitles: AxisTitles(
-                            sideTitles: _getBottomTitles(), // This will need to be adjusted when we scope the x-axis to the data
-                            axisNameWidget: Text(
-                              _getXAxisTitle(),
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 12), // Customize style
-                            ),
-                            axisNameSize: 20,
-                          ),
+                          // bottomTitles: AxisTitles(
+                          //   sideTitles: _getBottomTitles(), // This will need to be adjusted when we scope the x-axis to the data
+                          //   axisNameWidget: Text(
+                          //     _getXAxisTitle(),
+                          //     style: const TextStyle(
+                          //         fontWeight: FontWeight.bold, fontSize: 12), // Customize style
+                          //   ),
+                          //   axisNameSize: 20,
+                          // ),
                           leftTitles: AxisTitles(
                             sideTitles: _getLeftTitles(),
                             axisNameWidget: Text(
@@ -389,82 +599,107 @@ class _CentileChartState extends State<CentileChart> {
                           ),
                           topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                         ),
-                        minX: _minX,
-                        maxX: _maxX,
-                        minY: _minY,
-                        maxY: _maxY,
+                        minX: currentMinX,
+                        maxX: currentMaxX,
+                        minY: currentMinY,
+                        maxY: currentMaxY,
                         lineBarsData: _generateLineBarsData(),
+                        clipData: const FlClipData.all(),
                       ),
                     ),
                     if (_generateScatterSpots().isNotEmpty)
                       ScatterChart(
                         ScatterChartData(
+                          clipData: const FlClipData.all(),
                           gridData: const FlGridData(show: false),
                           scatterSpots: scatterSpots,
-                          titlesData: FlTitlesData(show: false),
-                          borderData: FlBorderData(show: false),
-                          minX: _minX,
-                          maxX: _maxX,
-                          minY: _minY,
-                          maxY: _maxY,
-                          scatterTouchData: ScatterTouchData(
-                            enabled: true,
-
-                            handleBuiltInTouches: true,
-                            mouseCursorResolver: (FlTouchEvent, ScatterTouchResponse) {
-                              return SystemMouseCursors.click;
-                            },
-                            touchTooltipData: ScatterTouchTooltipData(
-                              getTooltipItems: (ScatterSpot spot) {
-                                // Find the original data
-                                Map<String, dynamic>? touchedData;
-                                for (final data in scatterDataWithDetails) {
-                                  if (data['spot'].x == spot.x && data['spot'].y == spot.y) {
-                                    touchedData = data;
-                                    break; // Found the match, exit the loop
-                                  }
-                                }
-
-                                if (touchedData != null) {
-                                  // Now you have access to the original data and age type
-                                  final GrowthDataResponse originalResponse = touchedData['originalData'] as GrowthDataResponse;
-                                  final AgeCorrectionMethod ageType = touchedData['ageType'] as AgeCorrectionMethod;
-
-                                  // Build your tooltip string with meaningful data
-                                  String tooltipText = "${originalResponse.measurementDates?.observationDate ?? 'N/A'}\n${originalResponse.childObservationValue?.observationValue  ?? 'N/A'} ${getMeasurementMethodUnits(originalResponse.childObservationValue?.measurementMethod) ?? 'N/A'}";
-
-                                  // Add age and centile/SDS based on age type
-                                  if (ageType == AgeCorrectionMethod.chronological || ageType == AgeCorrectionMethod.both) {
-                                    tooltipText += "\nChronological Age: ${originalResponse.measurementDates?.chronologicalCalendarAge ?? 'N/A'}\nChronological Centile: ${originalResponse.measurementCalculatedValues?.chronologicalCentile ?? 'N/A'}";
-                                  }
-
-                                  if (ageType == AgeCorrectionMethod.corrected || ageType == AgeCorrectionMethod.both) {
-                                    tooltipText += "\nCorrected Age: ${originalResponse.measurementDates?.correctedCalendarAge ?? 'N/A'}\nCorrected Centile: ${originalResponse.measurementCalculatedValues?.correctedCentile ?? 'N/A'}\nInterpretation: ${originalResponse.measurementCalculatedValues?.correctedCentileBand ?? 'N/A'}";
-                                  }
-
-                                  return ScatterTooltipItem(
-                                    tooltipText,
-                                    textStyle: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 10, // Adjust font size for modal
-                                    ),
-                                    textDirection: TextDirection.ltr,
-                                    textAlign: TextAlign.left,
-                                  );
-                }
-                                return null; // Returning null means no tooltip will be shown
-                              },
+                          titlesData: FlTitlesData(
+                            show: true,
+                            // bottomTitles: AxisTitles(
+                            //   sideTitles: _getBottomTitles(), // This will need to be adjusted when we scope the x-axis to the data
+                            //   axisNameWidget: Text(
+                            //     _getXAxisTitle(),
+                            //     style: const TextStyle(
+                            //         fontWeight: FontWeight.bold, fontSize: 12), // Customize style
+                            //   ),
+                            //   axisNameSize: 20,
+                            // ),
+                            leftTitles: AxisTitles(
+                              sideTitles: _getLeftTitles(),
+                              axisNameWidget: Text(
+                                _getYAxisTitle(),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 12), // Customize style
+                              ),
+                              axisNameSize: 20,
                             ),
+                            rightTitles: AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                           ),
+                          borderData: FlBorderData(show: false),
+                          minX: currentMinX,
+                          maxX: currentMaxX,
+                          minY: currentMinY,
+                          maxY: currentMaxY,
+                           scatterTouchData: ScatterTouchData(
+                             enabled: true,
+                             handleBuiltInTouches: true,
+                             mouseCursorResolver: (FlTouchEvent, ScatterTouchResponse) {
+                               return SystemMouseCursors.click;
+                             },
+                             touchTooltipData: ScatterTouchTooltipData(
+                               getTooltipItems: (ScatterSpot spot) {
+                                 // Find the original data
+                                 Map<String, dynamic>? touchedData;
+                                 for (final data in scatterDataWithDetails) {
+                                   if (data['spot'].x == spot.x && data['spot'].y == spot.y) {
+                                     touchedData = data;
+                                     break; // Found the match, exit the loop
+                                   }
+                                 }
+
+                                 if (touchedData != null) {
+                                   // Now you have access to the original data and age type
+                                   final GrowthDataResponse originalResponse = touchedData['originalData'] as GrowthDataResponse;
+                                   final AgeCorrectionMethod ageType = touchedData['ageType'] as AgeCorrectionMethod;
+
+                                   // Build your tooltip string with meaningful data
+                                   String tooltipText = "${originalResponse.measurementDates?.observationDate ?? 'N/A'}\n${originalResponse.childObservationValue?.observationValue  ?? 'N/A'} ${getMeasurementMethodUnits(originalResponse.childObservationValue?.measurementMethod) ?? 'N/A'}";
+
+                                   // Add age and centile/SDS based on age type
+                                   if (ageType == AgeCorrectionMethod.chronological || ageType == AgeCorrectionMethod.both) {
+                                     tooltipText += "\nChronological Age: ${originalResponse.measurementDates?.chronologicalCalendarAge ?? 'N/A'}\nChronological Centile: ${originalResponse.measurementCalculatedValues?.chronologicalCentile ?? 'N/A'}";
+                                   }
+
+                                   if (ageType == AgeCorrectionMethod.corrected || ageType == AgeCorrectionMethod.both) {
+                                     tooltipText += "\nCorrected Age: ${originalResponse.measurementDates?.correctedCalendarAge ?? 'N/A'}\nCorrected Centile: ${originalResponse.measurementCalculatedValues?.correctedCentile ?? 'N/A'}\nInterpretation: ${originalResponse.measurementCalculatedValues?.correctedCentileBand ?? 'N/A'}";
+                                   }
+
+                                   return ScatterTooltipItem(
+                                     tooltipText,
+                                     textStyle: const TextStyle(
+                                       color: Colors.white,
+                                       fontWeight: FontWeight.bold,
+                                       fontSize: 10, // Adjust font size for modal
+                                     ),
+                                     textDirection: TextDirection.ltr,
+                                     textAlign: TextAlign.left,
+                                   );
+                 }
+                                 return null; // Returning null means no tooltip will be shown
+                               },
+                             ),
+                           ),
                         ),
                       ),
-                    // Labels along the right axis
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        return Stack(children: _buildRightAxisLabels(constraints));
-                      },
-                    ),
+                     // Labels along the right axis
+                     LayoutBuilder(
+                       builder: (context, constraints) {
+                         return Stack(children: _buildRightAxisLabels(constraints));
+                       },
+                     ),
                   ],
                 );
               },
@@ -475,6 +710,5 @@ class _CentileChartState extends State<CentileChart> {
     );
 
   }
-
 }
 
