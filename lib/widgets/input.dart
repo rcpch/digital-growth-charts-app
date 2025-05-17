@@ -206,12 +206,12 @@ class _InputFormState extends State<InputForm> {
         _fixedGestationDays = _selectedGestationDays;
       }
 
-      // Show a loading indicator (optional, but good for user experience)
+      // show loading
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Submitting data...'),
           backgroundColor: Colors.blueAccent,
-          duration: Duration(seconds: 2), // Keep it brief
+          duration: Duration(seconds: 2),
         ),
       );
 
@@ -338,13 +338,13 @@ class _InputFormState extends State<InputForm> {
             // Date of Birth Field
             TextFormField(
               controller: _dobController,
+              readOnly: _organizedGrowthData.isNotEmpty ? true : false,
               decoration: const InputDecoration(
                 labelText: 'Date of Birth',
                 suffixIcon: Icon(Icons.calendar_today),
                 border: OutlineInputBorder(),
               ),
-              readOnly: true,
-              onTap: () => _selectDate(context, _dobController, isDob: true),
+              onTap: _organizedGrowthData.isNotEmpty ? null : () => _selectDate(context, _dobController, isDob: true),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please select a Date of Birth';
@@ -420,7 +420,7 @@ class _InputFormState extends State<InputForm> {
                             child: Text('$weeks'),
                           );
                         }).toList(),
-                        onChanged: (int? newValue) {
+                        onChanged: _organizedGrowthData.isNotEmpty ? null : (int? newValue) {
                           if (newValue != null) {
                             setState(() {
                               _selectedGestationWeeks = newValue;
@@ -447,7 +447,7 @@ class _InputFormState extends State<InputForm> {
                             child: Text('$days'),
                           );
                         }).toList(),
-                        onChanged: (int? newValue) {
+                        onChanged: _organizedGrowthData.isNotEmpty ? null : (int? newValue) {
                           if (newValue != null) {
                             setState(() {
                               _selectedGestationDays = newValue;
@@ -481,7 +481,7 @@ class _InputFormState extends State<InputForm> {
                     value: Sex.male,
                     groupValue: _selectedSex,
                     // This variable holds the currently selected Sex
-                    onChanged: (Sex? value) {
+                    onChanged: _organizedGrowthData.isNotEmpty ? null : (Sex? value) {
                       setState(() {
                         _selectedSex =
                             value!; // Update the state with the selected Sex
@@ -494,7 +494,7 @@ class _InputFormState extends State<InputForm> {
                     title: const Text('Female'),
                     value: Sex.female,
                     groupValue: _selectedSex, // Use the same groupValue
-                    onChanged: (Sex? value) {
+                    onChanged: _organizedGrowthData.isNotEmpty ? null : (Sex? value) {
                       setState(() {
                         _selectedSex = value!; // Update the state
                       });
