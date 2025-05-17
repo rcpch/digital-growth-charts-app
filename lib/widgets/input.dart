@@ -1,3 +1,4 @@
+import 'package:digital_growth_charts_app/themes/colours.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/digital_growth_charts_services.dart';
@@ -10,6 +11,7 @@ import '../services/centile_chart_data_utils.dart';
 class _InputFormState extends State<InputForm> {
   // A GlobalKey to uniquely identify the Form widget
   final _formKey = GlobalKey<FormState>();
+  bool _canSubmit = false;
 
   final DigitalGrowthChartsService _digitalGrowthChartsService = DigitalGrowthChartsService();// API service
   Map<MeasurementMethod, List<GrowthDataResponse>> _organizedGrowthData = {};
@@ -45,6 +47,24 @@ class _InputFormState extends State<InputForm> {
   bool _showGestationFields = false;
   int _selectedGestationWeeks = 40; // Default to 40 weeks
   int _selectedGestationDays = 0;   // Default to 0 days
+
+  void _checkFormValidity() {
+    // Validate the form and update the _canSubmit state
+    // The null check for currentState is important if the form might not be built yet.
+    if (_formKey.currentState != null && _formKey.currentState!.validate()) {
+      if (!_canSubmit) {
+        setState(() {
+          _canSubmit = true;
+        });
+      }
+    } else {
+      if (_canSubmit) {
+        setState(() {
+          _canSubmit = false;
+        });
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -304,6 +324,12 @@ class _InputFormState extends State<InputForm> {
     return Form( // Wrap your form content in a Form widget
       key: _formKey, // Assign the GlobalKey
       autovalidateMode: AutovalidateMode.onUserInteraction,
+      onChanged: (){
+        setState(() {
+          _canSubmit = _formKey.currentState?.validate() ?? false;
+        });
+        _checkFormValidity();
+      },
       child: SingleChildScrollView( // Add SingleChildScrollView to prevent overflow on smaller screens
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -597,18 +623,60 @@ class _InputFormState extends State<InputForm> {
 
             // Submit Button
             ElevatedButton(
-              onPressed: _submitForm,
-              child: const Text('Submit'),
+              onPressed: _canSubmit ? _submitForm : null,
+              child: const Text('Submit', style: TextStyle(color: Colors.white)),
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+                      (Set<WidgetState> states) {
+                        if (states.contains(WidgetState.disabled)) {
+                          return Colors.grey; // Optional: custom disabled color
+                        }
+                        if (states.contains(WidgetState.pressed)) {
+                          return secondaryColour;
+                        }
+                    return primaryColour; // Use the component's default.
+                  }),
+                shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(0),
+                  ),
+                )),
             ),
             // Reset Button
             ElevatedButton(
               onPressed: _hardResetForm,
-              child: const Text('Reset'),
+              child: const Text('Reset', style: TextStyle(color: Colors.white),),
+              style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+                          (Set<WidgetState> states) {
+                        if (states.contains(WidgetState.pressed)) {
+                          return secondaryColour;
+                        } else {
+                          return primaryColour; // Use the component's default.
+                        }}),
+                  shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(0),
+                    ),
+                  )),
             ),
           // Conditionally visible button to navigate to ResultsPage
           if (_organizedGrowthData.isNotEmpty) // Check if there's data
             ElevatedButton(
-              child: const Text('View Results'),
+              child: const Text('View Charts', style: TextStyle(color: Colors.white)),
+                style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+                            (Set<WidgetState> states) {
+                          if (states.contains(WidgetState.pressed)) {
+                            return secondaryColour;
+                          } else {
+                            return primaryColour; // Use the component's default.
+                          }}),
+                    shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(0),
+                      ),
+                    )),
               onPressed: () {
                 Navigator.push(
                     context,
