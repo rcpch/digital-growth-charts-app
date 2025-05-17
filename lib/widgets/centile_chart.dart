@@ -7,6 +7,7 @@ import '../definitions/enums.dart';
 import '../classes/digital_growth_charts_api_response.dart';
 import 'package:digital_growth_charts_app/services/centile_chart_data_utils.dart';
 import '../classes/digital_growth_charts_chart_coordinates_response.dart';
+import './segmented_buttons.dart';
 
 class CentileChart extends StatefulWidget {
   final OrganizedCentileLines organizedCentileLines;
@@ -427,7 +428,6 @@ class _CentileChartState extends State<CentileChart> {
   }
 
 
-
   // Determine the appropriate title for the axes based on the measurement method
   String _getXAxisTitle() {
 
@@ -490,6 +490,14 @@ class _CentileChartState extends State<CentileChart> {
     );
   }
 
+  void _handlePlotTypeChanged(AgeCorrectionMethod newPlotType) {
+    if (_selectedPlotType != newPlotType) {
+      setState(() {
+        _selectedPlotType = newPlotType;
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -514,11 +522,6 @@ class _CentileChartState extends State<CentileChart> {
     final List<Map<String, dynamic>> scatterDataWithDetails = _generateScatterSpots();
     final List<ScatterSpot> scatterSpots = scatterDataWithDetails.map((data) => data['spot'] as ScatterSpot).toList();
 
-    final baseData = FlBorderData(
-      show: true,
-      border: Border.all(color: Colors.transparent),
-    );
-
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -529,31 +532,9 @@ class _CentileChartState extends State<CentileChart> {
           ),
           const SizedBox(height: 12),
           // Toggle buttons
-          ToggleButtons(
-            isSelected: [
-              _selectedPlotType == AgeCorrectionMethod.chronological,
-              _selectedPlotType == AgeCorrectionMethod.corrected,
-              _selectedPlotType == AgeCorrectionMethod.both,
-            ],
-            onPressed: (int index) {
-              setState(() {
-                _selectedPlotType = AgeCorrectionMethod.values[index];
-              });
-            },
-            children: const [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: Text('Chronological'),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: Text('Corrected'),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: Text('Both'),
-              ),
-            ],
+          RCPCHSegmentedButtonWidget(
+            selectedPlotType: _selectedPlotType,
+            onPlotTypeChanged: _handlePlotTypeChanged,
           ),
           const SizedBox(height: 12),
           // Chart area
