@@ -1,0 +1,31 @@
+name: Build and test app on PRs
+
+on:
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4 # latest as at April 2025
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.3'
+
+      - name: Set up .env file
+        env:
+          ENV_FILE_CONTENTS: 
+        shell: bash
+        run: |
+            echo "${{secrets.ENV_FILE_CONTENTS}}" | base64 --decode > .env
+
+      - name: Run PR check script (test and build)
+        env:
+          BUILD_NUMBER: ${{github.run_number}}
+        run: s/pr-check
