@@ -26,3 +26,4 @@ doc/api/
 
 # Don't commit environment variables
 .env
+android/key.properties
