@@ -91,4 +91,4 @@ Android emulator stderr:
 Address these issues and try again.
 ```
 
-Try cold booting the Emulator. Go to the Android Virtual Device Manager in Android Studio and select "Cold Boot".
+Try cold booting the Emulator. Go to the Android Virtual Device Manager in Android Studio ("View" > "Device Manager") and select "Cold Boot".
