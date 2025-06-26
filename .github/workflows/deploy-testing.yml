@@ -1,0 +1,56 @@
+name: Build app and release to test users
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+
+permissions:
+  id-token: write
+  contents: read
+
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4 # latest as at April 2025
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.3'
+      
+      - name: Set up .env file
+        run: echo "${{ secrets.ENV_FILE_CONTENTS }}" >> .env
+
+      - name: Decode Android keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > android/keystore.jks
+
+      - name: Decode Android key properties
+        run: echo "${{ secrets.ANDROID_KEY_PROPERTIES }}" | base64 --decode > android/key.properties
+
+      - name: Run CI script (test and build)
+        env:
+          BUILD_NUMBER: ${{github.run_number}}
+        run: s/ci
+
+      - id: authenticate
+        name: Authenticate with Google
+        uses: google-github-actions/auth@v2 # latest as at April 2025
+        with:
+          service_account: rcpch-growth-charts-app@rcpch-growth-charts-app.iam.gserviceaccount.com
+          workload_identity_provider: projects/221963061860/locations/global/workloadIdentityPools/github/providers/rcpch-growth-charts-app
+          create_credentials_file: true
+
+      - name: Upload to Internal Test Track
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: ${{ steps.authenticate.outputs.credentials_file_path }}
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          packageName: uk.ac.rcpch.digital_growth_charts_app
+          track: internal

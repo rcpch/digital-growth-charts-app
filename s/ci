@@ -1,0 +1,7 @@
+#!/bin/bash -e
+
+flutter pub get
+flutter test
+
+# Android
+flutter build appbundle --build-number ${BUILD_NUMBER}
