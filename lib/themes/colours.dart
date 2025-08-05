@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // Your existing base colors
 const seedColor = Color(0xFF11a7f2); // Your original primary color
@@ -18,7 +19,7 @@ class AppColours {
   // Colors for centile lines
   static const Color centileLineColorNormal = Color(0xFFFF8000);
   static const Color centileLineColorSDS = Colors.red; // Distinct color for extreme centiles (e.g., 0.4th, 99.6th)
-
+  static const Color tooltipBackgroundColor = primaryColourDark;
   // Colors for growth data points
   static const Color chronologicalPointColor = Colors.black; // Color for chronological measurement points
   static const Color correctedPointColor = Colors.black; // Using your secondary color for corrected points
@@ -53,15 +54,8 @@ class DigitalGrowthChartsTheme {
         // You can also define other colors from your palette here
         primary: primaryColour,
         primaryContainer: primaryColourLight,
-        // secondary: secondaryColour, // Uncomment and set if you want to use secondary color in the M3 scheme
-        // secondaryContainer: secondaryColourLight, // Uncomment and set
-        // error: Colors.red, // Example error color
-        // onPrimary: Colors.white, // Example color on primary
-        // onSurface: textColor, // Already set above
-        // onError: Colors.white, // Example color on error
       ),
-      // You can add other theme properties here, like typography, shapes, etc.
-      // textTheme: const TextTheme(...),
+      textTheme: GoogleFonts.montserratTextTheme(),
       appBarTheme: const AppBarTheme(
         backgroundColor: seedColor,
         foregroundColor: Colors.white,
