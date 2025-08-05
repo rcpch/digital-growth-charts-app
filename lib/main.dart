@@ -22,7 +22,7 @@ class DGCApp extends StatelessWidget {
       theme: DigitalGrowthChartsTheme.defaultTheme,
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('RCPCH Digital Growth Charts'),
+          title: const Text('RCPCH Digital Growth Charts', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           centerTitle: true,
         ),
         body: SingleChildScrollView(
