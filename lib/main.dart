@@ -19,16 +19,11 @@ class DGCApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'RCPCH Digital Growth Charts',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: seedColor),
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
+      theme: DigitalGrowthChartsTheme.defaultTheme,
       home: Scaffold(
         appBar: AppBar(
           title: const Text('RCPCH Digital Growth Charts'),
           centerTitle: true,
-          backgroundColor: seedColor,
-          foregroundColor: Colors.white,
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),

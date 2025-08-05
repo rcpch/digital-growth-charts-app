@@ -742,7 +742,7 @@ class _CentileChartState extends State<CentileChart> {
                              touchTooltipData: ScatterTouchTooltipData(
                                tooltipBorderRadius: BorderRadius.only(topLeft: Radius.zero, topRight: Radius.zero,bottomLeft: Radius.zero, bottomRight: Radius.zero),
                                getTooltipColor: (ScatterSpot spot) {
-                                  return primaryColour;
+                                  return AppColours.tooltipBackgroundColor;
                               },
                                getTooltipItems: (ScatterSpot spot) {
                                  // Find the original data
