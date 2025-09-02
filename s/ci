@@ -4,4 +4,7 @@ flutter pub get
 flutter test
 
 # Android
-flutter build appbundle --build-number ${BUILD_NUMBER}
+flutter build appbundle \
+  --build-number ${BUILD_NUMBER} \
+  --dart-define=API_URL=$API_URL \
+  --dart-define=API_KEY=$API_KEY
