@@ -18,14 +18,9 @@ jobs:
         with:
           flutter-version: '3.35.2'
 
-      - name: Set up .env file
-        env:
-          ENV_FILE_CONTENTS: 
-        shell: bash
-        run: |
-            echo "${{secrets.ENV_FILE_CONTENTS}}" | base64 --decode > .env
-
       - name: Run PR check script (test and build)
         env:
           BUILD_NUMBER: ${{github.run_number}}
+          DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
+          DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
         run: s/pr-check
