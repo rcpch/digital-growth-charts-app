@@ -18,6 +18,9 @@ jobs:
         with:
           flutter-version: '3.35.2'
 
+      - name: Create dummy .env for CI build (if needed by pubspec.yaml assets)
+        run: touch .env # Creates an empty .env file
+
       - name: Run PR check script (test and build)
         env:
           BUILD_NUMBER: ${{github.run_number}}

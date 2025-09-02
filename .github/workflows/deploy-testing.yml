@@ -25,6 +25,9 @@ jobs:
         with:
           flutter-version: '3.35.2'
 
+      - name: Create dummy .env for CI build (if needed by pubspec.yaml assets)
+        run: touch .env # Creates an empty .env file
+
       - name: Decode Android keystore
         run: echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > android/keystore.jks
 
