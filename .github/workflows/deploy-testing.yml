@@ -1,19 +1,15 @@
 name: Build app and release to test users
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-
+  release:
+    types: [published]
 
 permissions:
   id-token: write
   contents: read
 
-
 jobs:
-  build-and-publish:
+  build-and-publish-android:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,6 +20,18 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.35.2'
+
+      - name: Extract version from pubspec.yaml and set build number (Android)
+        id: get_version_android
+        run: |
+          VERSION_NAME=$(grep '^version:' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          BUILD_NUMBER=$GITHUB_RUN_NUMBER
+
+          echo "Detected Android Version Name: $VERSION_NAME"
+          echo "Generated Android Build Number: $BUILD_NUMBER"
+
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
 
       - name: Create dummy .env for CI build (if needed by pubspec.yaml assets)
         run: touch .env # Creates an empty .env file: this is necessary to satisfy pubspec.yaml assets declaration, but it is empty so dart-defines will be used
