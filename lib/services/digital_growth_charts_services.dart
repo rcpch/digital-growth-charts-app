@@ -4,13 +4,14 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 
 // RCPCH imports
+import '/classes/app_config.dart';
 import '/classes/digital_growth_charts_api_response.dart';
 import '/classes/digital_growth_charts_chart_coordinates_response.dart';
 import '../definitions/enums.dart';
 
 class DigitalGrowthChartsService {
-  final String _baseUrl = dotenv.env['DGC_BASE_URL'] ?? '';
-  final String _apiKey = dotenv.env['DGC_API_KEY'] ?? '';
+  final String _baseUrl = AppConfig.apiUrl;
+  final String _apiKey = AppConfig.apiKey;
 
   // calculation endpoint
   Future<GrowthDataResponse> submitGrowthData({

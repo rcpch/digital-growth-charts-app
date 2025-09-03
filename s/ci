@@ -1,7 +1,25 @@
 #!/bin/bash -e
 
+# These environment variables DGC_BASE_URL and DGC_API_KEY
+# are expected to be set by the calling GitHub Actions workflow step's 'env:' block.
+# BUILD_NUMBER is also expected from the environment.
+
+DEFINES_TO_PASS=""
+if [ -n "$DGC_BASE_URL" ]; then
+    DEFINES_TO_PASS="--dart-define=DGC_BASE_URL=$DGC_BASE_URL $DEFINES_TO_PASS"
+fi
+if [ -n "$DGC_API_KEY" ]; then
+    DEFINES_TO_PASS="--dart-define=DGC_API_KEY=$DGC_API_KEY $DEFINES_TO_PASS"
+fi
+# Add any other dart-defines you need in a similar way
+
 flutter pub get
-flutter test
+
+echo "Running flutter test with defines: ${DEFINES_TO_PASS}"
+flutter test ${DEFINES_TO_PASS}
 
 # Android
-flutter build appbundle --build-number ${BUILD_NUMBER}
+flutter build appbundle --release \
+  --build-number ${BUILD_NUMBER} \
+  --dart-define=API_URL=$API_URL \
+  --dart-define=API_KEY=$API_KEY

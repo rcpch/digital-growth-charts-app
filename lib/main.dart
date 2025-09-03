@@ -1,13 +1,16 @@
 // libraries
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // RCPCH imports
+import '/classes/app_config.dart';
 import './themes/colours.dart';
 import './widgets/input.dart';
 
 void main() async{
-  await dotenv.load();
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Only load .env if dart-defines are not provided
+  await AppConfig.init();
   runApp(const DGCApp());
 }
 
