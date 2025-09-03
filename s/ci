@@ -19,7 +19,7 @@ echo "Running flutter test with defines: ${DEFINES_TO_PASS}"
 flutter test ${DEFINES_TO_PASS}
 
 # Android
-flutter build appbundle \
+flutter build appbundle --release \
   --build-number ${BUILD_NUMBER} \
   --dart-define=API_URL=$API_URL \
   --dart-define=API_KEY=$API_KEY
