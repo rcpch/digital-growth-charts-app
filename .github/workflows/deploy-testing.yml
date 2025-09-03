@@ -26,7 +26,7 @@ jobs:
           flutter-version: '3.35.2'
 
       - name: Create dummy .env for CI build (if needed by pubspec.yaml assets)
-        run: touch .env # Creates an empty .env file
+        run: touch .env # Creates an empty .env file: this is necessary to satisfy pubspec.yaml assets declaration, but it is empty so dart-defines will be used
 
       - name: Decode Android keystore
         run: echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > android/keystore.jks
