@@ -1,15 +1,11 @@
-String getMeasurementMethodLabel(String? measurementMethod){
-
+String getMeasurementMethodLabel(String? measurementMethod) {
   if (measurementMethod == 'height') {
     return "Height";
-  }
-  else if (measurementMethod == 'weight') {
+  } else if (measurementMethod == 'weight') {
     return "Weight";
-  }
-  else if (measurementMethod == 'ofc') {
+  } else if (measurementMethod == 'ofc') {
     return "Head Circumference";
-  }
-  else if (measurementMethod == 'bmi') {
+  } else if (measurementMethod == 'bmi') {
     return "BMI";
   } else {
     return "";
@@ -19,14 +15,11 @@ String getMeasurementMethodLabel(String? measurementMethod){
 String getMeasurementMethodUnits(String? measurementMethod) {
   if (measurementMethod == 'height') {
     return "cm";
-  }
-  else if (measurementMethod == 'weight') {
+  } else if (measurementMethod == 'weight') {
     return "kg";
-  }
-  else if (measurementMethod == 'ofc') {
+  } else if (measurementMethod == 'ofc') {
     return "cm";
-  }
-  else if (measurementMethod == 'bmi') {
+  } else if (measurementMethod == 'bmi') {
     return "kg/m²";
   } else {
     return "";

@@ -6,37 +6,32 @@ part of 'digital_growth_charts_chart_coordinates_response.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-
 Map<String, dynamic> _$DigitalGrowthChartsCentileLinesToJson(
   DigitalGrowthChartsCentileLines instance,
 ) => <String, dynamic>{'centile_data': instance.centileData};
 
 ReferenceData _$ReferenceDataFromJson(Map<String, dynamic> json) =>
     ReferenceData(
-      ukWhoChild:
-          json['uk_who_child'] == null
-              ? null
-              : SexMeasurementData.fromJson(
-                json['uk_who_child'] as Map<String, dynamic>,
-              ),
-      uk90Child:
-          json['uk90_child'] == null
-              ? null
-              : SexMeasurementData.fromJson(
-                json['uk90_child'] as Map<String, dynamic>,
-              ),
-      ukWhoInfant:
-          json['uk_who_infant'] == null
-              ? null
-              : SexMeasurementData.fromJson(
-                json['uk_who_infant'] as Map<String, dynamic>,
-              ),
-      uk90Preterm:
-          json['uk90_preterm'] == null
-              ? null
-              : SexMeasurementData.fromJson(
-                json['uk90_preterm'] as Map<String, dynamic>,
-              ),
+      ukWhoChild: json['uk_who_child'] == null
+          ? null
+          : SexMeasurementData.fromJson(
+              json['uk_who_child'] as Map<String, dynamic>,
+            ),
+      uk90Child: json['uk90_child'] == null
+          ? null
+          : SexMeasurementData.fromJson(
+              json['uk90_child'] as Map<String, dynamic>,
+            ),
+      ukWhoInfant: json['uk_who_infant'] == null
+          ? null
+          : SexMeasurementData.fromJson(
+              json['uk_who_infant'] as Map<String, dynamic>,
+            ),
+      uk90Preterm: json['uk90_preterm'] == null
+          ? null
+          : SexMeasurementData.fromJson(
+              json['uk90_preterm'] as Map<String, dynamic>,
+            ),
     );
 
 Map<String, dynamic> _$ReferenceDataToJson(ReferenceData instance) =>
@@ -49,16 +44,12 @@ Map<String, dynamic> _$ReferenceDataToJson(ReferenceData instance) =>
 
 SexMeasurementData _$SexMeasurementDataFromJson(Map<String, dynamic> json) =>
     SexMeasurementData(
-      male:
-          json['male'] == null
-              ? null
-              : MaleMeasurements.fromJson(json['male'] as Map<String, dynamic>),
-      female:
-          json['female'] == null
-              ? null
-              : FemaleMeasurements.fromJson(
-                json['female'] as Map<String, dynamic>,
-              ),
+      male: json['male'] == null
+          ? null
+          : MaleMeasurements.fromJson(json['male'] as Map<String, dynamic>),
+      female: json['female'] == null
+          ? null
+          : FemaleMeasurements.fromJson(json['female'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$SexMeasurementDataToJson(SexMeasurementData instance) =>
@@ -66,22 +57,18 @@ Map<String, dynamic> _$SexMeasurementDataToJson(SexMeasurementData instance) =>
 
 MaleMeasurements _$MaleMeasurementsFromJson(Map<String, dynamic> json) =>
     MaleMeasurements(
-      height:
-          (json['height'] as List<dynamic>?)
-              ?.map((e) => CentileDataPoint.fromJson(e as Map<String, dynamic>))
-              .toList(),
-      weight:
-          (json['weight'] as List<dynamic>?)
-              ?.map((e) => CentileDataPoint.fromJson(e as Map<String, dynamic>))
-              .toList(),
-      ofc:
-          (json['ofc'] as List<dynamic>?)
-              ?.map((e) => CentileDataPoint.fromJson(e as Map<String, dynamic>))
-              .toList(),
-      bmi:
-          (json['bmi'] as List<dynamic>?)
-              ?.map((e) => CentileDataPoint.fromJson(e as Map<String, dynamic>))
-              .toList(),
+      height: (json['height'] as List<dynamic>?)
+          ?.map((e) => CentileDataPoint.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      weight: (json['weight'] as List<dynamic>?)
+          ?.map((e) => CentileDataPoint.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      ofc: (json['ofc'] as List<dynamic>?)
+          ?.map((e) => CentileDataPoint.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      bmi: (json['bmi'] as List<dynamic>?)
+          ?.map((e) => CentileDataPoint.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$MaleMeasurementsToJson(MaleMeasurements instance) =>
@@ -94,22 +81,18 @@ Map<String, dynamic> _$MaleMeasurementsToJson(MaleMeasurements instance) =>
 
 FemaleMeasurements _$FemaleMeasurementsFromJson(Map<String, dynamic> json) =>
     FemaleMeasurements(
-      height:
-          (json['height'] as List<dynamic>?)
-              ?.map((e) => CentileDataPoint.fromJson(e as Map<String, dynamic>))
-              .toList(),
-      weight:
-          (json['weight'] as List<dynamic>?)
-              ?.map((e) => CentileDataPoint.fromJson(e as Map<String, dynamic>))
-              .toList(),
-      ofc:
-          (json['ofc'] as List<dynamic>?)
-              ?.map((e) => CentileDataPoint.fromJson(e as Map<String, dynamic>))
-              .toList(),
-      bmi:
-          (json['bmi'] as List<dynamic>?)
-              ?.map((e) => CentileDataPoint.fromJson(e as Map<String, dynamic>))
-              .toList(),
+      height: (json['height'] as List<dynamic>?)
+          ?.map((e) => CentileDataPoint.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      weight: (json['weight'] as List<dynamic>?)
+          ?.map((e) => CentileDataPoint.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      ofc: (json['ofc'] as List<dynamic>?)
+          ?.map((e) => CentileDataPoint.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      bmi: (json['bmi'] as List<dynamic>?)
+          ?.map((e) => CentileDataPoint.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$FemaleMeasurementsToJson(FemaleMeasurements instance) =>
@@ -124,10 +107,9 @@ CentileDataPoint _$CentileDataPointFromJson(Map<String, dynamic> json) =>
     CentileDataPoint(
       sds: (json['sds'] as num?)?.toDouble(),
       centile: (json['centile'] as num?)?.toDouble(),
-      data:
-          (json['data'] as List<dynamic>?)
-              ?.map((e) => DataPointValue.fromJson(e as Map<String, dynamic>))
-              .toList(),
+      data: (json['data'] as List<dynamic>?)
+          ?.map((e) => DataPointValue.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$CentileDataPointToJson(CentileDataPoint instance) =>

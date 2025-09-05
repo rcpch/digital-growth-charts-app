@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../themes/colours.dart';
 import '../definitions/enums.dart';
 
-
 class RCPCHSegmentedButtonWidget extends StatelessWidget {
   final AgeCorrectionMethod selectedPlotType;
   final ValueChanged<AgeCorrectionMethod> onPlotTypeChanged;
@@ -15,7 +14,6 @@ class RCPCHSegmentedButtonWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return SegmentedButton<AgeCorrectionMethod>(
       showSelectedIcon: false,
       segments: const <ButtonSegment<AgeCorrectionMethod>>[
@@ -45,7 +43,9 @@ class RCPCHSegmentedButtonWidget extends StatelessWidget {
       selected: <AgeCorrectionMethod>{selectedPlotType},
       onSelectionChanged: (Set<AgeCorrectionMethod> newSelection) {
         if (newSelection.isNotEmpty) {
-          onPlotTypeChanged(newSelection.first); // Call the callback from the parent
+          onPlotTypeChanged(
+            newSelection.first,
+          ); // Call the callback from the parent
         }
       },
       style: ButtonStyle(
@@ -54,27 +54,24 @@ class RCPCHSegmentedButtonWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(0), // Zero border radius
           ),
         ),
-        backgroundColor: WidgetStateProperty.resolveWith<Color?>(
-              (Set<WidgetState> states) {
-            if (states.contains(WidgetState.selected)) {
-              return primaryColourDark; // Selected background color
-            }
-            return primaryColour;      // Unselected background color
-          },
-        ),
+        backgroundColor: WidgetStateProperty.resolveWith<Color?>((
+          Set<WidgetState> states,
+        ) {
+          if (states.contains(WidgetState.selected)) {
+            return primaryColourDark; // Selected background color
+          }
+          return primaryColour; // Unselected background color
+        }),
         foregroundColor: WidgetStateProperty.all<Color?>(
           Colors.white, // Text color for all states
         ),
         textStyle: WidgetStateProperty.all<TextStyle>(
-          const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
+          const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
         ),
         side: WidgetStateProperty.all<BorderSide>(
           const BorderSide(
             color: Colors.transparent, // Set border color to transparent
-            width: 0,                  // Set border width to 0 (optional but good practice)
+            width: 0, // Set border width to 0 (optional but good practice)
           ),
         ),
       ),

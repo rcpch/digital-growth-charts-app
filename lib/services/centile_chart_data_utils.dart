@@ -3,12 +3,14 @@ import 'package:digital_growth_charts_app/classes/digital_growth_charts_chart_co
 import 'package:fl_chart/fl_chart.dart';
 import 'package:digital_growth_charts_app/classes/digital_growth_charts_api_response.dart';
 
-
 // Define a type for the organized chart data
 // Map: Sex -> Map: MeasurementMethod -> List of CentileDataPoint
-typedef OrganizedCentileLines = Map<Sex, Map<MeasurementMethod, List<CentileDataPoint>>>;
+typedef OrganizedCentileLines =
+    Map<Sex, Map<MeasurementMethod, List<CentileDataPoint>>>;
 
-OrganizedCentileLines organizeCentileLines(DigitalGrowthChartsCentileLines centileLinesResponse) {
+OrganizedCentileLines organizeCentileLines(
+  DigitalGrowthChartsCentileLines centileLinesResponse,
+) {
   final OrganizedCentileLines organizedData = {
     Sex.male: {
       MeasurementMethod.height: [],
@@ -42,16 +44,24 @@ OrganizedCentileLines organizeCentileLines(DigitalGrowthChartsCentileLines centi
           if (sexMeasurementData.male != null) {
             // Check if data exists and add it to the list for the corresponding measurement method
             if (sexMeasurementData.male!.height != null) {
-              organizedData[Sex.male]![MeasurementMethod.height]?.addAll(sexMeasurementData.male!.height!);
+              organizedData[Sex.male]![MeasurementMethod.height]?.addAll(
+                sexMeasurementData.male!.height!,
+              );
             }
             if (sexMeasurementData.male!.weight != null) {
-              organizedData[Sex.male]![MeasurementMethod.weight]?.addAll(sexMeasurementData.male!.weight!);
+              organizedData[Sex.male]![MeasurementMethod.weight]?.addAll(
+                sexMeasurementData.male!.weight!,
+              );
             }
             if (sexMeasurementData.male!.ofc != null) {
-              organizedData[Sex.male]![MeasurementMethod.ofc]?.addAll(sexMeasurementData.male!.ofc!);
+              organizedData[Sex.male]![MeasurementMethod.ofc]?.addAll(
+                sexMeasurementData.male!.ofc!,
+              );
             }
             if (sexMeasurementData.male!.bmi != null) {
-              organizedData[Sex.male]![MeasurementMethod.bmi]?.addAll(sexMeasurementData.male!.bmi!);
+              organizedData[Sex.male]![MeasurementMethod.bmi]?.addAll(
+                sexMeasurementData.male!.bmi!,
+              );
             }
           }
 
@@ -59,23 +69,30 @@ OrganizedCentileLines organizeCentileLines(DigitalGrowthChartsCentileLines centi
           if (sexMeasurementData.female != null) {
             // Check if data exists and add it to the list for the corresponding measurement method
             if (sexMeasurementData.female!.height != null) {
-              organizedData[Sex.female]![MeasurementMethod.height]?.addAll(sexMeasurementData.female!.height!);
+              organizedData[Sex.female]![MeasurementMethod.height]?.addAll(
+                sexMeasurementData.female!.height!,
+              );
             }
             if (sexMeasurementData.female!.weight != null) {
-              organizedData[Sex.female]![MeasurementMethod.weight]?.addAll(sexMeasurementData.female!.weight!);
+              organizedData[Sex.female]![MeasurementMethod.weight]?.addAll(
+                sexMeasurementData.female!.weight!,
+              );
             }
             if (sexMeasurementData.female!.ofc != null) {
-              organizedData[Sex.female]![MeasurementMethod.ofc]?.addAll(sexMeasurementData.female!.ofc!);
+              organizedData[Sex.female]![MeasurementMethod.ofc]?.addAll(
+                sexMeasurementData.female!.ofc!,
+              );
             }
             if (sexMeasurementData.female!.bmi != null) {
-              organizedData[Sex.female]![MeasurementMethod.bmi]?.addAll(sexMeasurementData.female!.bmi!);
+              organizedData[Sex.female]![MeasurementMethod.bmi]?.addAll(
+                sexMeasurementData.female!.bmi!,
+              );
             }
           }
         }
       }
     }
   }
-
 
   return organizedData;
 }
@@ -84,8 +101,5 @@ class GrowthDataScatterData {
   final ScatterSpot spot;
   final GrowthDataResponse originalData; // Store the original data
 
-  GrowthDataScatterData({
-    required this.spot,
-    required this.originalData,
-  });
+  GrowthDataScatterData({required this.spot, required this.originalData});
 }

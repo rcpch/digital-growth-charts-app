@@ -140,7 +140,8 @@ class Comments {
     this.layChronologicalDecimalAgeComment,
   });
 
-  factory Comments.fromJson(Map<String, dynamic> json) => _$CommentsFromJson(json);
+  factory Comments.fromJson(Map<String, dynamic> json) =>
+      _$CommentsFromJson(json);
 
   Map<String, dynamic> toJson() => _$CommentsToJson(this);
 }
@@ -215,10 +216,7 @@ class PlottableData {
   @JsonKey(name: 'sds_data')
   final SdsData? sdsData;
 
-  PlottableData({
-    this.centileData,
-    this.sdsData,
-  });
+  PlottableData({this.centileData, this.sdsData});
 
   factory PlottableData.fromJson(Map<String, dynamic> json) =>
       _$PlottableDataFromJson(json);
@@ -233,10 +231,7 @@ class CentileData {
   @JsonKey(name: 'corrected_decimal_age_data')
   final PlottableDataEntry? correctedDecimalAgeData;
 
-  CentileData({
-    this.chronologicalDecimalAgeData,
-    this.correctedDecimalAgeData,
-  });
+  CentileData({this.chronologicalDecimalAgeData, this.correctedDecimalAgeData});
 
   factory CentileData.fromJson(Map<String, dynamic> json) =>
       _$CentileDataFromJson(json);
@@ -251,10 +246,7 @@ class SdsData {
   @JsonKey(name: 'corrected_decimal_age_data')
   final PlottableDataEntry? correctedDecimalAgeData;
 
-  SdsData({
-    this.chronologicalDecimalAgeData,
-    this.correctedDecimalAgeData,
-  });
+  SdsData({this.chronologicalDecimalAgeData, this.correctedDecimalAgeData});
 
   factory SdsData.fromJson(Map<String, dynamic> json) =>
       _$SdsDataFromJson(json);
@@ -363,9 +355,7 @@ class EventsData {
   @JsonKey(name: 'events_text')
   final String? eventsText;
 
-  EventsData({
-    this.eventsText,
-  });
+  EventsData({this.eventsText});
 
   factory EventsData.fromJson(Map<String, dynamic> json) =>
       _$EventsDataFromJson(json);

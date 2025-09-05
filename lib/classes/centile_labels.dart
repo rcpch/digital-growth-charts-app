@@ -6,6 +6,10 @@ class CentileLabel {
   final String label;
   final Color color;
 
-  CentileLabel({required this.x, required this.y, required this.label, required this.color});
+  CentileLabel({
+    required this.x,
+    required this.y,
+    required this.label,
+    required this.color,
+  });
 }
-

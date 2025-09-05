@@ -50,9 +50,11 @@ class DigitalGrowthChartsService {
         requestBody['ofc'] = double.tryParse(observationValue);
         break;
       case MeasurementMethod.bmi:
-        requestBody['bmi'] = double.tryParse(observationValue); // Adjust key if needed
+        requestBody['bmi'] = double.tryParse(
+          observationValue,
+        ); // Adjust key if needed
         break;
-      }
+    }
 
     try {
       final response = await http.post(
@@ -70,17 +72,20 @@ class DigitalGrowthChartsService {
         return GrowthDataResponse.fromJson(responseData);
       } else {
         // API call failed
-        final String descriptiveErrorMessage = parseApiError(response.body, response.statusCode);
+        final String descriptiveErrorMessage = parseApiError(
+          response.body,
+          response.statusCode,
+        );
         throw Exception('${response.statusCode}: $descriptiveErrorMessage');
       }
     } catch (e) {
       // Handle any exceptions during the API call (e.g., network errors)
       developer.log(
-          'Error submitting growth data: $e',
-          level: LogLevel.warning,
-          name: 'DigitalGrowthChartsService',
-          error: e,
-          stackTrace: StackTrace.current,
+        'Error submitting growth data: $e',
+        level: LogLevel.warning,
+        name: 'DigitalGrowthChartsService',
+        error: e,
+        stackTrace: StackTrace.current,
       );
 
       rethrow; // Rethrow the exception to be handled by the caller
@@ -92,7 +97,9 @@ class DigitalGrowthChartsService {
     required Sex sex,
     required MeasurementMethod measurementMethod,
   }) async {
-    final url = Uri.parse('$_baseUrl/uk-who/chart-coordinates'); // Adjust the endpoint if needed
+    final url = Uri.parse(
+      '$_baseUrl/uk-who/chart-coordinates',
+    ); // Adjust the endpoint if needed
     final String measurementMethodString = measurementMethod.name;
     final String sexString = sex.name;
 
@@ -122,15 +129,17 @@ class DigitalGrowthChartsService {
           error: response.body,
           stackTrace: StackTrace.current,
         );
-        throw Exception('Failed to load chart coordinates: ${response.statusCode}');
+        throw Exception(
+          'Failed to load chart coordinates: ${response.statusCode}',
+        );
       }
     } catch (e) {
       developer.log(
-          'Error fetching chart coordinates: $e',
-          level: LogLevel.severe,
-          name: 'DigitalGrowthChartsService',
-          error: e,
-          stackTrace: StackTrace.current,
+        'Error fetching chart coordinates: $e',
+        level: LogLevel.severe,
+        name: 'DigitalGrowthChartsService',
+        error: e,
+        stackTrace: StackTrace.current,
       );
       rethrow;
     }
@@ -149,7 +158,8 @@ String parseApiError(String responseBody, int statusCode) {
       final List<dynamic> detailList = errorJson['detail'] as List<dynamic>;
       if (detailList.isNotEmpty) {
         final firstErrorObject = detailList[0];
-        if (firstErrorObject is Map<String, dynamic> && firstErrorObject.containsKey('msg')) {
+        if (firstErrorObject is Map<String, dynamic> &&
+            firstErrorObject.containsKey('msg')) {
           // Successfully extracted the specific message
           return firstErrorObject['msg'].toString(); // Ensure it's a string
         }
@@ -158,12 +168,15 @@ String parseApiError(String responseBody, int statusCode) {
     // If the specific 'msg' isn't found in the expected structure,
     // return a more generic message including the status code and a hint of the body.
     // You might want to truncate responseBody if it's too long for an exception message.
-    String truncatedBody = responseBody.length > 100 ? '${responseBody.substring(0, 100)}...' : responseBody;
+    String truncatedBody = responseBody.length > 100
+        ? '${responseBody.substring(0, 100)}...'
+        : responseBody;
     return 'API Error ($statusCode): Unexpected error format. Response: $truncatedBody';
-
   } catch (e) {
     // If JSON decoding fails or any other error during parsing
-    String truncatedBody = responseBody.length > 100 ? '${responseBody.substring(0, 100)}...' : responseBody;
+    String truncatedBody = responseBody.length > 100
+        ? '${responseBody.substring(0, 100)}...'
+        : responseBody;
     return 'API Error ($statusCode): Could not parse error response. Raw response: $truncatedBody';
   }
 }

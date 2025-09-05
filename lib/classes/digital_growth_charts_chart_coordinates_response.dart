@@ -10,7 +10,8 @@ class DigitalGrowthChartsCentileLines {
   DigitalGrowthChartsCentileLines({this.centileData});
 
   factory DigitalGrowthChartsCentileLines.fromJson(Map<String, dynamic> json) {
-    final List<dynamic>? centileDataList = json['centile_data'] as List<dynamic>?;
+    final List<dynamic>? centileDataList =
+        json['centile_data'] as List<dynamic>?;
     final List<ReferenceData> parsedCentileData = [];
 
     if (centileDataList != null) {
@@ -23,7 +24,8 @@ class DigitalGrowthChartsCentileLines {
     return DigitalGrowthChartsCentileLines(centileData: parsedCentileData);
   }
 
-  Map<String, dynamic> toJson() => _$DigitalGrowthChartsCentileLinesToJson(this);
+  Map<String, dynamic> toJson() =>
+      _$DigitalGrowthChartsCentileLinesToJson(this);
 }
 
 @JsonSerializable()
@@ -37,7 +39,12 @@ class ReferenceData {
   @JsonKey(name: 'uk90_preterm')
   SexMeasurementData? uk90Preterm;
 
-  ReferenceData({this.ukWhoChild, this.uk90Child, this.ukWhoInfant, this.uk90Preterm});
+  ReferenceData({
+    this.ukWhoChild,
+    this.uk90Child,
+    this.ukWhoInfant,
+    this.uk90Preterm,
+  });
 
   factory ReferenceData.fromJson(Map<String, dynamic> json) =>
       _$ReferenceDataFromJson(json);
