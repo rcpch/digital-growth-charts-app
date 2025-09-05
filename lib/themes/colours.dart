@@ -18,11 +18,14 @@ const textColor = Color(0xFF000000);
 class AppColours {
   // Colors for centile lines
   static const Color centileLineColorNormal = Color(0xFFFF8000);
-  static const Color centileLineColorSDS = Colors.red; // Distinct color for extreme centiles (e.g., 0.4th, 99.6th)
+  static const Color centileLineColorSDS =
+      Colors.red; // Distinct color for extreme centiles (e.g., 0.4th, 99.6th)
   static const Color tooltipBackgroundColor = primaryColourDark;
   // Colors for growth data points
-  static const Color chronologicalPointColor = Colors.black; // Color for chronological measurement points
-  static const Color correctedPointColor = Colors.black; // Using your secondary color for corrected points
+  static const Color chronologicalPointColor =
+      Colors.black; // Color for chronological measurement points
+  static const Color correctedPointColor =
+      Colors.black; // Using your secondary color for corrected points
 
   // Utility function to get color based on centile value
   static Color centileLineColor(double? centile) {
@@ -37,7 +40,6 @@ class AppColours {
   }
 }
 
-
 // Your existing theme definition
 class DigitalGrowthChartsTheme {
   static final ThemeData defaultTheme = _buildDigitalGrowthChartsTheme();
@@ -46,7 +48,8 @@ class DigitalGrowthChartsTheme {
     return ThemeData(
       useMaterial3: true,
       // Define the color scheme
-      colorScheme: ColorScheme.fromSeed( // Use fromSeed for better M3 scheme
+      colorScheme: ColorScheme.fromSeed(
+        // Use fromSeed for better M3 scheme
         seedColor: seedColor,
         brightness: Brightness.light, // Or Brightness.dark for a dark theme
         surface: background, // If your background is also your main surface

@@ -1,12 +1,13 @@
 // package and library imports
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
+import 'dart:developer' as developer;
 
 // RCPCH imports
 import '/classes/app_config.dart';
 import '/classes/digital_growth_charts_api_response.dart';
 import '/classes/digital_growth_charts_chart_coordinates_response.dart';
+import '/classes/log_levels.dart';
 import '../definitions/enums.dart';
 
 class DigitalGrowthChartsService {
@@ -49,11 +50,10 @@ class DigitalGrowthChartsService {
         requestBody['ofc'] = double.tryParse(observationValue);
         break;
       case MeasurementMethod.bmi:
-        requestBody['bmi'] = double.tryParse(observationValue); // Adjust key if needed
+        requestBody['bmi'] = double.tryParse(
+          observationValue,
+        ); // Adjust key if needed
         break;
-      default:
-      // Handle unknown measurement type or throw an error
-        throw Exception('Unknown measurement type: $measurementMethod');
     }
 
     try {
@@ -72,11 +72,22 @@ class DigitalGrowthChartsService {
         return GrowthDataResponse.fromJson(responseData);
       } else {
         // API call failed
-        throw Exception('Failed to load growth data: ${response.statusCode}');
+        final String descriptiveErrorMessage = parseApiError(
+          response.body,
+          response.statusCode,
+        );
+        throw Exception('${response.statusCode}: $descriptiveErrorMessage');
       }
     } catch (e) {
       // Handle any exceptions during the API call (e.g., network errors)
-      print('Error submitting growth data: $e');
+      developer.log(
+        'Error submitting growth data: $e',
+        level: LogLevel.warning,
+        name: 'DigitalGrowthChartsService',
+        error: e,
+        stackTrace: StackTrace.current,
+      );
+
       rethrow; // Rethrow the exception to be handled by the caller
     }
   }
@@ -86,7 +97,9 @@ class DigitalGrowthChartsService {
     required Sex sex,
     required MeasurementMethod measurementMethod,
   }) async {
-    final url = Uri.parse('$_baseUrl/uk-who/chart-coordinates'); // Adjust the endpoint if needed
+    final url = Uri.parse(
+      '$_baseUrl/uk-who/chart-coordinates',
+    ); // Adjust the endpoint if needed
     final String measurementMethodString = measurementMethod.name;
     final String sexString = sex.name;
 
@@ -109,11 +122,61 @@ class DigitalGrowthChartsService {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
         return DigitalGrowthChartsCentileLines.fromJson(responseData);
       } else {
-        throw Exception('Failed to load chart coordinates: ${response.statusCode}');
+        developer.log(
+          'Failed to load chart coordinates: ${response.statusCode}',
+          level: LogLevel.warning,
+          name: 'DigitalGrowthChartsService',
+          error: response.body,
+          stackTrace: StackTrace.current,
+        );
+        throw Exception(
+          'Failed to load chart coordinates: ${response.statusCode}',
+        );
       }
     } catch (e) {
-      print('Error fetching chart coordinates: $e');
+      developer.log(
+        'Error fetching chart coordinates: $e',
+        level: LogLevel.severe,
+        name: 'DigitalGrowthChartsService',
+        error: e,
+        stackTrace: StackTrace.current,
+      );
       rethrow;
     }
+  }
+}
+
+String parseApiError(String responseBody, int statusCode) {
+  try {
+    if (responseBody.isEmpty) {
+      return 'API Error: Status Code $statusCode (No response body)';
+    }
+
+    final Map<String, dynamic> errorJson = jsonDecode(responseBody);
+
+    if (errorJson.containsKey('detail') && errorJson['detail'] is List) {
+      final List<dynamic> detailList = errorJson['detail'] as List<dynamic>;
+      if (detailList.isNotEmpty) {
+        final firstErrorObject = detailList[0];
+        if (firstErrorObject is Map<String, dynamic> &&
+            firstErrorObject.containsKey('msg')) {
+          // Successfully extracted the specific message
+          return firstErrorObject['msg'].toString(); // Ensure it's a string
+        }
+      }
+    }
+    // If the specific 'msg' isn't found in the expected structure,
+    // return a more generic message including the status code and a hint of the body.
+    // You might want to truncate responseBody if it's too long for an exception message.
+    String truncatedBody = responseBody.length > 100
+        ? '${responseBody.substring(0, 100)}...'
+        : responseBody;
+    return 'API Error ($statusCode): Unexpected error format. Response: $truncatedBody';
+  } catch (e) {
+    // If JSON decoding fails or any other error during parsing
+    String truncatedBody = responseBody.length > 100
+        ? '${responseBody.substring(0, 100)}...'
+        : responseBody;
+    return 'API Error ($statusCode): Could not parse error response. Raw response: $truncatedBody';
   }
 }

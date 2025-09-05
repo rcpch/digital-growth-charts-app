@@ -8,44 +8,35 @@ part of 'digital_growth_charts_api_response.dart';
 
 GrowthDataResponse _$GrowthDataResponseFromJson(Map<String, dynamic> json) =>
     GrowthDataResponse(
-      birthData:
-          json['birth_data'] == null
-              ? null
-              : BirthData.fromJson(json['birth_data'] as Map<String, dynamic>),
-      measurementDates:
-          json['measurement_dates'] == null
-              ? null
-              : MeasurementDates.fromJson(
-                json['measurement_dates'] as Map<String, dynamic>,
-              ),
-      childObservationValue:
-          json['child_observation_value'] == null
-              ? null
-              : ChildObservationValue.fromJson(
-                json['child_observation_value'] as Map<String, dynamic>,
-              ),
-      measurementCalculatedValues:
-          json['measurement_calculated_values'] == null
-              ? null
-              : MeasurementCalculatedValues.fromJson(
-                json['measurement_calculated_values'] as Map<String, dynamic>,
-              ),
-      plottableData:
-          json['plottable_data'] == null
-              ? null
-              : PlottableData.fromJson(
-                json['plottable_data'] as Map<String, dynamic>,
-              ),
-      boneAge:
-          json['bone_age'] == null
-              ? null
-              : BoneAge.fromJson(json['bone_age'] as Map<String, dynamic>),
-      eventsData:
-          json['events_data'] == null
-              ? null
-              : EventsData.fromJson(
-                json['events_data'] as Map<String, dynamic>,
-              ),
+      birthData: json['birth_data'] == null
+          ? null
+          : BirthData.fromJson(json['birth_data'] as Map<String, dynamic>),
+      measurementDates: json['measurement_dates'] == null
+          ? null
+          : MeasurementDates.fromJson(
+              json['measurement_dates'] as Map<String, dynamic>,
+            ),
+      childObservationValue: json['child_observation_value'] == null
+          ? null
+          : ChildObservationValue.fromJson(
+              json['child_observation_value'] as Map<String, dynamic>,
+            ),
+      measurementCalculatedValues: json['measurement_calculated_values'] == null
+          ? null
+          : MeasurementCalculatedValues.fromJson(
+              json['measurement_calculated_values'] as Map<String, dynamic>,
+            ),
+      plottableData: json['plottable_data'] == null
+          ? null
+          : PlottableData.fromJson(
+              json['plottable_data'] as Map<String, dynamic>,
+            ),
+      boneAge: json['bone_age'] == null
+          ? null
+          : BoneAge.fromJson(json['bone_age'] as Map<String, dynamic>),
+      eventsData: json['events_data'] == null
+          ? null
+          : EventsData.fromJson(json['events_data'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$GrowthDataResponseToJson(GrowthDataResponse instance) =>
@@ -81,21 +72,19 @@ Map<String, dynamic> _$BirthDataToJson(BirthData instance) => <String, dynamic>{
 MeasurementDates _$MeasurementDatesFromJson(Map<String, dynamic> json) =>
     MeasurementDates(
       observationDate: json['observation_date'] as String?,
-      chronologicalDecimalAge:
-          (json['chronological_decimal_age'] as num?)?.toDouble(),
+      chronologicalDecimalAge: (json['chronological_decimal_age'] as num?)
+          ?.toDouble(),
       correctedDecimalAge: (json['corrected_decimal_age'] as num?)?.toDouble(),
       chronologicalCalendarAge: json['chronological_calendar_age'] as String?,
       correctedCalendarAge: json['corrected_calendar_age'] as String?,
-      correctedGestationalAge:
-          json['corrected_gestational_age'] == null
-              ? null
-              : CorrectedGestationalAge.fromJson(
-                json['corrected_gestational_age'] as Map<String, dynamic>,
-              ),
-      comments:
-          json['comments'] == null
-              ? null
-              : Comments.fromJson(json['comments'] as Map<String, dynamic>),
+      correctedGestationalAge: json['corrected_gestational_age'] == null
+          ? null
+          : CorrectedGestationalAge.fromJson(
+              json['corrected_gestational_age'] as Map<String, dynamic>,
+            ),
+      comments: json['comments'] == null
+          ? null
+          : Comments.fromJson(json['comments'] as Map<String, dynamic>),
       correctedDecimalAgeError: json['corrected_decimal_age_error'] as String?,
       chronologicalDecimalAgeError:
           json['chronological_decimal_age_error'] as String?,
@@ -201,16 +190,12 @@ Map<String, dynamic> _$MeasurementCalculatedValuesToJson(
 
 PlottableData _$PlottableDataFromJson(Map<String, dynamic> json) =>
     PlottableData(
-      centileData:
-          json['centile_data'] == null
-              ? null
-              : CentileData.fromJson(
-                json['centile_data'] as Map<String, dynamic>,
-              ),
-      sdsData:
-          json['sds_data'] == null
-              ? null
-              : SdsData.fromJson(json['sds_data'] as Map<String, dynamic>),
+      centileData: json['centile_data'] == null
+          ? null
+          : CentileData.fromJson(json['centile_data'] as Map<String, dynamic>),
+      sdsData: json['sds_data'] == null
+          ? null
+          : SdsData.fromJson(json['sds_data'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$PlottableDataToJson(PlottableData instance) =>
@@ -220,18 +205,16 @@ Map<String, dynamic> _$PlottableDataToJson(PlottableData instance) =>
     };
 
 CentileData _$CentileDataFromJson(Map<String, dynamic> json) => CentileData(
-  chronologicalDecimalAgeData:
-      json['chronological_decimal_age_data'] == null
-          ? null
-          : PlottableDataEntry.fromJson(
-            json['chronological_decimal_age_data'] as Map<String, dynamic>,
-          ),
-  correctedDecimalAgeData:
-      json['corrected_decimal_age_data'] == null
-          ? null
-          : PlottableDataEntry.fromJson(
-            json['corrected_decimal_age_data'] as Map<String, dynamic>,
-          ),
+  chronologicalDecimalAgeData: json['chronological_decimal_age_data'] == null
+      ? null
+      : PlottableDataEntry.fromJson(
+          json['chronological_decimal_age_data'] as Map<String, dynamic>,
+        ),
+  correctedDecimalAgeData: json['corrected_decimal_age_data'] == null
+      ? null
+      : PlottableDataEntry.fromJson(
+          json['corrected_decimal_age_data'] as Map<String, dynamic>,
+        ),
 );
 
 Map<String, dynamic> _$CentileDataToJson(CentileData instance) =>
@@ -241,18 +224,16 @@ Map<String, dynamic> _$CentileDataToJson(CentileData instance) =>
     };
 
 SdsData _$SdsDataFromJson(Map<String, dynamic> json) => SdsData(
-  chronologicalDecimalAgeData:
-      json['chronological_decimal_age_data'] == null
-          ? null
-          : PlottableDataEntry.fromJson(
-            json['chronological_decimal_age_data'] as Map<String, dynamic>,
-          ),
-  correctedDecimalAgeData:
-      json['corrected_decimal_age_data'] == null
-          ? null
-          : PlottableDataEntry.fromJson(
-            json['corrected_decimal_age_data'] as Map<String, dynamic>,
-          ),
+  chronologicalDecimalAgeData: json['chronological_decimal_age_data'] == null
+      ? null
+      : PlottableDataEntry.fromJson(
+          json['chronological_decimal_age_data'] as Map<String, dynamic>,
+        ),
+  correctedDecimalAgeData: json['corrected_decimal_age_data'] == null
+      ? null
+      : PlottableDataEntry.fromJson(
+          json['corrected_decimal_age_data'] as Map<String, dynamic>,
+        ),
 );
 
 Map<String, dynamic> _$SdsDataToJson(SdsData instance) => <String, dynamic>{

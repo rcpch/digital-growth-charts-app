@@ -6,7 +6,7 @@ import '/classes/app_config.dart';
 import './themes/colours.dart';
 import './widgets/input.dart';
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Only load .env if dart-defines are not provided
@@ -25,15 +25,18 @@ class DGCApp extends StatelessWidget {
       theme: DigitalGrowthChartsTheme.defaultTheme,
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('RCPCH Digital Growth Charts', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          title: const Text(
+            'RCPCH Digital Growth Charts',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
           centerTitle: true,
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
-          child:Column(
+          child: Column(
             children: const [
               InputForm(),
-              const Padding(
+              Padding(
                 padding: EdgeInsets.all(30),
                 child: Image(
                   image: AssetImage('assets/images/incubator_alpha.png'),
@@ -41,10 +44,10 @@ class DGCApp extends StatelessWidget {
                   width: 150,
                 ),
               ),
-            ]
-          )
-        )
-      )
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

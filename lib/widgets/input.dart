@@ -1,24 +1,26 @@
-import 'package:digital_growth_charts_app/themes/colours.dart';
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+// RCPCH imports
+import 'package:digital_growth_charts_app/themes/colours.dart';
+import 'package:digital_growth_charts_app/classes/log_levels.dart';
 import '../services/digital_growth_charts_services.dart';
 import '../classes/digital_growth_charts_api_response.dart';
 import '../classes/digital_growth_charts_chart_coordinates_response.dart';
 import '../definitions/enums.dart';
 import './results.dart';
 import '../services/centile_chart_data_utils.dart';
+import '../widgets/enum_radio_group.dart';
 
-class _InputFormState extends State<InputForm> {
+class InputFormState extends State<InputForm> {
   // A GlobalKey to uniquely identify the Form widget
   final _formKey = GlobalKey<FormState>();
   bool _canSubmit = false;
 
-  final DigitalGrowthChartsService _digitalGrowthChartsService = DigitalGrowthChartsService();// API service
+  final DigitalGrowthChartsService _digitalGrowthChartsService =
+      DigitalGrowthChartsService(); // API service
   Map<MeasurementMethod, List<GrowthDataResponse>> _organizedGrowthData = {};
-  OrganizedCentileLines _organizedCentileLines = {
-    Sex.male: {},
-    Sex.female: {},
-  };
+  OrganizedCentileLines _organizedCentileLines = {Sex.male: {}, Sex.female: {}};
 
   // State variables to store the fixed demographic data after the first submission
   DateTime? _fixedDob;
@@ -28,7 +30,8 @@ class _InputFormState extends State<InputForm> {
 
   // Controllers for the input fields
   final TextEditingController _dobController = TextEditingController();
-  final TextEditingController _observationDateController = TextEditingController();
+  final TextEditingController _observationDateController =
+      TextEditingController();
   final TextEditingController _measurementController = TextEditingController();
 
   // Variables to hold the selected dates (stored as DateTime objects for comparisons)
@@ -36,17 +39,16 @@ class _InputFormState extends State<InputForm> {
   DateTime? _selectedClinicDate;
 
   // Variable to hold the selected measurement type
-  MeasurementMethod _selectedMeasurementMethod = MeasurementMethod
-      .height; // Default to Height
+  MeasurementMethod _selectedMeasurementMethod =
+      MeasurementMethod.height; // Default to Height
 
   // Variable to hold the selected Sex
   Sex _selectedSex = Sex.male; // Default to Male
-  bool _formSubmitted = false;
 
   // State variables for the collapsable gestation section
   bool _showGestationFields = false;
   int _selectedGestationWeeks = 40; // Default to 40 weeks
-  int _selectedGestationDays = 0;   // Default to 0 days
+  int _selectedGestationDays = 0; // Default to 0 days
 
   void _checkFormValidity() {
     // Validate the form and update the _canSubmit state
@@ -88,31 +90,38 @@ class _InputFormState extends State<InputForm> {
   }
 
   // Function to show the date picker and update the text field and state
-  Future<void> _selectDate(BuildContext context,
-      TextEditingController controller, {required bool isDob}) async {
-        final DateTime? picked = await showDatePicker(
+  Future<void> _selectDate(
+    BuildContext context,
+    TextEditingController controller, {
+    required bool isDob,
+  }) async {
+    final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: (
-          isDob ? (_selectedDob ?? // Use selected DOB if available
-        DateTime(DateTime.now().year - 1, DateTime.now().month, DateTime.now().day)) // Otherwise suggest a recent year
-            : (_selectedClinicDate ?? // Use selected clinic date if available
-        DateTime.now())), // Otherwise suggest today
-        firstDate: DateTime(1900), // Adjust as needed
-        lastDate: DateTime.now(), // Cannot select a future date for either
-      );
-      if (picked != null) {
-        setState(() {
-          // Format the selected date for the text field display
-          final formattedDate = DateFormat('yyyy-MM-dd').format(picked);
-          controller.text = formattedDate;
-          // Store the selected date as DateTime for validation comparisons
-          if (isDob) {
-            _selectedDob = picked;
-          } else {
-            _selectedClinicDate = picked;
-          }
-        });
-      }
+      initialDate: (isDob
+          ? (_selectedDob ?? // Use selected DOB if available
+                DateTime(
+                  DateTime.now().year - 1,
+                  DateTime.now().month,
+                  DateTime.now().day,
+                )) // Otherwise suggest a recent year
+          : (_selectedClinicDate ?? // Use selected clinic date if available
+                DateTime.now())), // Otherwise suggest today
+      firstDate: DateTime(1900), // Adjust as needed
+      lastDate: DateTime.now(), // Cannot select a future date for either
+    );
+    if (picked != null) {
+      setState(() {
+        // Format the selected date for the text field display
+        final formattedDate = DateFormat('yyyy-MM-dd').format(picked);
+        controller.text = formattedDate;
+        // Store the selected date as DateTime for validation comparisons
+        if (isDob) {
+          _selectedDob = picked;
+        } else {
+          _selectedClinicDate = picked;
+        }
+      });
+    }
   }
 
   // Function to get the hint text for the measurement input based on the selected type
@@ -126,8 +135,6 @@ class _InputFormState extends State<InputForm> {
         return 'Enter head circumference in cm';
       case MeasurementMethod.bmi:
         return 'Enter BMI in kg/m²';
-      default:
-        return 'Enter measurement';
     }
   }
 
@@ -138,7 +145,6 @@ class _InputFormState extends State<InputForm> {
     setState(() {
       _selectedClinicDate = null;
       _selectedMeasurementMethod = MeasurementMethod.height;
-      _formSubmitted = false;
     });
   }
 
@@ -150,24 +156,17 @@ class _InputFormState extends State<InputForm> {
     _selectedDob = null;
     _selectedMeasurementMethod = MeasurementMethod.height;
     _selectedSex = Sex.male;
-    _formSubmitted = false;
     setState(() {
       _selectedClinicDate = null;
       _selectedMeasurementMethod = MeasurementMethod.height;
-      _formSubmitted = false;
       _organizedGrowthData = {};
-      _organizedCentileLines = {
-        Sex.male: {},
-        Sex.female: {},
-      };
+      _organizedCentileLines = {Sex.male: {}, Sex.female: {}};
     });
   }
 
   // Function to handle the submit button press
   void _submitForm() async {
-    setState(() {
-      _formSubmitted = true;
-    });
+    setState(() {});
     // Validate the form using the _formKey
     if (_formKey.currentState!.validate()) {
       // If the form is valid, process the data
@@ -192,7 +191,9 @@ class _InputFormState extends State<InputForm> {
             _selectedGestationDays != _fixedGestationDays) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Date of Birth, Sex, and Gestation must remain the same for the same child.'),
+              content: Text(
+                'Date of Birth, Sex, and Gestation must remain the same for the same child.',
+              ),
               backgroundColor: Colors.redAccent,
             ),
           );
@@ -217,54 +218,63 @@ class _InputFormState extends State<InputForm> {
 
       try {
         // Call the API service method
-        final GrowthDataResponse apiResponse =
-            await _digitalGrowthChartsService.submitGrowthData(
-          birthDate: dob,
-          observationDate: clinicDate,
-          sex: selectedSex,
-          measurementMethod: measurementMethod,
-          observationValue: observationValue,
+        final GrowthDataResponse apiResponse = await _digitalGrowthChartsService
+            .submitGrowthData(
+              birthDate: dob,
+              observationDate: clinicDate,
+              sex: selectedSex,
+              measurementMethod: measurementMethod,
+              observationValue: observationValue,
               gestationWeeks: gestationWeeks,
-          gestationDays: gestationDays,
-        );
+              gestationDays: gestationDays,
+            );
 
         //  add the response to a map of lists based on measurement method
         setState(() {
           _organizedGrowthData.update(
             measurementMethod,
-                (list) => list..add(apiResponse),
+            (list) => list..add(apiResponse),
             ifAbsent: () => [apiResponse],
           );
         });
 
         // Determine if centile data for this sex and measurement method is already cached
         final bool isCentileDataCached =
-            _organizedCentileLines[selectedSex]?.containsKey(measurementMethod) ?? false;
+            _organizedCentileLines[selectedSex]?.containsKey(
+              measurementMethod,
+            ) ??
+            false;
 
         DigitalGrowthChartsCentileLines? chartDataResponse;
 
         if (!isCentileDataCached) {
           // If centile data is not cached, fetch it
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Fetching chart data...'),
-              backgroundColor: Colors.orangeAccent,
-              duration: Duration(seconds: 2),
-            ),
-          );
-          chartDataResponse =
-          await _digitalGrowthChartsService.getChartCoordinates(
-            sex: selectedSex,
-            measurementMethod: measurementMethod,
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Fetching chart data...'),
+                backgroundColor: Colors.orangeAccent,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+          chartDataResponse = await _digitalGrowthChartsService
+              .getChartCoordinates(
+                sex: selectedSex,
+                measurementMethod: measurementMethod,
+              );
 
           // Process and merge the new centile data into the organized map
           if (chartDataResponse.centileData != null) {
             setState(() {
               final newOrganizedData = organizeCentileLines(chartDataResponse!);
               // Merge new data. Prioritize new data for the same sex and measurement method
-              if (newOrganizedData[selectedSex]?.containsKey(measurementMethod) ?? false) {
-                _organizedCentileLines[selectedSex]![measurementMethod] = newOrganizedData[selectedSex]![measurementMethod]!;
+              if (newOrganizedData[selectedSex]?.containsKey(
+                    measurementMethod,
+                  ) ??
+                  false) {
+                _organizedCentileLines[selectedSex]![measurementMethod] =
+                    newOrganizedData[selectedSex]![measurementMethod]!;
               }
             });
           }
@@ -273,30 +283,39 @@ class _InputFormState extends State<InputForm> {
         _resetForm();
 
         // If the API call is successful and returns a response, navigate to the results page
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ResultsPage(
-              organizedGrowthData: _organizedGrowthData,
-              organizedCentileLines: _organizedCentileLines,
-              sex: _fixedSex!,
-              dob: _fixedDob!,
-              gestationWeeks: _fixedGestationWeeks,
-              gestationDays: _fixedGestationDays,
-              measurementMethod: _selectedMeasurementMethod,
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ResultsPage(
+                organizedGrowthData: _organizedGrowthData,
+                organizedCentileLines: _organizedCentileLines,
+                sex: _fixedSex!,
+                dob: _fixedDob!,
+                gestationWeeks: _fixedGestationWeeks,
+                gestationDays: _fixedGestationDays,
+                measurementMethod: _selectedMeasurementMethod,
+              ),
             ),
-          ),
-        );
-
+          );
+        }
       } catch (e) {
         // Handle API call errors
-        print('Error during API submission: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to submit data: ${e.toString()}'),
-            backgroundColor: Colors.redAccent,
-          ),
+        developer.log(
+          'Error during API submission: $e',
+          level: LogLevel.warning,
+          name: 'DigitalGrowthChartsService',
+          error: e,
+          stackTrace: StackTrace.current,
         );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to submit data: ${e.toString()}'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
       }
     } else {
       // If the form is invalid, show an error message
@@ -307,7 +326,6 @@ class _InputFormState extends State<InputForm> {
         ),
       );
     }
-
   }
 
   @override
@@ -321,16 +339,18 @@ class _InputFormState extends State<InputForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Form( // Wrap your form content in a Form widget
+    return Form(
+      // Wrap form content in a Form widget
       key: _formKey, // Assign the GlobalKey
       autovalidateMode: AutovalidateMode.onUserInteraction,
-      onChanged: (){
+      onChanged: () {
         setState(() {
           _canSubmit = _formKey.currentState?.validate() ?? false;
         });
         _checkFormValidity();
       },
-      child: SingleChildScrollView( // Add SingleChildScrollView to prevent overflow on smaller screens
+      child: SingleChildScrollView(
+        // Add SingleChildScrollView to prevent overflow on smaller screens
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -344,7 +364,10 @@ class _InputFormState extends State<InputForm> {
                 suffixIcon: Icon(Icons.calendar_today),
                 border: OutlineInputBorder(),
               ),
-              onTap: _organizedGrowthData.isNotEmpty ? null : () => _selectDate(context, _dobController, isDob: true),
+              enabled: _organizedGrowthData.isEmpty,
+              onTap: _organizedGrowthData.isNotEmpty
+                  ? null
+                  : () => _selectDate(context, _dobController, isDob: true),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please select a Date of Birth';
@@ -364,8 +387,11 @@ class _InputFormState extends State<InputForm> {
                 border: OutlineInputBorder(),
               ),
               readOnly: true,
-              onTap: () =>
-                  _selectDate(context, _observationDateController, isDob: false),
+              onTap: () => _selectDate(
+                context,
+                _observationDateController,
+                isDob: false,
+              ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please select a Measurement Date';
@@ -375,14 +401,16 @@ class _InputFormState extends State<InputForm> {
                   return 'Please select Date of Birth first';
                 }
                 // Clinic date cannot be before date of birth
-                if (_selectedClinicDate != null && _selectedDob != null &&
+                if (_selectedClinicDate != null &&
+                    _selectedDob != null &&
                     _selectedClinicDate!.isBefore(_selectedDob!)) {
                   return 'Clinic Date cannot be before Date of Birth';
                 }
                 // Clinic date cannot be more than 20 years after date of birth
                 if (_selectedClinicDate != null && _selectedDob != null) {
-                  final ageAtClinic = _selectedClinicDate!.difference(
-                      _selectedDob!).inDays / 365.25;
+                  final ageAtClinic =
+                      _selectedClinicDate!.difference(_selectedDob!).inDays /
+                      365.25;
                   if (ageAtClinic > 20) {
                     return 'Child cannot be older than 20 years at clinic visit';
                   }
@@ -405,28 +433,46 @@ class _InputFormState extends State<InputForm> {
               initiallyExpanded: _showGestationFields,
               children: <Widget>[
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Gestation Weeks:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Gestation Weeks:',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       DropdownButtonFormField<int>(
-                        decoration: const InputDecoration(border: OutlineInputBorder()),
-                        value: _selectedGestationWeeks,
-                        items: List.generate(19, (index) => index + 24) // Weeks 24 to 42
-                            .map((int weeks) {
-                          return DropdownMenuItem<int>(
-                            value: weeks,
-                            child: Text('$weeks'),
-                          );
-                        }).toList(),
-                        onChanged: _organizedGrowthData.isNotEmpty ? null : (int? newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              _selectedGestationWeeks = newValue;
-                            });
-                          }
-                        },
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                        ),
+                        initialValue: _selectedGestationWeeks,
+                        items:
+                            List.generate(
+                                  19,
+                                  (index) => index + 24,
+                                ) // Weeks 24 to 42
+                                .map((int weeks) {
+                                  return DropdownMenuItem<int>(
+                                    value: weeks,
+                                    child: Text('$weeks'),
+                                  );
+                                })
+                                .toList(),
+                        onChanged: _organizedGrowthData.isNotEmpty
+                            ? null
+                            : (int? newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    _selectedGestationWeeks = newValue;
+                                  });
+                                }
+                              },
                         validator: (value) {
                           // Validation if this section is expanded
                           if (_showGestationFields && value == null) {
@@ -436,24 +482,36 @@ class _InputFormState extends State<InputForm> {
                         },
                       ),
                       const SizedBox(height: 16),
-                      const Text('Gestation Days:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Gestation Days:',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       DropdownButtonFormField<int>(
-                        decoration: const InputDecoration(border: OutlineInputBorder()),
-                        value: _selectedGestationDays,
-                        items: List.generate(7, (index) => index) // Days 0 to 6
-                            .map((int days) {
-                          return DropdownMenuItem<int>(
-                            value: days,
-                            child: Text('$days'),
-                          );
-                        }).toList(),
-                        onChanged: _organizedGrowthData.isNotEmpty ? null : (int? newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              _selectedGestationDays = newValue;
-                            });
-                          }
-                        },
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                        ),
+                        initialValue: _selectedGestationDays,
+                        items:
+                            List.generate(7, (index) => index) // Days 0 to 6
+                                .map((int days) {
+                                  return DropdownMenuItem<int>(
+                                    value: days,
+                                    child: Text('$days'),
+                                  );
+                                })
+                                .toList(),
+                        onChanged: _organizedGrowthData.isNotEmpty
+                            ? null
+                            : (int? newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    _selectedGestationDays = newValue;
+                                  });
+                                }
+                              },
                         validator: (value) {
                           // Validation if this section is expanded
                           if (_showGestationFields && value == null) {
@@ -471,129 +529,69 @@ class _InputFormState extends State<InputForm> {
             // --- End of New Gestation Section ---
 
             // Sex Radio Buttons
-            const Text('Select Sex:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Row(
-              children: <Widget>[
-                Expanded( // Use Expanded to make the RadioListTiles take up available space
-                  child: RadioListTile<Sex>(
-                    title: const Text('Male'),
-                    value: Sex.male,
-                    groupValue: _selectedSex,
-                    // This variable holds the currently selected Sex
-                    onChanged: _organizedGrowthData.isNotEmpty ? null : (Sex? value) {
-                      setState(() {
-                        _selectedSex =
-                            value!; // Update the state with the selected Sex
-                      });
-                    },
-                  ),
-                ),
-                Expanded( // Use Expanded for the Female radio button as well
-                  child: RadioListTile<Sex>(
-                    title: const Text('Female'),
-                    value: Sex.female,
-                    groupValue: _selectedSex, // Use the same groupValue
-                    onChanged: _organizedGrowthData.isNotEmpty ? null : (Sex? value) {
-                      setState(() {
-                        _selectedSex = value!; // Update the state
-                      });
-                    },
-                  ),
-                ),
-              ],
+            const Text(
+              'Select Sex:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
+            EnumRadioGroup<Sex>(
+              groupValue: _selectedSex,
+              onChanged: (value) {
+                setState(() {
+                  _selectedSex = value!;
+                });
+                _checkFormValidity();
+              },
+              enabled: _organizedGrowthData.isEmpty,
+              values: Sex.values,
+              labelBuilder: (m) {
+                switch (m) {
+                  case Sex.male:
+                    return 'Boy';
+                  case Sex.female:
+                    return 'Girl';
+                }
+              },
+            ),
+
             const SizedBox(height: 16),
 
-            Builder( // Use Builder to get a context that can find the Form ancestor
+            Builder(
+              // Use Builder to get a context that can find the Form ancestor
               builder: (BuildContext context) {
-                if (_selectedSex == null &&
-                    _formSubmitted) {
-                  // Only show error if validation has been triggered and Sex is null
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      'Please select a Sex',
-                      style: TextStyle(color: Theme
-                          .of(context)
-                          .colorScheme
-                          .error, fontSize: 12),
-                    ),
-                  );
-                }
-                return const SizedBox
-                    .shrink(); // Hide the error message when a Sex is selected or form not validated yet
+                return const SizedBox.shrink(); // Hide the error message when a Sex is selected or form not validated yet
               },
             ),
             const SizedBox(height: 16),
             // Spacing after Sex validation
 
             // Measurement Type Radio Buttons
-            const Text('Select Measurement Type:',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: RadioListTile<MeasurementMethod>(
-                    title: const Text('Height'),
-                    value: MeasurementMethod.height,
-                    groupValue: _selectedMeasurementMethod,
-                    onChanged: (MeasurementMethod? value) {
-                      setState(() {
-                        _selectedMeasurementMethod = value!;
-                        _measurementController
-                            .clear(); // Clear input when type changes
-                      });
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: RadioListTile<MeasurementMethod>(
-                    title: const Text('Weight'),
-                    value: MeasurementMethod.weight,
-                    groupValue: _selectedMeasurementMethod,
-                    onChanged: (MeasurementMethod? value) {
-                      setState(() {
-                        _selectedMeasurementMethod = value!;
-                        _measurementController
-                            .clear(); // Clear input when type changes
-                      });
-                    },
-                  ),
-                ),
-              ],
+            const Text(
+              'Select Measurement Type:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            Row( // New row for the remaining radio buttons
-              children: <Widget>[
-                Expanded(
-                  child: RadioListTile<MeasurementMethod>(
-                    title: const Text('Head Circ.'),
-                    value: MeasurementMethod.ofc,
-                    groupValue: _selectedMeasurementMethod,
-                    onChanged: (MeasurementMethod? value) {
-                      setState(() {
-                        _selectedMeasurementMethod = value!;
-                        _measurementController
-                            .clear(); // Clear input when type changes
-                      });
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: RadioListTile<MeasurementMethod>(
-                    title: const Text('BMI'),
-                    value: MeasurementMethod.bmi,
-                    groupValue: _selectedMeasurementMethod,
-                    onChanged: (MeasurementMethod? value) {
-                      setState(() {
-                        _selectedMeasurementMethod = value!;
-                        _measurementController
-                            .clear(); // Clear input when type changes
-                      });
-                    },
-                  ),
-                ),
-              ],
+            EnumRadioGroup<MeasurementMethod>(
+              groupValue: _selectedMeasurementMethod,
+              enabled: true,
+              onChanged: (value) {
+                setState(() {
+                  _selectedMeasurementMethod = value!;
+                  _measurementController.clear();
+                });
+              },
+              values: MeasurementMethod.values, // all enum values
+              labelBuilder: (m) {
+                switch (m) {
+                  case MeasurementMethod.height:
+                    return 'Height';
+                  case MeasurementMethod.weight:
+                    return 'Weight';
+                  case MeasurementMethod.ofc:
+                    return 'Head Circ.';
+                  case MeasurementMethod.bmi:
+                    return 'BMI';
+                }
+              },
+              itemsPerRow: 2, // 2 radiobuttons per row
             ),
             const SizedBox(height: 16),
 
@@ -601,7 +599,8 @@ class _InputFormState extends State<InputForm> {
             TextFormField(
               controller: _measurementController,
               keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true), // Allow decimal input
+                decimal: true,
+              ), // Allow decimal input
               decoration: InputDecoration(
                 labelText: 'Measurement',
                 hintText: _getMeasurementHintText(), // Dynamic hint text
@@ -624,79 +623,95 @@ class _InputFormState extends State<InputForm> {
             // Submit Button
             ElevatedButton(
               onPressed: _canSubmit ? _submitForm : null,
-              child: const Text('Submit', style: TextStyle(color: Colors.white)),
               style: ButtonStyle(
-                backgroundColor: WidgetStateProperty.resolveWith<Color?>(
-                      (Set<WidgetState> states) {
-                        if (states.contains(WidgetState.disabled)) {
-                          return Colors.grey; // Optional: custom disabled color
-                        }
-                        if (states.contains(WidgetState.pressed)) {
-                          return secondaryColour;
-                        }
-                    return primaryColour; // Use the component's default.
-                  }),
+                backgroundColor: WidgetStateProperty.resolveWith<Color?>((
+                  Set<WidgetState> states,
+                ) {
+                  if (states.contains(WidgetState.disabled)) {
+                    return Colors.grey; // Optional: custom disabled color
+                  }
+                  if (states.contains(WidgetState.pressed)) {
+                    return secondaryColour;
+                  }
+                  return primaryColour; // Use the component's default.
+                }),
                 shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                   RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(0),
                   ),
-                )),
+                ),
+              ),
+              child: const Text(
+                'Submit',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
+            const SizedBox(height: 12.0),
             // Reset Button
             ElevatedButton(
               onPressed: _hardResetForm,
-              child: const Text('Reset', style: TextStyle(color: Colors.white),),
               style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.resolveWith<Color?>(
-                          (Set<WidgetState> states) {
-                        if (states.contains(WidgetState.pressed)) {
-                          return secondaryColour;
-                        } else {
-                          return primaryColour; // Use the component's default.
-                        }}),
+                backgroundColor: WidgetStateProperty.resolveWith<Color?>((
+                  Set<WidgetState> states,
+                ) {
+                  if (states.contains(WidgetState.pressed)) {
+                    return secondaryColour;
+                  } else {
+                    return primaryColour; // Use the component's default.
+                  }
+                }),
+                shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(0),
+                  ),
+                ),
+              ),
+              child: const Text('Reset', style: TextStyle(color: Colors.white)),
+            ),
+            // Conditionally visible button to navigate to ResultsPage
+            if (_organizedGrowthData.isNotEmpty) // Check if there's data
+              ElevatedButton(
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.resolveWith<Color?>((
+                    Set<WidgetState> states,
+                  ) {
+                    if (states.contains(WidgetState.pressed)) {
+                      return secondaryColour;
+                    } else {
+                      return primaryColour; // Use the component's default.
+                    }
+                  }),
                   shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(0),
                     ),
-                  )),
-            ),
-          // Conditionally visible button to navigate to ResultsPage
-          if (_organizedGrowthData.isNotEmpty) // Check if there's data
-            ElevatedButton(
-              child: const Text('View Charts', style: TextStyle(color: Colors.white)),
-                style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith<Color?>(
-                            (Set<WidgetState> states) {
-                          if (states.contains(WidgetState.pressed)) {
-                            return secondaryColour;
-                          } else {
-                            return primaryColour; // Use the component's default.
-                          }}),
-                    shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(0),
-                      ),
-                    )),
-              onPressed: () {
-                Navigator.push(
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          ResultsPage(
-                            organizedGrowthData: _organizedGrowthData,
-                            organizedCentileLines: _organizedCentileLines,
-                            sex: _fixedSex!,
-                            // Make sure these are not null if data exists
-                            dob: _fixedDob!,
-                            gestationWeeks: _fixedGestationWeeks,
-                            gestationDays: _fixedGestationDays,
-                            // You might need to decide which measurement method to show by default
-                            measurementMethod: _organizedGrowthData.keys
-                                .first, // Example: show the first available method
-                          ),
-                    )
-                );
-              })
+                      builder: (context) => ResultsPage(
+                        organizedGrowthData: _organizedGrowthData,
+                        organizedCentileLines: _organizedCentileLines,
+                        sex: _fixedSex!,
+                        // Make sure these are not null if data exists
+                        dob: _fixedDob!,
+                        gestationWeeks: _fixedGestationWeeks,
+                        gestationDays: _fixedGestationDays,
+                        // You might need to decide which measurement method to show by default
+                        measurementMethod: _organizedGrowthData
+                            .keys
+                            .first, // Example: show the first available method
+                      ),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'View Charts',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
           ],
         ),
       ),
@@ -705,8 +720,8 @@ class _InputFormState extends State<InputForm> {
 }
 
 class InputForm extends StatefulWidget {
-  const InputForm({Key? key}) : super(key: key);
+  const InputForm({super.key});
 
   @override
-  _InputFormState createState() => _InputFormState();
+  InputFormState createState() => InputFormState();
 }

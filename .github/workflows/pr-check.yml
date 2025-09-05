@@ -16,10 +16,16 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.35.2'
+          flutter-version: '3.35.3'
 
       - name: Create dummy .env for CI build (if needed by pubspec.yaml assets)
         run: touch .env # Creates an empty .env file: this is necessary to satisfy pubspec.yaml assets declaration, but it is empty so dart-defines will be used
+
+      - name: Check for formatting issues
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze project source
+        run: flutter analyze
 
       - name: Run PR check script (test and build)
         env:
