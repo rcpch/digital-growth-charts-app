@@ -1,6 +1,9 @@
-import 'package:digital_growth_charts_app/themes/colours.dart';
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+// RCPCH imports
+import 'package:digital_growth_charts_app/themes/colours.dart';
+import 'package:digital_growth_charts_app/classes/log_levels.dart';
 import '../services/digital_growth_charts_services.dart';
 import '../classes/digital_growth_charts_api_response.dart';
 import '../classes/digital_growth_charts_chart_coordinates_response.dart';
@@ -289,7 +292,13 @@ class InputFormState extends State<InputForm> {
 
       } catch (e) {
         // Handle API call errors
-        print('Error during API submission: $e');
+        developer.log(
+            'Error during API submission: $e',
+            level: LogLevel.warning,
+            name: 'DigitalGrowthChartsService',
+            error: e,
+            stackTrace: StackTrace.current,
+        );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

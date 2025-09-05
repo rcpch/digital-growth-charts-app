@@ -1,11 +1,13 @@
 // package and library imports
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:developer' as developer;
 
 // RCPCH imports
 import '/classes/app_config.dart';
 import '/classes/digital_growth_charts_api_response.dart';
 import '/classes/digital_growth_charts_chart_coordinates_response.dart';
+import '/classes/log_levels.dart';
 import '../definitions/enums.dart';
 
 class DigitalGrowthChartsService {
@@ -73,7 +75,14 @@ class DigitalGrowthChartsService {
       }
     } catch (e) {
       // Handle any exceptions during the API call (e.g., network errors)
-      print('Error submitting growth data: $e');
+      developer.log(
+          'Error submitting growth data: $e',
+          level: LogLevel.warning,
+          name: 'DigitalGrowthChartsService',
+          error: e,
+          stackTrace: StackTrace.current,
+      );
+
       rethrow; // Rethrow the exception to be handled by the caller
     }
   }
@@ -106,10 +115,23 @@ class DigitalGrowthChartsService {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
         return DigitalGrowthChartsCentileLines.fromJson(responseData);
       } else {
+        developer.log(
+          'Failed to load chart coordinates: ${response.statusCode}',
+          level: LogLevel.warning,
+          name: 'DigitalGrowthChartsService',
+          error: response.body,
+          stackTrace: StackTrace.current,
+        );
         throw Exception('Failed to load chart coordinates: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching chart coordinates: $e');
+      developer.log(
+          'Error fetching chart coordinates: $e',
+          level: LogLevel.severe,
+          name: 'DigitalGrowthChartsService',
+          error: e,
+          stackTrace: StackTrace.current,
+      );
       rethrow;
     }
   }
