@@ -642,6 +642,7 @@ class _InputFormState extends State<InputForm> {
                   ),
                 )),
             ),
+            const SizedBox(height: 12.0),
             // Reset Button
             ElevatedButton(
               onPressed: _hardResetForm,
