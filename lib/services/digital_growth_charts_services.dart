@@ -68,7 +68,8 @@ class DigitalGrowthChartsService {
         return GrowthDataResponse.fromJson(responseData);
       } else {
         // API call failed
-        throw Exception('Failed to load growth data: ${response.statusCode}: ${response.body}');
+        final String descriptiveErrorMessage = parseApiError(response.body, response.statusCode);
+        throw Exception('${response.statusCode}: $descriptiveErrorMessage');
       }
     } catch (e) {
       // Handle any exceptions during the API call (e.g., network errors)
@@ -111,5 +112,36 @@ class DigitalGrowthChartsService {
       print('Error fetching chart coordinates: $e');
       rethrow;
     }
+  }
+}
+
+String parseApiError(String responseBody, int statusCode) {
+  try {
+    if (responseBody.isEmpty) {
+      return 'API Error: Status Code $statusCode (No response body)';
+    }
+
+    final Map<String, dynamic> errorJson = jsonDecode(responseBody);
+
+    if (errorJson.containsKey('detail') && errorJson['detail'] is List) {
+      final List<dynamic> detailList = errorJson['detail'] as List<dynamic>;
+      if (detailList.isNotEmpty) {
+        final firstErrorObject = detailList[0];
+        if (firstErrorObject is Map<String, dynamic> && firstErrorObject.containsKey('msg')) {
+          // Successfully extracted the specific message
+          return firstErrorObject['msg'].toString(); // Ensure it's a string
+        }
+      }
+    }
+    // If the specific 'msg' isn't found in the expected structure,
+    // return a more generic message including the status code and a hint of the body.
+    // You might want to truncate responseBody if it's too long for an exception message.
+    String truncatedBody = responseBody.length > 100 ? '${responseBody.substring(0, 100)}...' : responseBody;
+    return 'API Error ($statusCode): Unexpected error format. Response: $truncatedBody';
+
+  } catch (e) {
+    // If JSON decoding fails or any other error during parsing
+    String truncatedBody = responseBody.length > 100 ? '${responseBody.substring(0, 100)}...' : responseBody;
+    return 'API Error ($statusCode): Could not parse error response. Raw response: $truncatedBody';
   }
 }
