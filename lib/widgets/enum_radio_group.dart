@@ -6,6 +6,7 @@ class EnumRadioGroup<T extends Enum> extends StatelessWidget {
   final List<T> values;
   final String Function(T) labelBuilder;
   final int itemsPerRow;
+  final bool enabled;
 
   const EnumRadioGroup({
     super.key,
@@ -14,6 +15,7 @@ class EnumRadioGroup<T extends Enum> extends StatelessWidget {
     required this.values,
     required this.labelBuilder,
     this.itemsPerRow = 2, // default: 2 buttons per row
+    this.enabled = true,
   });
 
   @override
@@ -31,6 +33,7 @@ class EnumRadioGroup<T extends Enum> extends StatelessWidget {
                     child: RadioListTile<T>(
                       title: Text(labelBuilder(values[j])),
                       value: values[j],
+                      enabled: enabled,
                     ),
                   ),
               ],

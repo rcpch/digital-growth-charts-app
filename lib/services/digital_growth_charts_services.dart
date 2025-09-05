@@ -68,7 +68,7 @@ class DigitalGrowthChartsService {
         return GrowthDataResponse.fromJson(responseData);
       } else {
         // API call failed
-        throw Exception('Failed to load growth data: ${response.statusCode}');
+        throw Exception('Failed to load growth data: ${response.statusCode}: ${response.body}');
       }
     } catch (e) {
       // Handle any exceptions during the API call (e.g., network errors)

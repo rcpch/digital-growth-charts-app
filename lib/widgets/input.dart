@@ -322,7 +322,7 @@ class InputFormState extends State<InputForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Form( // Wrap your form content in a Form widget
+    return Form( // Wrap form content in a Form widget
       key: _formKey, // Assign the GlobalKey
       autovalidateMode: AutovalidateMode.onUserInteraction,
       onChanged: (){
@@ -345,6 +345,7 @@ class InputFormState extends State<InputForm> {
                 suffixIcon: Icon(Icons.calendar_today),
                 border: OutlineInputBorder(),
               ),
+              enabled: _organizedGrowthData.isEmpty,
               onTap: _organizedGrowthData.isNotEmpty ? null : () => _selectDate(context, _dobController, isDob: true),
               validator: (value) {
                 if (value == null || value.isEmpty) {
@@ -476,11 +477,13 @@ class InputFormState extends State<InputForm> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             EnumRadioGroup<Sex>(
                 groupValue: _selectedSex,
-                onChanged: (value){
-                  setState(() {
-                    _selectedSex = value!;
-                  });
+                onChanged: (value) {
+                    setState(() {
+                      _selectedSex = value!;
+                    });
+                    _checkFormValidity();
                 },
+                enabled: _organizedGrowthData.isEmpty,
                 values: Sex.values,
                 labelBuilder: (m){
                   switch (m) {
@@ -508,6 +511,7 @@ class InputFormState extends State<InputForm> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             EnumRadioGroup<MeasurementMethod>(
               groupValue: _selectedMeasurementMethod,
+              enabled: true,
               onChanged: (value) {
                 setState(() {
                   _selectedMeasurementMethod = value!;

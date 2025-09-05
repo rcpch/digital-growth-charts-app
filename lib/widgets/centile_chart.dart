@@ -1,7 +1,6 @@
 import 'package:digital_growth_charts_app/definitions/helpers.dart';
 import 'package:digital_growth_charts_app/themes/colours.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../definitions/enums.dart';
 import '../classes/digital_growth_charts_api_response.dart';
@@ -32,30 +31,6 @@ class CentileChart extends StatefulWidget {
 
   @override
   State<CentileChart> createState() => _CentileChartState();
-
-  @override
-  bool operator == (Object other) {
-    if (identical(this, other)) return true;
-    return other is CentileChart &&
-        other.measurementMethod == measurementMethod &&
-        other.sex == sex &&
-        other.dob == dob &&
-        other.gestationWeeks == gestationWeeks &&
-        other.gestationDays == gestationDays &&
-        listEquals(other.growthDataForMethod, growthDataForMethod) &&
-        other.organizedCentileLines == organizedCentileLines;
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    measurementMethod,
-    sex,
-    dob,
-    gestationWeeks,
-    gestationDays,
-    Object.hashAll(growthDataForMethod),
-    organizedCentileLines,
-  );
 }
 
 class _CentileChartState extends State<CentileChart> {
