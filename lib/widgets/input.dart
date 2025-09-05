@@ -7,8 +7,9 @@ import '../classes/digital_growth_charts_chart_coordinates_response.dart';
 import '../definitions/enums.dart';
 import './results.dart';
 import '../services/centile_chart_data_utils.dart';
+import '../widgets/enum_radio_group.dart';
 
-class _InputFormState extends State<InputForm> {
+class InputFormState extends State<InputForm> {
   // A GlobalKey to uniquely identify the Form widget
   final _formKey = GlobalKey<FormState>();
   bool _canSubmit = false;
@@ -41,7 +42,6 @@ class _InputFormState extends State<InputForm> {
 
   // Variable to hold the selected Sex
   Sex _selectedSex = Sex.male; // Default to Male
-  bool _formSubmitted = false;
 
   // State variables for the collapsable gestation section
   bool _showGestationFields = false;
@@ -126,9 +126,7 @@ class _InputFormState extends State<InputForm> {
         return 'Enter head circumference in cm';
       case MeasurementMethod.bmi:
         return 'Enter BMI in kg/m²';
-      default:
-        return 'Enter measurement';
-    }
+      }
   }
 
   void _resetForm() {
@@ -138,7 +136,6 @@ class _InputFormState extends State<InputForm> {
     setState(() {
       _selectedClinicDate = null;
       _selectedMeasurementMethod = MeasurementMethod.height;
-      _formSubmitted = false;
     });
   }
 
@@ -150,11 +147,9 @@ class _InputFormState extends State<InputForm> {
     _selectedDob = null;
     _selectedMeasurementMethod = MeasurementMethod.height;
     _selectedSex = Sex.male;
-    _formSubmitted = false;
     setState(() {
       _selectedClinicDate = null;
       _selectedMeasurementMethod = MeasurementMethod.height;
-      _formSubmitted = false;
       _organizedGrowthData = {};
       _organizedCentileLines = {
         Sex.male: {},
@@ -166,7 +161,6 @@ class _InputFormState extends State<InputForm> {
   // Function to handle the submit button press
   void _submitForm() async {
     setState(() {
-      _formSubmitted = true;
     });
     // Validate the form using the _formKey
     if (_formKey.currentState!.validate()) {
@@ -245,13 +239,15 @@ class _InputFormState extends State<InputForm> {
 
         if (!isCentileDataCached) {
           // If centile data is not cached, fetch it
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Fetching chart data...'),
-              backgroundColor: Colors.orangeAccent,
-              duration: Duration(seconds: 2),
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Fetching chart data...'),
+                backgroundColor: Colors.orangeAccent,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
           chartDataResponse =
           await _digitalGrowthChartsService.getChartCoordinates(
             sex: selectedSex,
@@ -273,30 +269,35 @@ class _InputFormState extends State<InputForm> {
         _resetForm();
 
         // If the API call is successful and returns a response, navigate to the results page
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ResultsPage(
-              organizedGrowthData: _organizedGrowthData,
-              organizedCentileLines: _organizedCentileLines,
-              sex: _fixedSex!,
-              dob: _fixedDob!,
-              gestationWeeks: _fixedGestationWeeks,
-              gestationDays: _fixedGestationDays,
-              measurementMethod: _selectedMeasurementMethod,
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  ResultsPage(
+                    organizedGrowthData: _organizedGrowthData,
+                    organizedCentileLines: _organizedCentileLines,
+                    sex: _fixedSex!,
+                    dob: _fixedDob!,
+                    gestationWeeks: _fixedGestationWeeks,
+                    gestationDays: _fixedGestationDays,
+                    measurementMethod: _selectedMeasurementMethod,
+                  ),
             ),
-          ),
-        );
+          );
+        }
 
       } catch (e) {
         // Handle API call errors
         print('Error during API submission: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to submit data: ${e.toString()}'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to submit data: ${e.toString()}'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
       }
     } else {
       // If the form is invalid, show an error message
@@ -412,7 +413,7 @@ class _InputFormState extends State<InputForm> {
                       const Text('Gestation Weeks:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                       DropdownButtonFormField<int>(
                         decoration: const InputDecoration(border: OutlineInputBorder()),
-                        value: _selectedGestationWeeks,
+                        initialValue: _selectedGestationWeeks,
                         items: List.generate(19, (index) => index + 24) // Weeks 24 to 42
                             .map((int weeks) {
                           return DropdownMenuItem<int>(
@@ -439,7 +440,7 @@ class _InputFormState extends State<InputForm> {
                       const Text('Gestation Days:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                       DropdownButtonFormField<int>(
                         decoration: const InputDecoration(border: OutlineInputBorder()),
-                        value: _selectedGestationDays,
+                        initialValue: _selectedGestationDays,
                         items: List.generate(7, (index) => index) // Days 0 to 6
                             .map((int days) {
                           return DropdownMenuItem<int>(
@@ -473,54 +474,28 @@ class _InputFormState extends State<InputForm> {
             // Sex Radio Buttons
             const Text('Select Sex:',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Row(
-              children: <Widget>[
-                Expanded( // Use Expanded to make the RadioListTiles take up available space
-                  child: RadioListTile<Sex>(
-                    title: const Text('Male'),
-                    value: Sex.male,
-                    groupValue: _selectedSex,
-                    // This variable holds the currently selected Sex
-                    onChanged: _organizedGrowthData.isNotEmpty ? null : (Sex? value) {
-                      setState(() {
-                        _selectedSex =
-                            value!; // Update the state with the selected Sex
-                      });
-                    },
-                  ),
-                ),
-                Expanded( // Use Expanded for the Female radio button as well
-                  child: RadioListTile<Sex>(
-                    title: const Text('Female'),
-                    value: Sex.female,
-                    groupValue: _selectedSex, // Use the same groupValue
-                    onChanged: _organizedGrowthData.isNotEmpty ? null : (Sex? value) {
-                      setState(() {
-                        _selectedSex = value!; // Update the state
-                      });
-                    },
-                  ),
-                ),
-              ],
+            EnumRadioGroup<Sex>(
+                groupValue: _selectedSex,
+                onChanged: (value){
+                  setState(() {
+                    _selectedSex = value!;
+                  });
+                },
+                values: Sex.values,
+                labelBuilder: (m){
+                  switch (m) {
+                    case Sex.male:
+                      return 'Boy';
+                    case Sex.female:
+                      return 'Girl';
+                  }
+                }
             ),
+
             const SizedBox(height: 16),
 
             Builder( // Use Builder to get a context that can find the Form ancestor
               builder: (BuildContext context) {
-                if (_selectedSex == null &&
-                    _formSubmitted) {
-                  // Only show error if validation has been triggered and Sex is null
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      'Please select a Sex',
-                      style: TextStyle(color: Theme
-                          .of(context)
-                          .colorScheme
-                          .error, fontSize: 12),
-                    ),
-                  );
-                }
                 return const SizedBox
                     .shrink(); // Hide the error message when a Sex is selected or form not validated yet
               },
@@ -531,69 +506,28 @@ class _InputFormState extends State<InputForm> {
             // Measurement Type Radio Buttons
             const Text('Select Measurement Type:',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: RadioListTile<MeasurementMethod>(
-                    title: const Text('Height'),
-                    value: MeasurementMethod.height,
-                    groupValue: _selectedMeasurementMethod,
-                    onChanged: (MeasurementMethod? value) {
-                      setState(() {
-                        _selectedMeasurementMethod = value!;
-                        _measurementController
-                            .clear(); // Clear input when type changes
-                      });
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: RadioListTile<MeasurementMethod>(
-                    title: const Text('Weight'),
-                    value: MeasurementMethod.weight,
-                    groupValue: _selectedMeasurementMethod,
-                    onChanged: (MeasurementMethod? value) {
-                      setState(() {
-                        _selectedMeasurementMethod = value!;
-                        _measurementController
-                            .clear(); // Clear input when type changes
-                      });
-                    },
-                  ),
-                ),
-              ],
-            ),
-            Row( // New row for the remaining radio buttons
-              children: <Widget>[
-                Expanded(
-                  child: RadioListTile<MeasurementMethod>(
-                    title: const Text('Head Circ.'),
-                    value: MeasurementMethod.ofc,
-                    groupValue: _selectedMeasurementMethod,
-                    onChanged: (MeasurementMethod? value) {
-                      setState(() {
-                        _selectedMeasurementMethod = value!;
-                        _measurementController
-                            .clear(); // Clear input when type changes
-                      });
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: RadioListTile<MeasurementMethod>(
-                    title: const Text('BMI'),
-                    value: MeasurementMethod.bmi,
-                    groupValue: _selectedMeasurementMethod,
-                    onChanged: (MeasurementMethod? value) {
-                      setState(() {
-                        _selectedMeasurementMethod = value!;
-                        _measurementController
-                            .clear(); // Clear input when type changes
-                      });
-                    },
-                  ),
-                ),
-              ],
+            EnumRadioGroup<MeasurementMethod>(
+              groupValue: _selectedMeasurementMethod,
+              onChanged: (value) {
+                setState(() {
+                  _selectedMeasurementMethod = value!;
+                  _measurementController.clear();
+                });
+              },
+              values: MeasurementMethod.values, // all enum values
+              labelBuilder: (m) {
+                switch (m) {
+                  case MeasurementMethod.height:
+                    return 'Height';
+                  case MeasurementMethod.weight:
+                    return 'Weight';
+                  case MeasurementMethod.ofc:
+                    return 'Head Circ.';
+                  case MeasurementMethod.bmi:
+                    return 'BMI';
+                }
+              },
+              itemsPerRow: 2, // 2 radiobuttons per row
             ),
             const SizedBox(height: 16),
 
@@ -624,7 +558,6 @@ class _InputFormState extends State<InputForm> {
             // Submit Button
             ElevatedButton(
               onPressed: _canSubmit ? _submitForm : null,
-              child: const Text('Submit', style: TextStyle(color: Colors.white)),
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith<Color?>(
                       (Set<WidgetState> states) {
@@ -641,12 +574,12 @@ class _InputFormState extends State<InputForm> {
                     borderRadius: BorderRadius.circular(0),
                   ),
                 )),
+              child: const Text('Submit', style: TextStyle(color: Colors.white)),
             ),
             const SizedBox(height: 12.0),
             // Reset Button
             ElevatedButton(
               onPressed: _hardResetForm,
-              child: const Text('Reset', style: TextStyle(color: Colors.white),),
               style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.resolveWith<Color?>(
                           (Set<WidgetState> states) {
@@ -660,12 +593,12 @@ class _InputFormState extends State<InputForm> {
                       borderRadius: BorderRadius.circular(0),
                     ),
                   )),
+              child: const Text('Reset', style: TextStyle(color: Colors.white),),
             ),
           // Conditionally visible button to navigate to ResultsPage
           if (_organizedGrowthData.isNotEmpty) // Check if there's data
             ElevatedButton(
-              child: const Text('View Charts', style: TextStyle(color: Colors.white)),
-                style: ButtonStyle(
+              style: ButtonStyle(
                     backgroundColor: WidgetStateProperty.resolveWith<Color?>(
                             (Set<WidgetState> states) {
                           if (states.contains(WidgetState.pressed)) {
@@ -697,7 +630,8 @@ class _InputFormState extends State<InputForm> {
                           ),
                     )
                 );
-              })
+              },
+              child: const Text('View Charts', style: TextStyle(color: Colors.white)))
           ],
         ),
       ),
@@ -706,8 +640,8 @@ class _InputFormState extends State<InputForm> {
 }
 
 class InputForm extends StatefulWidget {
-  const InputForm({Key? key}) : super(key: key);
+  const InputForm({super.key});
 
   @override
-  _InputFormState createState() => _InputFormState();
+  InputFormState createState() => InputFormState();
 }

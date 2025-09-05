@@ -8,8 +8,7 @@ class ResultsDataTable extends StatelessWidget {
 
   final Map<MeasurementMethod, List<GrowthDataResponse>> organizedGrowthData;
 
-  const ResultsDataTable({Key? key, required this.organizedGrowthData})
-      : super(key: key);
+  const ResultsDataTable({super.key, required this.organizedGrowthData});
 
   // Helper function to build RichText (can still be useful for other parts)
   Widget _buildRichText(String label, String value) {
@@ -54,16 +53,16 @@ class ResultsDataTable extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 _buildRichText('Chronological Age: ',
-                    '${growthData.measurementDates?.chronologicalCalendarAge ??
-                        'N/A'}'),
+                    growthData.measurementDates?.chronologicalCalendarAge ??
+                        'N/A'),
                 const SizedBox(height: 8),
                 _buildRichText('Corrected Age: ',
-                    '${growthData.measurementDates?.correctedCalendarAge ??
-                        'N/A'}'),
+                    growthData.measurementDates?.correctedCalendarAge ??
+                        'N/A'),
                 const SizedBox(height: 8),
                 _buildRichText('Corrected Age Comment: ',
-                    '${growthData.measurementDates?.comments
-                        ?.clinicianCorrectedDecimalAgeComment ?? ''}'),
+                    growthData.measurementDates?.comments
+                        ?.clinicianCorrectedDecimalAgeComment ?? ''),
                 // Use empty string for comment if null
                 const SizedBox(height: 16),
                 Text(
@@ -106,8 +105,8 @@ class ResultsDataTable extends StatelessWidget {
                         ?.correctedCentile ?? 'N/A'}'),
                 const SizedBox(height: 8),
                 _buildRichText('Interpretation: ',
-                    '${growthData.measurementCalculatedValues
-                        ?.correctedCentileBand ?? 'N/A'}'),
+                    growthData.measurementCalculatedValues
+                        ?.correctedCentileBand ?? 'N/A'),
                 const SizedBox(height: 8),
                 _buildRichText('SDS: ',
                     '${growthData.measurementCalculatedValues?.correctedSds ??
@@ -172,10 +171,10 @@ class ResultsDataTable extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             _buildRichText('Date of Birth: ',
-                '${firstGrowthData.birthData?.birthDate ?? 'N/A'}'),
+                firstGrowthData.birthData?.birthDate ?? 'N/A'),
             const SizedBox(height: 8),
             _buildRichText(
-                'Sex: ', '${firstGrowthData.birthData?.sex ?? 'N/A'}'),
+                'Sex: ', firstGrowthData.birthData?.sex ?? 'N/A'),
             const SizedBox(height: 16),
             const Divider(height: 20,
                 thickness: 5,

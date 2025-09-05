@@ -20,7 +20,7 @@ class CentileChart extends StatefulWidget {
   final int? gestationDays;
 
   const CentileChart({
-    Key? key,
+    super.key,
     required this.organizedCentileLines,
     required this.measurementMethod,
     required this.sex,
@@ -28,7 +28,7 @@ class CentileChart extends StatefulWidget {
     required this.dob,
     this.gestationWeeks,
     this.gestationDays,
-  }) : super(key: key);
+  });
 
   @override
   State<CentileChart> createState() => _CentileChartState();
@@ -242,76 +242,6 @@ class _CentileChartState extends State<CentileChart> {
     return dataMaxY + padding;
   }
 
-  List<Widget> _buildRightAxisLabels(BoxConstraints constraints) {
-    final List<Widget> labels = [];
-
-    final centilePoints = widget.organizedCentileLines[widget.sex]?[widget.measurementMethod];
-    if (centilePoints == null || centilePoints.isEmpty) return labels;
-
-    final chartHeight = constraints.maxHeight;
-
-    // Group centile lines by centile value
-    final Map<double, List<CentileDataPoint>> grouped = {};
-    for (final centile in centilePoints) {
-      final key = centile.centile ?? 0.0;
-      grouped.putIfAbsent(key, () => []).add(centile);
-    }
-
-    for (final entry in grouped.entries) {
-      final lines = entry.value;
-
-      // Pick the line with the highest max x (i.e., most rightward)
-      CentileDataPoint? rightmostLine;
-      double highestX = double.negativeInfinity;
-
-      for (final line in lines) {
-        final data = line.data;
-        if (data == null || data.isEmpty) continue;
-
-        final List<FlSpot> spots = data
-            .map((p) => FlSpot(p.x ?? 0.0, p.y ?? 0.0))
-            .toList();
-
-        final FlSpot maxXSpot = spots.reduce((a, b) => a.x > b.x ? a : b);
-        if (maxXSpot.x > highestX) {
-          highestX = maxXSpot.x;
-          rightmostLine = line;
-        }
-      }
-
-
-      // Build label for the rightmost line (if any)
-      if (rightmostLine != null && rightmostLine.data != null && rightmostLine.data!.isNotEmpty) {
-        final List<FlSpot> spots = rightmostLine.data!
-            .map((p) => FlSpot(p.x ?? 0.0, p.y ?? 0.0))
-            .toList();
-
-        final FlSpot rightmostSpot = spots.reduce((a, b) => a.x > b.x ? a : b);
-        final double normalizedY = (rightmostSpot.y - minY) / (maxY - minY);
-        final double topOffset = chartHeight * (1 - normalizedY);
-
-        labels.add(
-          Positioned(
-            right: 20,
-            top: (topOffset - 10).clamp(0.0, chartHeight - 20),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white),
-                  color: Colors.white
-              ),
-              child: Text(
-                '${rightmostLine.centile?.toStringAsFixed(1)}%',
-                style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w500, color: primaryColour),
-              ),
-            ),
-          ),
-        );
-      }
-    }
-
-    return labels;
-  }
 
 
   List<LineChartBarData> _generateLineBarsData() {
@@ -467,9 +397,7 @@ class _CentileChartState extends State<CentileChart> {
         return 'Head Circumference (cm)';
       case MeasurementMethod.bmi:
         return 'BMI (kg/m²)';
-      default: // Should not happen with the enum
-        return 'Measurement Value';
-    }
+      }
   }
 
   SideTitles _getBottomTitles() {
@@ -484,8 +412,8 @@ class _CentileChartState extends State<CentileChart> {
           titleWidget = Text('');
         }
         else if (value < 0.0383){
-          const one_week = 0.0191;
-          titleWidget = Text('${(40+(value / one_week)).toStringAsFixed(0)} w');
+          const oneWeek = 0.0191;
+          titleWidget = Text('${(40+(value / oneWeek)).toStringAsFixed(0)} w');
         }
         else if (value < 2) {
           if (value % 1 == 0){
@@ -553,7 +481,7 @@ class _CentileChartState extends State<CentileChart> {
     }
     ukWHOVerticalLines = ukWHOVerticalLinesBaseData.map((ukWHODataLine){
       return VerticalLine(
-        x: ukWHODataLine.decimal_age, // Use decimal_age for the x-coordinate
+        x: ukWHODataLine.decimalAge, // Use decimalAge for the x-coordinate
         strokeWidth: 1.5,
         color: ukWHODataLine.lineColor, // Use color from your custom object
         label: VerticalLineLabel(
@@ -574,7 +502,7 @@ class _CentileChartState extends State<CentileChart> {
 
     pubertalVerticalLines = pubertalUKWHOVerticalLines.map((pubertalDataLine){
       return VerticalLine(
-        x: pubertalDataLine.decimal_age, // Use decimal_age for the x-coordinate
+        x: pubertalDataLine.decimalAge, // Use decimalAge for the x-coordinate
         strokeWidth: 1.5,
         color: pubertalDataLine.lineColor, // Use color from your custom object
         label: VerticalLineLabel(
@@ -591,7 +519,7 @@ class _CentileChartState extends State<CentileChart> {
           ),
         ),
       );
-    }).toList();;
+    }).toList();
     return ukWHOVerticalLines + pubertalVerticalLines;
   }
 
@@ -736,7 +664,7 @@ class _CentileChartState extends State<CentileChart> {
                            scatterTouchData: ScatterTouchData(
                              enabled: true,
                              handleBuiltInTouches: true,
-                             mouseCursorResolver: (FlTouchEvent, ScatterTouchResponse) {
+                             mouseCursorResolver: (FlTouchEvent flTouchEvent, scatterTouchResponse) {
                                return SystemMouseCursors.click;
                              },
                              touchTooltipData: ScatterTouchTooltipData(
@@ -760,7 +688,7 @@ class _CentileChartState extends State<CentileChart> {
                                    final AgeCorrectionMethod ageType = touchedData['ageType'] as AgeCorrectionMethod;
 
                                    // Build your tooltip string with meaningful data
-                                   String tooltipText = "${originalResponse.measurementDates?.observationDate ?? 'N/A'}\n${originalResponse.childObservationValue?.observationValue  ?? 'N/A'} ${getMeasurementMethodUnits(originalResponse.childObservationValue?.measurementMethod) ?? 'N/A'}";
+                                   String tooltipText = "${originalResponse.measurementDates?.observationDate ?? 'N/A'}\n${originalResponse.childObservationValue?.observationValue  ?? 'N/A'} ${getMeasurementMethodUnits(originalResponse.childObservationValue?.measurementMethod)}";
 
                                    // Add age and centile/SDS based on age type
                                    if (ageType == AgeCorrectionMethod.chronological || ageType == AgeCorrectionMethod.both) {

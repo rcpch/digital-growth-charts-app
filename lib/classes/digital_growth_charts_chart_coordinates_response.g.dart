@@ -6,14 +6,6 @@ part of 'digital_growth_charts_chart_coordinates_response.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-DigitalGrowthChartsCentileLines _$DigitalGrowthChartsCentileLinesFromJson(
-  Map<String, dynamic> json,
-) => DigitalGrowthChartsCentileLines(
-  centileData:
-      (json['centile_data'] as List<dynamic>?)
-          ?.map((e) => ReferenceData.fromJson(e as Map<String, dynamic>))
-          .toList(),
-);
 
 Map<String, dynamic> _$DigitalGrowthChartsCentileLinesToJson(
   DigitalGrowthChartsCentileLines instance,

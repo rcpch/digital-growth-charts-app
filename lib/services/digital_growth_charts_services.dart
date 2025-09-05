@@ -1,6 +1,5 @@
 // package and library imports
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 
 // RCPCH imports
@@ -51,10 +50,7 @@ class DigitalGrowthChartsService {
       case MeasurementMethod.bmi:
         requestBody['bmi'] = double.tryParse(observationValue); // Adjust key if needed
         break;
-      default:
-      // Handle unknown measurement type or throw an error
-        throw Exception('Unknown measurement type: $measurementMethod');
-    }
+      }
 
     try {
       final response = await http.post(

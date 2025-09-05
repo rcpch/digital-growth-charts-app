@@ -33,7 +33,7 @@ class DGCApp extends StatelessWidget {
           child:Column(
             children: const [
               InputForm(),
-              const Padding(
+              Padding(
                 padding: EdgeInsets.all(30),
                 child: Image(
                   image: AssetImage('assets/images/incubator_alpha.png'),
