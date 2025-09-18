@@ -10,6 +10,7 @@ on:
 permissions:
   id-token: write
   contents: read
+  pages: write
 
 jobs:
   build-and-publish-android:
@@ -81,7 +82,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v4 # latest as at April 2025
+        uses: actions/checkout@v5 # latest as at April 2025
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -106,8 +107,14 @@ jobs:
           fi
           ./s/ci "$DEFINES_FOR_SCRIPT"
 
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload docs artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build/web
+          path: 'staticdocs'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
