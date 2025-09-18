@@ -1,8 +1,11 @@
 name: Build app and release to test users
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+
 
 permissions:
   id-token: write
@@ -72,3 +75,39 @@ jobs:
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
           packageName: uk.ac.rcpch.digital_growth_charts_app
           track: internal
+
+  build-and-push-web:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4 # latest as at April 2025
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.3'
+
+      - name: Create dummy .env for CI build (if needed by pubspec.yaml assets)
+        run: touch .env # Creates an empty .env file: this is necessary to satisfy pubspec.yaml assets declaration, but it is empty so dart-defines will be used
+
+      - name: Run CI script (test and build)
+        env:
+          BUILD_NUMBER: ${{github.run_number}}
+          API_URL: ${{ secrets.DGC_BASE_URL }}
+          API_KEY: ${{ secrets.DGC_API_KEY }}
+        run: |
+          DEFINES_FOR_SCRIPT=""
+          if [ -n "${{ secrets.DGC_BASE_URL }}" ]; then
+            DEFINES_FOR_SCRIPT="--dart-define=DGC_BASE_URL=${{ secrets.DGC_BASE_URL }} $DEFINES_FOR_SCRIPT"
+          fi
+          if [ -n "${{ secrets.DGC_API_KEY }}" ]; then
+            DEFINES_FOR_SCRIPT="--dart-define=DGC_API_KEY=${{ secrets.DGC_API_KEY }} $DEFINES_FOR_SCRIPT"
+          fi
+          ./s/ci "$DEFINES_FOR_SCRIPT"
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
