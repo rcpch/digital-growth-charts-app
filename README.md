@@ -7,6 +7,7 @@ This is a flutter wrapper for the RCPCH digital growth charts.
 ## Getting Started
 
 The RCPCH Digital Growth Charts App is a Flutter 3 project, written in Dart 3.9. Flutter is a mobile application development framework which allows us to develop in a single codebase and from this deploy native apps for iOS, Android, web and desktop.
+It is currently set up to deploy to android, ios and web.
 
 ## Local development setup
 
