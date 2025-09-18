@@ -1,7 +1,7 @@
 name: Build app and release to test users
 
 on:
-  merge:
+  push:
     branches: [main]
   workflow_dispatch:
 
