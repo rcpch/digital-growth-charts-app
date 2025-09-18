@@ -11,65 +11,34 @@ permissions:
   pages: write    # Required for actions/deploy-pages
 
 jobs:
-  # ============================
-  # ANDROID BUILD AND PUBLISH
-  # ============================
   build-and-publish-android:
     runs-on: ubuntu-latest
-    name: Build and Publish Android App
+    # ============================
+    # ANDROID BUILD AND DEPLOY
+    # ============================
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 # latest as at September 2025
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.35.3'
-          cache: true
-
-      - name: Get Flutter dependencies
-        run: flutter pub get
 
       - name: Extract version from pubspec.yaml and set build number (Android)
         id: get_version_android
         run: |
           VERSION_NAME=$(grep '^version:' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
           BUILD_NUMBER=$GITHUB_RUN_NUMBER
+
           echo "Detected Android Version Name: $VERSION_NAME"
           echo "Generated Android Build Number: $BUILD_NUMBER"
+
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
-          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV # Ensure BUILD_NUMBER is set for the build step
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
 
       - name: Create dummy .env for CI build (if needed by pubspec.yaml assets)
-        run: touch .env
-
-      - name: Run Flutter tests (Android context)
-        env:
-          DGC_BASE_URL: ${{ secrets.DGC_BASE_URL_ANDROID }} # Use specific secrets if they differ
-          DGC_API_KEY: ${{ secrets.DGC_API_KEY_ANDROID }}
-        run: |
-          DEFINES_TO_PASS=""
-          if [ -n "$DGC_BASE_URL" ]; then
-            DEFINES_TO_PASS="--dart-define=DGC_BASE_URL=$DGC_BASE_URL $DEFINES_TO_PASS"
-          fi
-          if [ -n "$DGC_API_KEY" ]; then
-            DEFINES_TO_PASS="--dart-define=DGC_API_KEY=$DGC_API_KEY $DEFINES_TO_PASS"
-          fi
-          echo "Running flutter test with defines: ${DEFINES_TO_PASS}"
-          flutter test ${DEFINES_TO_PASS}
-
-      - name: Build Android App Bundle
-        env:
-          BUILD_NUMBER_ENV: ${{ steps.get_version_android.outputs.BUILD_NUMBER || env.BUILD_NUMBER || github.run_number }} # Prioritize extracted, then env, then GITHUB_RUN_NUMBER
-          DGC_BASE_URL: ${{ secrets.DGC_BASE_URL_ANDROID }}
-          DGC_API_KEY: ${{ secrets.DGC_API_KEY_ANDROID }}
-        run: |
-          echo "Using Android Build Number: $BUILD_NUMBER_ENV"
-          flutter build appbundle --release \
-            --build-name=${{ steps.get_version_android.outputs.VERSION_NAME }} \
-            --build-number=${BUILD_NUMBER_ENV} \
-            --dart-define=DGC_BASE_URL=${DGC_BASE_URL} \
-            --dart-define=DGC_API_KEY=${DGC_API_KEY} # Add other necessary dart-defines
+        run: touch .env # Creates an empty .env file: this is necessary to satisfy pubspec.yaml assets declaration, but it is empty so dart-defines will be used
 
       - name: Decode Android keystore
         run: echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 --decode > android/keystore.jks
@@ -77,12 +46,27 @@ jobs:
       - name: Decode Android key properties
         run: echo "${{ secrets.ANDROID_KEY_PROPERTIES }}" | base64 --decode > android/key.properties
 
+      - name: Run CI script (test and build)
+        env:
+          BUILD_NUMBER: ${{github.run_number}}
+          API_URL: ${{ secrets.DGC_BASE_URL }}
+          API_KEY: ${{ secrets.DGC_API_KEY }}
+        run: |
+          DEFINES_FOR_SCRIPT=""
+          if [ -n "${{ secrets.DGC_BASE_URL }}" ]; then
+            DEFINES_FOR_SCRIPT="--dart-define=DGC_BASE_URL=${{ secrets.DGC_BASE_URL }} $DEFINES_FOR_SCRIPT"
+          fi
+          if [ -n "${{ secrets.DGC_API_KEY }}" ]; then
+            DEFINES_FOR_SCRIPT="--dart-define=DGC_API_KEY=${{ secrets.DGC_API_KEY }} $DEFINES_FOR_SCRIPT"
+          fi
+          ./s/ci "$DEFINES_FOR_SCRIPT"
+
       - id: authenticate
         name: Authenticate with Google
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v2 # latest as at April 2025
         with:
-          service_account: rcpch-growth-charts-app@rcpch-growth-charts-app.iam.gserviceaccount.com # Replace with your actual service account
-          workload_identity_provider: projects/221963061860/locations/global/workloadIdentityPools/github/providers/rcpch-growth-charts-app # Replace with your WIF provider
+          service_account: rcpch-growth-charts-app@rcpch-growth-charts-app.iam.gserviceaccount.com
+          workload_identity_provider: projects/221963061860/locations/global/workloadIdentityPools/github/providers/rcpch-growth-charts-app
           create_credentials_file: true
 
       - name: Upload to Internal Test Track
@@ -119,32 +103,38 @@ jobs:
 
       - name: Run Flutter tests (Web context)
         env:
-          DGC_BASE_URL: ${{ secrets.DGC_BASE_URL_WEB }}
-          DGC_API_KEY: ${{ secrets.DGC_API_KEY_WEB }}
+          # These environment variables are available within THIS run script block
+          # Their names (LOCAL_ENV_API_BASE_URL, LOCAL_ENV_API_KEY) are chosen to be clear
+          # that they are just temporary shell variables holding the secret values.
+          LOCAL_ENV_DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
+          LOCAL_ENV_DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
         run: |
           DEFINES_TO_PASS=""
-          if [ -n "$DGC_BASE_URL" ]; then
-            DEFINES_TO_PASS="--dart-define=DGC_BASE_URL=$DGC_BASE_URL $DEFINES_TO_PASS"
+          # Check the shell variable that holds the secret's value
+          if [ -n "$LOCAL_ENV_DGC_BASE_URL" ]; then
+          DEFINES_TO_PASS="--dart-define=DGC_BASE_URL=$LOCAL_ENV_DGC_BASE_URL $DEFINES_TO_PASS"
           fi
-          if [ -n "$DGC_API_KEY" ]; then
-            DEFINES_TO_PASS="--dart-define=DGC_API_KEY=$DGC_API_KEY $DEFINES_TO_PASS"
+          if [ -n "$LOCAL_ENV_DGC_API_KEY" ]; then
+          DEFINES_TO_PASS="--dart-define=DGC_API_KEY=$LOCAL_ENV_DGC_API_KEY $DEFINES_TO_PASS"
           fi
           echo "Running flutter test (web context) with defines: ${DEFINES_TO_PASS}"
-          flutter test ${DEFINES_TO_PASS} # Tests can also run in web context if configured
+          flutter test ${DEFINES_TO_PASS}
 
       - name: Build Flutter Web
         env:
-          DGC_BASE_URL: ${{ secrets.DGC_BASE_URL_WEB }}
-          DGC_API_KEY: ${{ secrets.DGC_API_KEY_WEB }} # Again, be cautious with this on the client-side
+          LOCAL_ENV_DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
+          LOCAL_ENV_DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
         run: |
           FLUTTER_WEB_BUILD_COMMAND="flutter build web --release"
           
           # Add dart-defines for web build
-          if [ -n "$DGC_BASE_URL" ]; then
-            FLUTTER_WEB_BUILD_COMMAND="$FLUTTER_WEB_BUILD_COMMAND --dart-define=DGC_BASE_URL=$DGC_BASE_URL"
+          if [ -n "$LOCAL_ENV_DGC_BASE_URL" ]; then
+            # Dart define KEY is 'DGC_BASE_URL', VALUE is from shell variable '$LOCAL_ENV_DGC_BASE_URL'
+            FLUTTER_WEB_BUILD_COMMAND="$FLUTTER_WEB_BUILD_COMMAND --dart-define=DGC_BASE_URL=$LOCAL_ENV_DGC_BASE_URL"
           fi
-          if [ -n "$DGC_API_KEY" ]; then
-            FLUTTER_WEB_BUILD_COMMAND="$FLUTTER_WEB_BUILD_COMMAND --dart-define=DGC_API_KEY=$DGC_API_KEY"
+          if [ -n "$LOCAL_ENV_DGC_API_KEY" ]; then
+            # Dart define KEY is 'DGC_API_KEY', VALUE is from shell variable '$LOCAL_ENV_DGC_API_KEY'
+            FLUTTER_WEB_BUILD_COMMAND="$FLUTTER_WEB_BUILD_COMMAND --dart-define=DGC_API_KEY=$LOCAL_ENV_DGC_API_KEY"
           fi
           
           echo "Running Web Build: $FLUTTER_WEB_BUILD_COMMAND"
