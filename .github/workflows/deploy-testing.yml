@@ -13,10 +13,12 @@ permissions:
 jobs:
   build-and-publish-android:
     runs-on: ubuntu-latest
-
+    # ============================
+    # ANDROID BUILD AND DEPLOY
+    # ============================
     steps:
       - name: Check out code
-        uses: actions/checkout@v4 # latest as at April 2025
+        uses: actions/checkout@v4 # latest as at September 2025
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -101,32 +103,38 @@ jobs:
 
       - name: Run Flutter tests (Web context)
         env:
-          DGC_BASE_URL: ${{ secrets.DGC_BASE_URL_WEB }}
-          DGC_API_KEY: ${{ secrets.DGC_API_KEY_WEB }}
+          # These environment variables are available within THIS run script block
+          # Their names (LOCAL_ENV_API_BASE_URL, LOCAL_ENV_API_KEY) are chosen to be clear
+          # that they are just temporary shell variables holding the secret values.
+          LOCAL_ENV_DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
+          LOCAL_ENV_DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
         run: |
           DEFINES_TO_PASS=""
-          if [ -n "$DGC_BASE_URL" ]; then
-            DEFINES_TO_PASS="--dart-define=DGC_BASE_URL=$DGC_BASE_URL $DEFINES_TO_PASS"
+          # Check the shell variable that holds the secret's value
+          if [ -n "$LOCAL_ENV_DGC_BASE_URL" ]; then
+          DEFINES_TO_PASS="--dart-define=DGC_BASE_URL=$LOCAL_ENV_DGC_BASE_URL $DEFINES_TO_PASS"
           fi
-          if [ -n "$DGC_API_KEY" ]; then
-            DEFINES_TO_PASS="--dart-define=DGC_API_KEY=$DGC_API_KEY $DEFINES_TO_PASS"
+          if [ -n "$LOCAL_ENV_DGC_API_KEY" ]; then
+          DEFINES_TO_PASS="--dart-define=DGC_API_KEY=$LOCAL_ENV_DGC_API_KEY $DEFINES_TO_PASS"
           fi
           echo "Running flutter test (web context) with defines: ${DEFINES_TO_PASS}"
-          flutter test ${DEFINES_TO_PASS} # Tests can also run in web context if configured
+          flutter test ${DEFINES_TO_PASS}
 
       - name: Build Flutter Web
         env:
-          DGC_BASE_URL: ${{ secrets.DGC_BASE_URL_WEB }}
-          DGC_API_KEY: ${{ secrets.DGC_API_KEY_WEB }} # Again, be cautious with this on the client-side
+          LOCAL_ENV_DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
+          LOCAL_ENV_DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
         run: |
           FLUTTER_WEB_BUILD_COMMAND="flutter build web --release"
           
           # Add dart-defines for web build
-          if [ -n "$DGC_BASE_URL" ]; then
-            FLUTTER_WEB_BUILD_COMMAND="$FLUTTER_WEB_BUILD_COMMAND --dart-define=DGC_BASE_URL=$DGC_BASE_URL"
+          if [ -n "$LOCAL_ENV_DGC_BASE_URL" ]; then
+            # Dart define KEY is 'DGC_BASE_URL', VALUE is from shell variable '$LOCAL_ENV_DGC_BASE_URL'
+            FLUTTER_WEB_BUILD_COMMAND="$FLUTTER_WEB_BUILD_COMMAND --dart-define=DGC_BASE_URL=$LOCAL_ENV_DGC_BASE_URL"
           fi
-          if [ -n "$DGC_API_KEY" ]; then
-            FLUTTER_WEB_BUILD_COMMAND="$FLUTTER_WEB_BUILD_COMMAND --dart-define=DGC_API_KEY=$DGC_API_KEY"
+          if [ -n "$LOCAL_ENV_DGC_API_KEY" ]; then
+            # Dart define KEY is 'DGC_API_KEY', VALUE is from shell variable '$LOCAL_ENV_DGC_API_KEY'
+            FLUTTER_WEB_BUILD_COMMAND="$FLUTTER_WEB_BUILD_COMMAND --dart-define=DGC_API_KEY=$LOCAL_ENV_DGC_API_KEY"
           fi
           
           echo "Running Web Build: $FLUTTER_WEB_BUILD_COMMAND"
