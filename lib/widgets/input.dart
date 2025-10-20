@@ -39,7 +39,7 @@ class InputFormState extends State<InputForm> {
   DateTime? _selectedClinicDate;
 
   // Variable to hold the selected measurement type
-  MeasurementMethod _selectedMeasurementMethod =
+  MeasurementMethod? _selectedMeasurementMethod =
       MeasurementMethod.height; // Default to Height
 
   // Variable to hold the selected Sex
@@ -135,16 +135,19 @@ class InputFormState extends State<InputForm> {
         return 'Enter head circumference in cm';
       case MeasurementMethod.bmi:
         return 'Enter BMI in kg/m²';
+      case null:
+        return "";
     }
   }
 
   void _resetForm() {
-    _observationDateController.clear();
     _measurementController.clear();
 
     setState(() {
-      _selectedClinicDate = null;
-      _selectedMeasurementMethod = MeasurementMethod.height;
+      // Don't reset the observation date, it's annoying to have to select it again
+      // https://github.com/rcpch/digital-growth-charts-app/issues/21
+      // You do have to select the measurement type though to avoid mistakes
+      _selectedMeasurementMethod = null;
     });
   }
 
@@ -177,7 +180,7 @@ class InputFormState extends State<InputForm> {
       final String dob = _dobController.text;
       final String clinicDate = _observationDateController.text;
       final String observationValue = _measurementController.text;
-      final MeasurementMethod measurementMethod = _selectedMeasurementMethod;
+      final MeasurementMethod measurementMethod = _selectedMeasurementMethod!;
       final Sex selectedSex = _selectedSex;
       // Access gestation values
       final int gestationWeeks = _selectedGestationWeeks;
@@ -294,7 +297,7 @@ class InputFormState extends State<InputForm> {
                 dob: _fixedDob!,
                 gestationWeeks: _fixedGestationWeeks,
                 gestationDays: _fixedGestationDays,
-                measurementMethod: _selectedMeasurementMethod,
+                measurementMethod: measurementMethod,
               ),
             ),
           );
