@@ -815,7 +815,7 @@ class _CentileChartState extends State<CentileChart> {
                         child: IconButton(
                           icon: Icon(
                             Icons.add_chart,
-                            semanticLabel: "Add measurement"
+                            semanticLabel: "Add measurement",
                           ),
                           tooltip: "Add measurement",
                           onPressed: () {
