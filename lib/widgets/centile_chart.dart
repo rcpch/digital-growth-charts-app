@@ -807,6 +807,30 @@ class _CentileChartState extends State<CentileChart> {
                         ),
                       ),
                     ),
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: Padding(
+                        // Optional padding around the button itself
+                        padding: const EdgeInsets.all(10.0),
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.add_chart,
+                            semanticLabel: "Add measurement",
+                          ),
+                          tooltip: "Add measurement",
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          iconSize: 30.0,
+                          style: ButtonStyle(
+                            backgroundColor: WidgetStateProperty.all<Color>(
+                              primaryColour,
+                            ),
+                          ),
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ],
                 );
               },
