@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import 'package:digital_growth_charts_app/widgets/charts.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 // RCPCH imports
@@ -11,6 +12,7 @@ import '../definitions/enums.dart';
 import './results.dart';
 import '../services/centile_chart_data_utils.dart';
 import '../widgets/enum_radio_group.dart';
+import '../widgets/charts.dart';
 
 class InputFormState extends State<InputForm> {
   // A GlobalKey to uniquely identify the Form widget
@@ -289,17 +291,7 @@ class InputFormState extends State<InputForm> {
         if (mounted) {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => ResultsPage(
-                organizedGrowthData: _organizedGrowthData,
-                organizedCentileLines: _organizedCentileLines,
-                sex: _fixedSex!,
-                dob: _fixedDob!,
-                gestationWeeks: _fixedGestationWeeks,
-                gestationDays: _fixedGestationDays,
-                measurementMethod: measurementMethod,
-              ),
-            ),
+            MaterialPageRoute(builder: (context) => const ChartsRoute())
           );
         }
       } catch (e) {
@@ -693,22 +685,26 @@ class InputFormState extends State<InputForm> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => ResultsPage(
-                        organizedGrowthData: _organizedGrowthData,
-                        organizedCentileLines: _organizedCentileLines,
-                        sex: _fixedSex!,
-                        // Make sure these are not null if data exists
-                        dob: _fixedDob!,
-                        gestationWeeks: _fixedGestationWeeks,
-                        gestationDays: _fixedGestationDays,
-                        // You might need to decide which measurement method to show by default
-                        measurementMethod: _organizedGrowthData
-                            .keys
-                            .first, // Example: show the first available method
-                      ),
-                    ),
+                    MaterialPageRoute(builder: (context) => const ChartsRoute())
                   );
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (context) => ResultsPage(
+                  //       organizedGrowthData: _organizedGrowthData,
+                  //       organizedCentileLines: _organizedCentileLines,
+                  //       sex: _fixedSex!,
+                  //       // Make sure these are not null if data exists
+                  //       dob: _fixedDob!,
+                  //       gestationWeeks: _fixedGestationWeeks,
+                  //       gestationDays: _fixedGestationDays,
+                  //       // You might need to decide which measurement method to show by default
+                  //       measurementMethod: _organizedGrowthData
+                  //           .keys
+                  //           .first, // Example: show the first available method
+                  //     ),
+                  //   ),
+                  // );
                 },
                 child: const Text(
                   'View Charts',
