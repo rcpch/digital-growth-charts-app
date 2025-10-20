@@ -1,3 +1,4 @@
+import 'package:digital_growth_charts_app/widgets/child_data.dart';
 import 'package:flutter/material.dart';
 
 class ChartsRoute extends StatelessWidget {
@@ -16,7 +17,7 @@ class ChartsRoute extends StatelessWidget {
         ),
         body: const TabBarView(
           children: [
-            Text("data"),
+            ChildDataForm(),
             Text("height"),
             Text("weight"),
             Text("bmi"),
