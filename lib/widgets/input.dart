@@ -152,7 +152,7 @@ class InputFormState extends State<InputForm> {
 
   void _hardResetForm() {
      var appState = Provider.of<AppState>(context, listen: false);
-     appState.dob = null;
+     appState.reset();
 
     _observationDateController.clear();
     _measurementController.clear();
@@ -224,69 +224,12 @@ class InputFormState extends State<InputForm> {
         ),
       );
 
-      try {
-        // Call the API service method
-        final GrowthDataResponse apiResponse = await _digitalGrowthChartsService
-            .submitGrowthData(
-              birthDate: dob,
-              observationDate: clinicDate,
-              sex: selectedSex,
-              measurementMethod: measurementMethod,
-              observationValue: observationValue,
-              gestationWeeks: gestationWeeks,
-              gestationDays: gestationDays,
-            );
-
-        //  add the response to a map of lists based on measurement method
-        setState(() {
-          _organizedGrowthData.update(
-            measurementMethod,
-            (list) => list..add(apiResponse),
-            ifAbsent: () => [apiResponse],
-          );
-        });
-
-        // Determine if centile data for this sex and measurement method is already cached
-        final bool isCentileDataCached =
-            _organizedCentileLines[selectedSex]?.containsKey(
-              measurementMethod,
-            ) ??
-            false;
-
-        DigitalGrowthChartsCentileLines? chartDataResponse;
-
-        if (!isCentileDataCached) {
-          // If centile data is not cached, fetch it
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Fetching chart data...'),
-                backgroundColor: Colors.orangeAccent,
-                duration: Duration(seconds: 2),
-              ),
-            );
-          }
-          chartDataResponse = await _digitalGrowthChartsService
-              .getChartCoordinates(
-                sex: selectedSex,
-                measurementMethod: measurementMethod,
-              );
-
-          // Process and merge the new centile data into the organized map
-          if (chartDataResponse.centileData != null) {
-            setState(() {
-              final newOrganizedData = organizeCentileLines(chartDataResponse!);
-              // Merge new data. Prioritize new data for the same sex and measurement method
-              if (newOrganizedData[selectedSex]?.containsKey(
-                    measurementMethod,
-                  ) ??
-                  false) {
-                _organizedCentileLines[selectedSex]![measurementMethod] =
-                    newOrganizedData[selectedSex]![measurementMethod]!;
-              }
-            });
-          }
-        }
+      // try {
+        await appState.addMeasurement(
+          observationDate: clinicDate,
+          method: measurementMethod,
+          value: observationValue
+        );
 
         _resetForm();
 
@@ -303,24 +246,24 @@ class InputFormState extends State<InputForm> {
             ),
           );
         }
-      } catch (e) {
-        // Handle API call errors
-        developer.log(
-          'Error during API submission: $e',
-          level: LogLevel.warning,
-          name: 'DigitalGrowthChartsService',
-          error: e,
-          stackTrace: StackTrace.current,
-        );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to submit data: ${e.toString()}'),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
-        }
-      }
+      // } catch (e) {
+      //   // Handle API call errors
+      //   developer.log(
+      //     'Error during API submission: $e',
+      //     level: LogLevel.warning,
+      //     name: 'DigitalGrowthChartsService',
+      //     error: e,
+      //     stackTrace: StackTrace.current,
+      //   );
+      //   if (mounted) {
+      //     ScaffoldMessenger.of(context).showSnackBar(
+      //       SnackBar(
+      //         content: Text('Failed to submit data: ${e.toString()}'),
+      //         backgroundColor: Colors.redAccent,
+      //       ),
+      //     );
+      //   }
+      // }
     } else {
       // If the form is invalid, show an error message
       ScaffoldMessenger.of(context).showSnackBar(
