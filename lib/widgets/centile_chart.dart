@@ -258,12 +258,37 @@ class _CentileChartState extends State<CentileChart> {
     if (centileDataPoints != null) {
       for (final centileDataPoint in centileDataPoints) {
         if (centileDataPoint.data != null) {
-          final List<FlSpot> spots = centileDataPoint.data!.map((dataPoint) {
+          final List<FlSpot> allSpots = centileDataPoint.data!.map((dataPoint) {
             // Assuming dataPoint.x is the age and dataPoint.y is the measurement value.
             final double xValue = dataPoint.x ?? 0.0;
             final double yValue = dataPoint.y ?? 0.0;
             return FlSpot(xValue, yValue);
           }).toList();
+
+          final List<FlSpot> spots = [];
+
+          // https://github.com/rcpch/digital-growth-charts-app/issues/28
+          // fl_chart is very slow to render dashed lines off screen so clip the lines
+          // to the current viewpoint (ensuring we grab the first and last points either side)
+          for(var i = 0; i < allSpots.length; i++) {
+            if(spots.isEmpty && allSpots[i].x >= minX) {
+              if(i > 0) {
+                spots.add(allSpots[i - 1]);
+              }
+
+              spots.add(allSpots[i]);
+            } else if(allSpots[i].x >= minX && allSpots[i].x <= maxX) {
+              spots.add(allSpots[i]);
+            } else if(allSpots[i].x > maxX) {
+              spots.add(allSpots[i]);
+
+              if(i < allSpots.length - 1) {
+                spots.add(allSpots[i + 1]);
+              }
+
+              break;
+            }
+          }
 
           if (spots.isNotEmpty) {
             final isDashed = dashedCentileValues.contains(
