@@ -19,9 +19,6 @@ class InputFormState extends State<InputForm> {
   final _formKey = GlobalKey<FormState>();
   bool _canSubmit = false;
 
-  final DigitalGrowthChartsService _digitalGrowthChartsService =
-      DigitalGrowthChartsService(); // API service
-  Map<MeasurementMethod, List<GrowthDataResponse>> _organizedGrowthData = {};
   OrganizedCentileLines _organizedCentileLines = {Sex.male: {}, Sex.female: {}};
 
   // Controllers for the input fields
@@ -164,8 +161,6 @@ class InputFormState extends State<InputForm> {
     setState(() {
       _selectedClinicDate = null;
       _selectedMeasurementMethod = MeasurementMethod.height;
-      _organizedGrowthData = {};
-      _organizedCentileLines = {Sex.male: {}, Sex.female: {}};
     });
   }
 
@@ -182,16 +177,11 @@ class InputFormState extends State<InputForm> {
           .save(); // Save the form fields (not strictly necessary for TextFormFields with controllers, but good practice)
 
       // Access the entered values:
-      final String dob = _dobController.text;
       final String clinicDate = _observationDateController.text;
       final String observationValue = _measurementController.text;
       final MeasurementMethod measurementMethod = _selectedMeasurementMethod!;
-      final Sex selectedSex = _selectedSex;
-      // Access gestation values
-      final int gestationWeeks = _selectedGestationWeeks;
-      final int gestationDays = _selectedGestationDays;
 
-      if (_organizedGrowthData.isNotEmpty) {
+      if (appState.organizedGrowthData.isNotEmpty) {
         // If there's existing data, check if the current demographics match the fixed ones
         if (_selectedDob != appState.dob ||
             _selectedSex != appState.sex ||
@@ -224,7 +214,7 @@ class InputFormState extends State<InputForm> {
         ),
       );
 
-      // try {
+      try {
         await appState.addMeasurement(
           observationDate: clinicDate,
           method: measurementMethod,
@@ -239,31 +229,29 @@ class InputFormState extends State<InputForm> {
             context,
             MaterialPageRoute(
               builder: (context) => ResultsPage(
-                organizedGrowthData: _organizedGrowthData,
-                organizedCentileLines: _organizedCentileLines,
                 measurementMethod: measurementMethod,
               ),
             ),
           );
         }
-      // } catch (e) {
-      //   // Handle API call errors
-      //   developer.log(
-      //     'Error during API submission: $e',
-      //     level: LogLevel.warning,
-      //     name: 'DigitalGrowthChartsService',
-      //     error: e,
-      //     stackTrace: StackTrace.current,
-      //   );
-      //   if (mounted) {
-      //     ScaffoldMessenger.of(context).showSnackBar(
-      //       SnackBar(
-      //         content: Text('Failed to submit data: ${e.toString()}'),
-      //         backgroundColor: Colors.redAccent,
-      //       ),
-      //     );
-      //   }
-      // }
+      } catch (e) {
+        // Handle API call errors
+        developer.log(
+          'Error during API submission: $e',
+          level: LogLevel.warning,
+          name: 'DigitalGrowthChartsService',
+          error: e,
+          stackTrace: StackTrace.current,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to submit data: ${e.toString()}'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      }
     } else {
       // If the form is invalid, show an error message
       ScaffoldMessenger.of(context).showSnackBar(
@@ -286,6 +274,8 @@ class InputFormState extends State<InputForm> {
 
   @override
   Widget build(BuildContext context) {
+    var appState = context.watch<AppState>();
+
     return Form(
       // Wrap form content in a Form widget
       key: _formKey, // Assign the GlobalKey
@@ -305,14 +295,14 @@ class InputFormState extends State<InputForm> {
             // Date of Birth Field
             TextFormField(
               controller: _dobController,
-              readOnly: _organizedGrowthData.isNotEmpty ? true : false,
+              readOnly: appState.organizedGrowthData.isNotEmpty,
               decoration: const InputDecoration(
                 labelText: 'Date of Birth',
                 suffixIcon: Icon(Icons.calendar_today),
                 border: OutlineInputBorder(),
               ),
-              enabled: _organizedGrowthData.isEmpty,
-              onTap: _organizedGrowthData.isNotEmpty
+              enabled: appState.organizedGrowthData.isEmpty,
+              onTap: appState.organizedGrowthData.isNotEmpty
                   ? null
                   : () => _selectDate(context, _dobController, isDob: true),
               validator: (value) {
@@ -411,7 +401,7 @@ class InputFormState extends State<InputForm> {
                                   );
                                 })
                                 .toList(),
-                        onChanged: _organizedGrowthData.isNotEmpty
+                        onChanged: appState.organizedGrowthData.isNotEmpty
                             ? null
                             : (int? newValue) {
                                 if (newValue != null) {
@@ -450,7 +440,7 @@ class InputFormState extends State<InputForm> {
                                   );
                                 })
                                 .toList(),
-                        onChanged: _organizedGrowthData.isNotEmpty
+                        onChanged: appState.organizedGrowthData.isNotEmpty
                             ? null
                             : (int? newValue) {
                                 if (newValue != null) {
@@ -488,7 +478,7 @@ class InputFormState extends State<InputForm> {
                 });
                 _checkFormValidity();
               },
-              enabled: _organizedGrowthData.isEmpty,
+              enabled: appState.organizedGrowthData.isEmpty,
               values: Sex.values,
               labelBuilder: (m) {
                 switch (m) {
@@ -616,7 +606,7 @@ class InputFormState extends State<InputForm> {
               child: const Text('Reset', style: TextStyle(color: Colors.white)),
             ),
             // Conditionally visible button to navigate to ResultsPage
-            if (_organizedGrowthData.isNotEmpty) // Check if there's data
+            if (appState.organizedGrowthData.isNotEmpty) // Check if there's data
               ElevatedButton(
                 style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.resolveWith<Color?>((
@@ -639,12 +629,8 @@ class InputFormState extends State<InputForm> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => ResultsPage(
-                        organizedGrowthData: _organizedGrowthData,
-                        organizedCentileLines: _organizedCentileLines,
                         // You might need to decide which measurement method to show by default
-                        measurementMethod: _organizedGrowthData
-                            .keys
-                            .first, // Example: show the first available method
+                        measurementMethod: appState.organizedGrowthData.keys.first, // Example: show the first available method
                       ),
                     ),
                   );

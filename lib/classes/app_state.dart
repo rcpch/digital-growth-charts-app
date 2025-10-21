@@ -55,8 +55,6 @@ class AppState with ChangeNotifier {
       throw Exception('Missing demographics in app state');
     }
 
-    print("_dgcApi: $_dgcApi");
-
     // Exception handling is the responsibility of the caller for now
     final apiResponse = await _dgcApi.submitGrowthData(
       birthDate: DateFormat('yyyy-MM-dd').format(_dob!),
