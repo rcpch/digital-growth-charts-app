@@ -12,12 +12,12 @@ import './results_data_table.dart';
 import '../classes/app_state.dart';
 
 class ResultsPage extends StatefulWidget {
-  final MeasurementMethod measurementMethod;
-
   const ResultsPage({
     super.key,
-    required this.measurementMethod,
+    this.initialMeasurementMethod,
   });
+
+  final MeasurementMethod? initialMeasurementMethod;
 
   @override
   State<ResultsPage> createState() => _ResultsPageState();
@@ -25,12 +25,29 @@ class ResultsPage extends StatefulWidget {
 
 class _ResultsPageState extends State<ResultsPage> {
   late PageController _pageController;
-  int _currentPage = 0;
+  late int _currentPage;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0);
+
+    var appState = context.read<AppState>();
+
+    print("initialMeasurementMethod: ${widget.initialMeasurementMethod} data: ${appState.organizedGrowthData.keys}");
+
+    if(widget.initialMeasurementMethod != null &&
+       appState.organizedGrowthData.containsKey(widget.initialMeasurementMethod)) {
+      // Start on the page for the specified measurement method
+      var methodIndex = appState.organizedGrowthData.keys.toList().indexOf(widget.initialMeasurementMethod!);
+      _currentPage = methodIndex;
+      _pageController = PageController(initialPage: methodIndex);
+    } else {
+      // Default to the first chart page
+      _currentPage = 0;
+      
+    }
+
+    _pageController = PageController(initialPage: _currentPage);
   }
 
   // Function to navigate to a specific page

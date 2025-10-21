@@ -5,12 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:digital_growth_charts_app/themes/colours.dart';
 import 'package:digital_growth_charts_app/classes/log_levels.dart';
 import 'package:provider/provider.dart';
-import '../services/digital_growth_charts_services.dart';
-import '../classes/digital_growth_charts_api_response.dart';
-import '../classes/digital_growth_charts_chart_coordinates_response.dart';
 import '../definitions/enums.dart';
 import './results.dart';
-import '../services/centile_chart_data_utils.dart';
 import '../widgets/enum_radio_group.dart';
 import '../classes/app_state.dart';
 
@@ -18,8 +14,6 @@ class InputFormState extends State<InputForm> {
   // A GlobalKey to uniquely identify the Form widget
   final _formKey = GlobalKey<FormState>();
   bool _canSubmit = false;
-
-  OrganizedCentileLines _organizedCentileLines = {Sex.male: {}, Sex.female: {}};
 
   // Controllers for the input fields
   final TextEditingController _dobController = TextEditingController();
@@ -229,7 +223,7 @@ class InputFormState extends State<InputForm> {
             context,
             MaterialPageRoute(
               builder: (context) => ResultsPage(
-                measurementMethod: measurementMethod,
+                initialMeasurementMethod: measurementMethod,
               ),
             ),
           );
@@ -628,10 +622,7 @@ class InputFormState extends State<InputForm> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ResultsPage(
-                        // You might need to decide which measurement method to show by default
-                        measurementMethod: appState.organizedGrowthData.keys.first, // Example: show the first available method
-                      ),
+                      builder: (context) => ResultsPage(),
                     ),
                   );
                 },
