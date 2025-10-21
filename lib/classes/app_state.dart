@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:digital_growth_charts_app/definitions/enums.dart';
 import '../classes/digital_growth_charts_api_response.dart';
-import '../classes/digital_growth_charts_chart_coordinates_response.dart';
 import '../services/centile_chart_data_utils.dart';
 import '../services/digital_growth_charts_services.dart';
 
@@ -15,7 +14,10 @@ class AppState with ChangeNotifier {
 
   final Map<MeasurementMethod, List<GrowthDataResponse>> _organizedGrowthData =
       {};
-  OrganizedCentileLines _organizedCentileLines = {Sex.male: {}, Sex.female: {}};
+  final OrganizedCentileLines _organizedCentileLines = {
+    Sex.male: {},
+    Sex.female: {},
+  };
 
   final DigitalGrowthChartsService _dgcApi = DigitalGrowthChartsService();
 
@@ -24,8 +26,9 @@ class AppState with ChangeNotifier {
   int? get gestationWeeks => _gestationWeeks;
   int? get gestationDays => _gestationDays;
 
-  get organizedGrowthData => _organizedGrowthData;
-  get organizedCentileLines => _organizedCentileLines;
+  Map<MeasurementMethod, List<GrowthDataResponse>> get organizedGrowthData =>
+      _organizedGrowthData;
+  OrganizedCentileLines get organizedCentileLines => _organizedCentileLines;
 
   set dob(DateTime? newDob) {
     _dob = newDob;
