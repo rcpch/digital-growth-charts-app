@@ -298,10 +298,6 @@ class InputFormState extends State<InputForm> {
               builder: (context) => ResultsPage(
                 organizedGrowthData: _organizedGrowthData,
                 organizedCentileLines: _organizedCentileLines,
-                sex: appState.sex!,
-                dob: appState.dob!,
-                gestationWeeks: appState.gestationWeeks!,
-                gestationDays: appState.gestationDays!,
                 measurementMethod: measurementMethod,
               ),
             ),
@@ -702,11 +698,6 @@ class InputFormState extends State<InputForm> {
                       builder: (context) => ResultsPage(
                         organizedGrowthData: _organizedGrowthData,
                         organizedCentileLines: _organizedCentileLines,
-                        sex: context.read<AppState>().sex!,
-                        // Make sure these are not null if data exists
-                        dob: context.read<AppState>().dob!,
-                        gestationWeeks: context.read<AppState>().gestationWeeks!,
-                        gestationDays: context.read<AppState>().gestationDays!,
                         // You might need to decide which measurement method to show by default
                         measurementMethod: _organizedGrowthData
                             .keys

@@ -1,5 +1,6 @@
 // Dart/flutter imports
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 // Third party imports
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -10,26 +11,19 @@ import '../definitions/enums.dart';
 import './centile_chart.dart';
 import './results_data_table.dart';
 import '../services/centile_chart_data_utils.dart';
+import '../classes/app_state.dart';
 
 class ResultsPage extends StatefulWidget {
   final Map<MeasurementMethod, List<GrowthDataResponse>> organizedGrowthData;
   final OrganizedCentileLines organizedCentileLines;
 
-  final Sex sex;
   final MeasurementMethod measurementMethod;
-  final DateTime dob;
-  final int? gestationWeeks;
-  final int? gestationDays;
 
   const ResultsPage({
     super.key,
     required this.organizedGrowthData,
     required this.organizedCentileLines,
-    required this.sex,
-    required this.dob,
     required this.measurementMethod,
-    this.gestationWeeks,
-    this.gestationDays,
   });
 
   @override
@@ -95,7 +89,7 @@ class _ResultsPageState extends State<ResultsPage> {
         .toList();
   }
 
-  Widget _buildPageViewItem(int index) {
+  Widget _buildPageViewItem(BuildContext context, int index) {
     // If it's the last page and we have charts, it's the data table
     if (index == _availableCharts.length && _availableCharts.isNotEmpty) {
       return ResultsDataTable(
@@ -106,16 +100,24 @@ class _ResultsPageState extends State<ResultsPage> {
 
     // Otherwise it's a chart
     final method = _availableCharts[index];
-    // Debug print the actual data points
-    return CentileChart(
-      key: PageStorageKey('chart_$method'),
-      organizedCentileLines: widget.organizedCentileLines,
-      measurementMethod: method,
-      sex: widget.sex,
-      growthDataForMethod: widget.organizedGrowthData[method]!,
-      dob: widget.dob,
-      gestationWeeks: widget.gestationWeeks,
-      gestationDays: widget.gestationDays,
+
+    var appState = context.read<AppState>();
+
+    if(appState.dob != null && appState.sex != null) {
+      return CentileChart(
+        key: PageStorageKey('chart_$method'),
+        organizedCentileLines: widget.organizedCentileLines,
+        measurementMethod: method,
+        sex: appState.sex!,
+        growthDataForMethod: widget.organizedGrowthData[method]!,
+        dob: appState.dob!,
+        gestationWeeks: appState.gestationWeeks,
+        gestationDays: appState.gestationDays,
+      );
+    }
+
+    return const Center(
+      child: Text('Cannot display chart. Missing date of birth or sex.'),
     );
   }
 
@@ -125,7 +127,7 @@ class _ResultsPageState extends State<ResultsPage> {
       controller: _pageController,
       itemCount: _numPages,
       itemBuilder: (context, index) {
-        return _buildPageViewItem(index);
+        return _buildPageViewItem(context, index);
       },
       onPageChanged: (index) {
         setState(() {
