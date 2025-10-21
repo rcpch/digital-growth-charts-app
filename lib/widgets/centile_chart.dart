@@ -270,19 +270,19 @@ class _CentileChartState extends State<CentileChart> {
           // https://github.com/rcpch/digital-growth-charts-app/issues/28
           // fl_chart is very slow to render dashed lines off screen so clip the lines
           // to the current viewpoint (ensuring we grab the first and last points either side)
-          for(var i = 0; i < allSpots.length; i++) {
-            if(spots.isEmpty && allSpots[i].x >= minX) {
-              if(i > 0) {
+          for (var i = 0; i < allSpots.length; i++) {
+            if (spots.isEmpty && allSpots[i].x >= minX) {
+              if (i > 0) {
                 spots.add(allSpots[i - 1]);
               }
 
               spots.add(allSpots[i]);
-            } else if(allSpots[i].x >= minX && allSpots[i].x <= maxX) {
+            } else if (allSpots[i].x >= minX && allSpots[i].x <= maxX) {
               spots.add(allSpots[i]);
-            } else if(allSpots[i].x > maxX) {
+            } else if (allSpots[i].x > maxX) {
               spots.add(allSpots[i]);
 
-              if(i < allSpots.length - 1) {
+              if (i < allSpots.length - 1) {
                 spots.add(allSpots[i + 1]);
               }
 
