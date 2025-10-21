@@ -42,7 +42,9 @@ class InputFormState extends State<InputForm> {
   void _checkFormValidity() {
     // Validate the form and update the _canSubmit state
     // The null check for currentState is important if the form might not be built yet.
-    if (_formKey.currentState != null && _formKey.currentState!.validate()) {
+    if (_formKey.currentState != null &&
+        _formKey.currentState!.validate() &&
+        _selectedMeasurementMethod != null) {
       if (!_canSubmit) {
         setState(() {
           _canSubmit = true;
@@ -140,6 +142,7 @@ class InputFormState extends State<InputForm> {
       // https://github.com/rcpch/digital-growth-charts-app/issues/21
       // You do have to select the measurement type though to avoid mistakes
       _selectedMeasurementMethod = null;
+      _canSubmit = false;
     });
   }
 
@@ -504,6 +507,7 @@ class InputFormState extends State<InputForm> {
                   _selectedMeasurementMethod = value!;
                   _measurementController.clear();
                 });
+                _checkFormValidity();
               },
               values: MeasurementMethod.values, // all enum values
               labelBuilder: (m) {
