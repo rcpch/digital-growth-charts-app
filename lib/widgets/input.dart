@@ -37,6 +37,8 @@ class InputFormState extends State<InputForm> {
   int _selectedGestationWeeks = 40; // Default to 40 weeks
   int _selectedGestationDays = 0; // Default to 0 days
 
+  bool _loading = false;
+
   void _checkFormValidity() {
     // Validate the form and update the _canSubmit state
     // The null check for currentState is important if the form might not be built yet.
@@ -199,14 +201,7 @@ class InputFormState extends State<InputForm> {
         appState.gestationDays = _selectedGestationDays;
       }
 
-      // show loading
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Submitting data...'),
-          backgroundColor: Colors.blueAccent,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      setState(() => _loading = true);
 
       try {
         await appState.addMeasurement(
@@ -244,6 +239,8 @@ class InputFormState extends State<InputForm> {
             ),
           );
         }
+      } finally {
+        setState(() => _loading = false);
       }
     } else {
       // If the form is invalid, show an error message
@@ -552,7 +549,7 @@ class InputFormState extends State<InputForm> {
 
             // Submit Button
             ElevatedButton(
-              onPressed: _canSubmit ? _submitForm : null,
+              onPressed: _canSubmit && !_loading ? _submitForm : null,
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith<Color?>((
                   Set<WidgetState> states,
@@ -571,8 +568,8 @@ class InputFormState extends State<InputForm> {
                   ),
                 ),
               ),
-              child: const Text(
-                'Submit',
+              child: Text(
+                _loading ? 'Loading...' : 'Submit',
                 style: TextStyle(color: Colors.white),
               ),
             ),
