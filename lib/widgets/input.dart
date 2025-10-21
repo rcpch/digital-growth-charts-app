@@ -24,10 +24,6 @@ class InputFormState extends State<InputForm> {
   Map<MeasurementMethod, List<GrowthDataResponse>> _organizedGrowthData = {};
   OrganizedCentileLines _organizedCentileLines = {Sex.male: {}, Sex.female: {}};
 
-  // State variables to store the fixed demographic data after the first submission
-  int? _fixedGestationWeeks;
-  int? _fixedGestationDays;
-
   // Controllers for the input fields
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _observationDateController =
@@ -84,10 +80,10 @@ class InputFormState extends State<InputForm> {
       // Populate the Sex selection (for display, it's locked to edits)
       _selectedSex = appState.sex!;
     }
-    if (_fixedGestationWeeks != null) {
+    if (appState.gestationWeeks != null) {
       // Populate Gestation fields and state
-      _selectedGestationWeeks = _fixedGestationWeeks!;
-      _selectedGestationDays = _fixedGestationDays!;
+      _selectedGestationWeeks = appState.gestationWeeks!;
+      _selectedGestationDays = appState.gestationDays!;
       _showGestationFields = true; // Expand gestation section if data exists
     }
   }
@@ -199,8 +195,8 @@ class InputFormState extends State<InputForm> {
         // If there's existing data, check if the current demographics match the fixed ones
         if (_selectedDob != appState.dob ||
             _selectedSex != appState.sex ||
-            _selectedGestationWeeks != _fixedGestationWeeks ||
-            _selectedGestationDays != _fixedGestationDays) {
+            _selectedGestationWeeks != appState.gestationWeeks ||
+            _selectedGestationDays != appState.gestationDays) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text(
@@ -215,8 +211,8 @@ class InputFormState extends State<InputForm> {
         // This is the first submission, so store the demographics as fixed
         appState.dob = _selectedDob;
         appState.sex = _selectedSex;
-        _fixedGestationWeeks = _selectedGestationWeeks;
-        _fixedGestationDays = _selectedGestationDays;
+        appState.gestationWeeks = _selectedGestationWeeks;
+        appState.gestationDays = _selectedGestationDays;
       }
 
       // show loading
@@ -304,8 +300,8 @@ class InputFormState extends State<InputForm> {
                 organizedCentileLines: _organizedCentileLines,
                 sex: appState.sex!,
                 dob: appState.dob!,
-                gestationWeeks: _fixedGestationWeeks,
-                gestationDays: _fixedGestationDays,
+                gestationWeeks: appState.gestationWeeks!,
+                gestationDays: appState.gestationDays!,
                 measurementMethod: measurementMethod,
               ),
             ),
@@ -709,8 +705,8 @@ class InputFormState extends State<InputForm> {
                         sex: context.read<AppState>().sex!,
                         // Make sure these are not null if data exists
                         dob: context.read<AppState>().dob!,
-                        gestationWeeks: _fixedGestationWeeks,
-                        gestationDays: _fixedGestationDays,
+                        gestationWeeks: context.read<AppState>().gestationWeeks!,
+                        gestationDays: context.read<AppState>().gestationDays!,
                         // You might need to decide which measurement method to show by default
                         measurementMethod: _organizedGrowthData
                             .keys
