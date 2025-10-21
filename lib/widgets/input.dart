@@ -25,7 +25,6 @@ class InputFormState extends State<InputForm> {
   OrganizedCentileLines _organizedCentileLines = {Sex.male: {}, Sex.female: {}};
 
   // State variables to store the fixed demographic data after the first submission
-  Sex? _fixedSex;
   int? _fixedGestationWeeks;
   int? _fixedGestationDays;
 
@@ -77,13 +76,13 @@ class InputFormState extends State<InputForm> {
 
     // Check if fixed data exists (meaning we are returning from a submission)
     if (appState.dob != null) {
-      // Populate the Date of Birth field and state
+      // Populate the Date of Birth field (for display, it's locked to edits)
       _dobController.text = DateFormat('yyyy-MM-dd').format(appState.dob!);
       _selectedDob = appState.dob;
     }
-    if (_fixedSex != null) {
-      // Populate the Sex selection
-      _selectedSex = _fixedSex!;
+    if (appState.sex != null) {
+      // Populate the Sex selection (for display, it's locked to edits)
+      _selectedSex = appState.sex!;
     }
     if (_fixedGestationWeeks != null) {
       // Populate Gestation fields and state
@@ -199,7 +198,7 @@ class InputFormState extends State<InputForm> {
       if (_organizedGrowthData.isNotEmpty) {
         // If there's existing data, check if the current demographics match the fixed ones
         if (_selectedDob != appState.dob ||
-            _selectedSex != _fixedSex ||
+            _selectedSex != appState.sex ||
             _selectedGestationWeeks != _fixedGestationWeeks ||
             _selectedGestationDays != _fixedGestationDays) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -215,8 +214,7 @@ class InputFormState extends State<InputForm> {
       } else {
         // This is the first submission, so store the demographics as fixed
         appState.dob = _selectedDob;
-
-        _fixedSex = _selectedSex;
+        appState.sex = _selectedSex;
         _fixedGestationWeeks = _selectedGestationWeeks;
         _fixedGestationDays = _selectedGestationDays;
       }
@@ -304,7 +302,7 @@ class InputFormState extends State<InputForm> {
               builder: (context) => ResultsPage(
                 organizedGrowthData: _organizedGrowthData,
                 organizedCentileLines: _organizedCentileLines,
-                sex: _fixedSex!,
+                sex: appState.sex!,
                 dob: appState.dob!,
                 gestationWeeks: _fixedGestationWeeks,
                 gestationDays: _fixedGestationDays,
@@ -369,10 +367,6 @@ class InputFormState extends State<InputForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            // TEMP DEBUGGING DOB FIELD
-            Text(
-              context.watch<AppState>().dob?.toString() ?? 'No DOB set',
-            ),
             // Date of Birth Field
             TextFormField(
               controller: _dobController,
@@ -712,7 +706,7 @@ class InputFormState extends State<InputForm> {
                       builder: (context) => ResultsPage(
                         organizedGrowthData: _organizedGrowthData,
                         organizedCentileLines: _organizedCentileLines,
-                        sex: _fixedSex!,
+                        sex: context.read<AppState>().sex!,
                         // Make sure these are not null if data exists
                         dob: context.read<AppState>().dob!,
                         gestationWeeks: _fixedGestationWeeks,
