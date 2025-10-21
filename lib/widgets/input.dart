@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 // RCPCH imports
 import 'package:digital_growth_charts_app/themes/colours.dart';
 import 'package:digital_growth_charts_app/classes/log_levels.dart';
+import 'package:provider/provider.dart';
 import '../services/digital_growth_charts_services.dart';
 import '../classes/digital_growth_charts_api_response.dart';
 import '../classes/digital_growth_charts_chart_coordinates_response.dart';
@@ -11,6 +12,7 @@ import '../definitions/enums.dart';
 import './results.dart';
 import '../services/centile_chart_data_utils.dart';
 import '../widgets/enum_radio_group.dart';
+import '../classes/app_state.dart';
 
 class InputFormState extends State<InputForm> {
   // A GlobalKey to uniquely identify the Form widget
@@ -23,7 +25,6 @@ class InputFormState extends State<InputForm> {
   OrganizedCentileLines _organizedCentileLines = {Sex.male: {}, Sex.female: {}};
 
   // State variables to store the fixed demographic data after the first submission
-  DateTime? _fixedDob;
   Sex? _fixedSex;
   int? _fixedGestationWeeks;
   int? _fixedGestationDays;
@@ -71,11 +72,14 @@ class InputFormState extends State<InputForm> {
   @override
   void initState() {
     super.initState();
+
+    var appState = Provider.of<AppState>(context, listen: false);
+
     // Check if fixed data exists (meaning we are returning from a submission)
-    if (_fixedDob != null) {
+    if (appState.dob != null) {
       // Populate the Date of Birth field and state
-      _dobController.text = DateFormat('yyyy-MM-dd').format(_fixedDob!);
-      _selectedDob = _fixedDob;
+      _dobController.text = DateFormat('yyyy-MM-dd').format(appState.dob!);
+      _selectedDob = appState.dob;
     }
     if (_fixedSex != null) {
       // Populate the Sex selection
@@ -152,6 +156,9 @@ class InputFormState extends State<InputForm> {
   }
 
   void _hardResetForm() {
+     var appState = Provider.of<AppState>(context, listen: false);
+     appState.dob = null;
+
     _observationDateController.clear();
     _measurementController.clear();
     _dobController.clear();
@@ -170,6 +177,9 @@ class InputFormState extends State<InputForm> {
   // Function to handle the submit button press
   void _submitForm() async {
     setState(() {});
+
+    var appState = Provider.of<AppState>(context, listen: false);
+
     // Validate the form using the _formKey
     if (_formKey.currentState!.validate()) {
       // If the form is valid, process the data
@@ -188,7 +198,7 @@ class InputFormState extends State<InputForm> {
 
       if (_organizedGrowthData.isNotEmpty) {
         // If there's existing data, check if the current demographics match the fixed ones
-        if (_selectedDob != _fixedDob ||
+        if (_selectedDob != appState.dob ||
             _selectedSex != _fixedSex ||
             _selectedGestationWeeks != _fixedGestationWeeks ||
             _selectedGestationDays != _fixedGestationDays) {
@@ -204,7 +214,8 @@ class InputFormState extends State<InputForm> {
         }
       } else {
         // This is the first submission, so store the demographics as fixed
-        _fixedDob = _selectedDob;
+        appState.dob = _selectedDob;
+
         _fixedSex = _selectedSex;
         _fixedGestationWeeks = _selectedGestationWeeks;
         _fixedGestationDays = _selectedGestationDays;
@@ -294,7 +305,7 @@ class InputFormState extends State<InputForm> {
                 organizedGrowthData: _organizedGrowthData,
                 organizedCentileLines: _organizedCentileLines,
                 sex: _fixedSex!,
-                dob: _fixedDob!,
+                dob: appState.dob!,
                 gestationWeeks: _fixedGestationWeeks,
                 gestationDays: _fixedGestationDays,
                 measurementMethod: measurementMethod,
@@ -358,6 +369,10 @@ class InputFormState extends State<InputForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
+            // TEMP DEBUGGING DOB FIELD
+            Text(
+              context.watch<AppState>().dob?.toString() ?? 'No DOB set',
+            ),
             // Date of Birth Field
             TextFormField(
               controller: _dobController,
@@ -699,7 +714,7 @@ class InputFormState extends State<InputForm> {
                         organizedCentileLines: _organizedCentileLines,
                         sex: _fixedSex!,
                         // Make sure these are not null if data exists
-                        dob: _fixedDob!,
+                        dob: context.read<AppState>().dob!,
                         gestationWeeks: _fixedGestationWeeks,
                         gestationDays: _fixedGestationDays,
                         // You might need to decide which measurement method to show by default
