@@ -60,7 +60,7 @@ class AppState with ChangeNotifier {
     }
 
     // Exception handling is the responsibility of the caller for now
-    final apiResponse = await _dgcApi.submitGrowthData(
+    final futureApiResponse = _dgcApi.submitGrowthData(
       birthDate: DateFormat('yyyy-MM-dd').format(_dob!),
       observationDate: observationDate,
       sex: _sex!,
@@ -68,12 +68,6 @@ class AppState with ChangeNotifier {
       gestationDays: _gestationDays!,
       measurementMethod: method,
       observationValue: value,
-    );
-
-    _organizedGrowthData.update(
-      method,
-      (list) => list..add(apiResponse),
-      ifAbsent: () => [apiResponse],
     );
 
     final bool isCentileDataCached =
@@ -96,6 +90,14 @@ class AppState with ChangeNotifier {
       }
     }
 
+    final apiResponse = await futureApiResponse;
+
+    _organizedGrowthData.update(
+      method,
+      (list) => list..add(apiResponse),
+      ifAbsent: () => [apiResponse],
+    );
+
     notifyListeners();
   }
 
@@ -105,7 +107,6 @@ class AppState with ChangeNotifier {
     _gestationWeeks = null;
     _gestationDays = null;
     _organizedGrowthData.clear();
-    _organizedCentileLines = {Sex.male: {}, Sex.female: {}};
 
     notifyListeners();
   }
