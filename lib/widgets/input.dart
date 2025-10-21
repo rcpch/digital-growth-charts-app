@@ -142,8 +142,8 @@ class InputFormState extends State<InputForm> {
   }
 
   void _hardResetForm() {
-     var appState = Provider.of<AppState>(context, listen: false);
-     appState.reset();
+    var appState = Provider.of<AppState>(context, listen: false);
+    appState.reset();
 
     _observationDateController.clear();
     _measurementController.clear();
@@ -212,7 +212,7 @@ class InputFormState extends State<InputForm> {
         await appState.addMeasurement(
           observationDate: clinicDate,
           method: measurementMethod,
-          value: observationValue
+          value: observationValue,
         );
 
         _resetForm();
@@ -222,9 +222,8 @@ class InputFormState extends State<InputForm> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ResultsPage(
-                initialMeasurementMethod: measurementMethod,
-              ),
+              builder: (context) =>
+                  ResultsPage(initialMeasurementMethod: measurementMethod),
             ),
           );
         }
@@ -600,7 +599,9 @@ class InputFormState extends State<InputForm> {
               child: const Text('Reset', style: TextStyle(color: Colors.white)),
             ),
             // Conditionally visible button to navigate to ResultsPage
-            if (appState.organizedGrowthData.isNotEmpty) // Check if there's data
+            if (appState
+                .organizedGrowthData
+                .isNotEmpty) // Check if there's data
               ElevatedButton(
                 style: ButtonStyle(
                   backgroundColor: WidgetStateProperty.resolveWith<Color?>((
@@ -621,9 +622,7 @@ class InputFormState extends State<InputForm> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => ResultsPage(),
-                    ),
+                    MaterialPageRoute(builder: (context) => ResultsPage()),
                   );
                 },
                 child: const Text(

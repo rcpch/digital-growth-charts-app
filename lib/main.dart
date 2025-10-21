@@ -31,7 +31,10 @@ class DGCApp extends StatelessWidget {
           appBar: AppBar(
             title: const Text(
               'RCPCH Digital Growth Charts',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             centerTitle: true,
           ),
@@ -52,7 +55,7 @@ class DGCApp extends StatelessWidget {
             ),
           ),
         ),
-      )
+      ),
     );
   }
 }

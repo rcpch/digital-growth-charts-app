@@ -12,10 +12,7 @@ import './results_data_table.dart';
 import '../classes/app_state.dart';
 
 class ResultsPage extends StatefulWidget {
-  const ResultsPage({
-    super.key,
-    this.initialMeasurementMethod,
-  });
+  const ResultsPage({super.key, this.initialMeasurementMethod});
 
   final MeasurementMethod? initialMeasurementMethod;
 
@@ -33,18 +30,19 @@ class _ResultsPageState extends State<ResultsPage> {
 
     var appState = context.read<AppState>();
 
-    print("initialMeasurementMethod: ${widget.initialMeasurementMethod} data: ${appState.organizedGrowthData.keys}");
-
-    if(widget.initialMeasurementMethod != null &&
-       appState.organizedGrowthData.containsKey(widget.initialMeasurementMethod)) {
+    if (widget.initialMeasurementMethod != null &&
+        appState.organizedGrowthData.containsKey(
+          widget.initialMeasurementMethod,
+        )) {
       // Start on the page for the specified measurement method
-      var methodIndex = appState.organizedGrowthData.keys.toList().indexOf(widget.initialMeasurementMethod!);
+      var methodIndex = appState.organizedGrowthData.keys.toList().indexOf(
+        widget.initialMeasurementMethod!,
+      );
       _currentPage = methodIndex;
       _pageController = PageController(initialPage: methodIndex);
     } else {
       // Default to the first chart page
       _currentPage = 0;
-      
     }
 
     _pageController = PageController(initialPage: _currentPage);
@@ -66,7 +64,9 @@ class _ResultsPageState extends State<ResultsPage> {
   }
 
   Widget _buildPageView(AppState appState) {
-    var numPages = appState.organizedGrowthData.length + (appState.organizedGrowthData.isNotEmpty ? 1 : 0);
+    var numPages =
+        appState.organizedGrowthData.length +
+        (appState.organizedGrowthData.isNotEmpty ? 1 : 0);
 
     return PageView.builder(
       key: const ValueKey('pageView'),
@@ -79,7 +79,7 @@ class _ResultsPageState extends State<ResultsPage> {
             key: const PageStorageKey('data_table'),
             organizedGrowthData: appState.organizedGrowthData,
           );
-        } else if(appState.dob != null && appState.sex != null) {
+        } else if (appState.dob != null && appState.sex != null) {
           var method = appState.organizedGrowthData.keys.elementAt(index);
 
           return CentileChart(
@@ -122,7 +122,9 @@ class _ResultsPageState extends State<ResultsPage> {
     }
 
     // Calculate the total number of pages (charts + data table)
-    int numPages = appState.organizedGrowthData.length + (appState.organizedGrowthData.isNotEmpty ? 1 : 0);
+    int numPages =
+        appState.organizedGrowthData.length +
+        (appState.organizedGrowthData.isNotEmpty ? 1 : 0);
     // Only add the data table page if there is at least one chart
 
     return Scaffold(

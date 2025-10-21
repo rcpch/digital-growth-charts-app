@@ -13,7 +13,8 @@ class AppState with ChangeNotifier {
   int? _gestationWeeks;
   int? _gestationDays;
 
-  final Map<MeasurementMethod, List<GrowthDataResponse>> _organizedGrowthData = {};
+  final Map<MeasurementMethod, List<GrowthDataResponse>> _organizedGrowthData =
+      {};
   OrganizedCentileLines _organizedCentileLines = {Sex.male: {}, Sex.female: {}};
 
   final DigitalGrowthChartsService _dgcApi = DigitalGrowthChartsService();
@@ -49,9 +50,12 @@ class AppState with ChangeNotifier {
   Future<void> addMeasurement({
     required String observationDate,
     required MeasurementMethod method,
-    required String value
+    required String value,
   }) async {
-    if (_dob == null || _sex == null || _gestationWeeks == null || _gestationDays == null) {
+    if (_dob == null ||
+        _sex == null ||
+        _gestationWeeks == null ||
+        _gestationDays == null) {
       throw Exception('Missing demographics in app state');
     }
 
@@ -63,7 +67,7 @@ class AppState with ChangeNotifier {
       gestationWeeks: _gestationWeeks!,
       gestationDays: _gestationDays!,
       measurementMethod: method,
-      observationValue: value
+      observationValue: value,
     );
 
     _organizedGrowthData.update(
@@ -72,12 +76,13 @@ class AppState with ChangeNotifier {
       ifAbsent: () => [apiResponse],
     );
 
-    final bool isCentileDataCached = _organizedCentileLines[_sex!]?.containsKey(method) ?? false;
+    final bool isCentileDataCached =
+        _organizedCentileLines[_sex!]?.containsKey(method) ?? false;
 
     if (!isCentileDataCached) {
       final apiResponse = await _dgcApi.getChartCoordinates(
         sex: _sex!,
-        measurementMethod: method
+        measurementMethod: method,
       );
 
       // Process and merge the new centile data into the organized map
@@ -85,7 +90,8 @@ class AppState with ChangeNotifier {
         final newOrganizedData = organizeCentileLines(apiResponse);
         // Merge new data. Prioritize new data for the same sex and measurement method
         if (newOrganizedData[_sex!]?.containsKey(method) ?? false) {
-          _organizedCentileLines[_sex!]![method] = newOrganizedData[_sex!]![method]!;
+          _organizedCentileLines[_sex!]![method] =
+              newOrganizedData[_sex!]![method]!;
         }
       }
     }
