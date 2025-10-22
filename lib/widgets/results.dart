@@ -1,5 +1,6 @@
 // Dart/flutter imports
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 // RCPCH Imports
@@ -7,6 +8,7 @@ import '../definitions/enums.dart';
 import './centile_chart.dart';
 import './results_data_table.dart';
 import '../classes/app_state.dart';
+import '../widgets/enum_radio_group.dart';
 
 class ResultsPage extends StatefulWidget {
   ResultsPage({
@@ -131,41 +133,51 @@ class _ResultsPageState extends State<ResultsPage> with SingleTickerProviderStat
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Growth Chart - ${appState.sex?.name ?? ''}'),
+        title: Text('Growth Chart - ${appState.sex != null ? toBeginningOfSentenceCase(appState.sex!.name) : ''}'),
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.display_settings),
             onPressed: () => showDialog<String>(
               context: context,
-              builder: (BuildContext context) => AlertDialog(
-                content: Column(children: [
-                  RadioGroup<AgeCorrectionMethod>(
-                    groupValue: _ageCorrectionMethod,
-                    onChanged: (AgeCorrectionMethod? value) {
-                      setState(() {
-                        _ageCorrectionMethod = value!;
-                      });
-                    },
-                    child: Column(
-                      children: <Widget>[
-                        for (var method in AgeCorrectionMethod.values)
-                          ListTile(
-                            title: Text(method.name),
-                            leading: Radio<AgeCorrectionMethod>(
-                              value: method,
-                            ),
-                          ),
-                      ]
-                    ),
-                  )
-                ]),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, 'OK'),
-                    child: const Text('OK')
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  content: Column(
+                    children: [
+                      Text(
+                        'Age correction',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      StatefulBuilder(
+                        builder: (BuildContext context, StateSetter setDialogState) {
+                          return EnumRadioGroup<AgeCorrectionMethod>(
+                            groupValue: _ageCorrectionMethod,
+                            itemsPerRow: 1,
+                            onChanged: (value) {
+                              setState(() {
+                                _ageCorrectionMethod = value!;
+                              });
+                              setDialogState(() {}); // Update the dialog state
+                            },
+                            values: AgeCorrectionMethod.values,
+                            labelBuilder: (m) {
+                              return toBeginningOfSentenceCase(m.name);
+                            },
+                          );
+                        }
+                      )
+                    ]
                   ),
-                ],
-              ),
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, 'OK'),
+                      child: const Text('OK')
+                    ),
+                  ],
+                );
+              }
             )
           ),
         ]
