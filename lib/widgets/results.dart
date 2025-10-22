@@ -9,9 +9,13 @@ import './results_data_table.dart';
 import '../classes/app_state.dart';
 
 class ResultsPage extends StatefulWidget {
-  const ResultsPage({super.key, this.initialMeasurementMethod});
+  ResultsPage({
+    super.key,
+    this.initialMeasurementMethod
+  });
 
   final MeasurementMethod? initialMeasurementMethod;
+  AgeCorrectionMethod ageCorrectionMethod = AgeCorrectionMethod.chronological;
 
   @override
   State<ResultsPage> createState() => _ResultsPageState();
@@ -52,6 +56,7 @@ class _ResultsPageState extends State<ResultsPage> with SingleTickerProviderStat
       sex: appState.sex!,
       growthDataForMethod: appState.organizedGrowthData[method]!,
       dob: appState.dob!,
+      ageCorrectionMethod: widget.ageCorrectionMethod,
       gestationWeeks: appState.gestationWeeks,
       gestationDays: appState.gestationDays,
     );
