@@ -15,7 +15,6 @@ class ResultsPage extends StatefulWidget {
   });
 
   final MeasurementMethod? initialMeasurementMethod;
-  AgeCorrectionMethod ageCorrectionMethod = AgeCorrectionMethod.chronological;
 
   @override
   State<ResultsPage> createState() => _ResultsPageState();
@@ -29,6 +28,8 @@ enum ResultsTab {
 }
 
 class _ResultsPageState extends State<ResultsPage> with SingleTickerProviderStateMixin {
+  AgeCorrectionMethod _ageCorrectionMethod = AgeCorrectionMethod.chronological;
+
   Widget buildPlaceholder(MeasurementMethod? method) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -56,7 +57,7 @@ class _ResultsPageState extends State<ResultsPage> with SingleTickerProviderStat
       sex: appState.sex!,
       growthDataForMethod: appState.organizedGrowthData[method]!,
       dob: appState.dob!,
-      ageCorrectionMethod: widget.ageCorrectionMethod,
+      ageCorrectionMethod: _ageCorrectionMethod,
       gestationWeeks: appState.gestationWeeks,
       gestationDays: appState.gestationDays,
     );
@@ -137,7 +138,27 @@ class _ResultsPageState extends State<ResultsPage> with SingleTickerProviderStat
             onPressed: () => showDialog<String>(
               context: context,
               builder: (BuildContext context) => AlertDialog(
-                content: const Text('AlertDialog description'),
+                content: Column(children: [
+                  RadioGroup<AgeCorrectionMethod>(
+                    groupValue: _ageCorrectionMethod,
+                    onChanged: (AgeCorrectionMethod? value) {
+                      setState(() {
+                        _ageCorrectionMethod = value!;
+                      });
+                    },
+                    child: Column(
+                      children: <Widget>[
+                        for (var method in AgeCorrectionMethod.values)
+                          ListTile(
+                            title: Text(method.name),
+                            leading: Radio<AgeCorrectionMethod>(
+                              value: method,
+                            ),
+                          ),
+                      ]
+                    ),
+                  )
+                ]),
                 actions: <Widget>[
                   TextButton(
                     onPressed: () => Navigator.pop(context, 'OK'),
