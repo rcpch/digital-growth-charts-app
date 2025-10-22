@@ -25,9 +25,25 @@ enum ResultsTab {
 }
 
 class _ResultsPageState extends State<ResultsPage> with SingleTickerProviderStateMixin {
+  Widget buildPlaceholder(MeasurementMethod? method) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text('No ${method?.name ?? ''} data yet.'),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text("Add measurement"),
+        )
+      ]
+    );
+  }
+
   Widget buildChart(MeasurementMethod method, AppState appState) {
     if(!appState.organizedGrowthData.containsKey(method)) {
-      return Center(child: Text("No growth data available"));
+      return buildPlaceholder(method);
     }
 
     return CentileChart(
@@ -79,7 +95,15 @@ class _ResultsPageState extends State<ResultsPage> with SingleTickerProviderStat
       return Scaffold(
         appBar: AppBar(title: const Text('Growth Chart Results')),
         body: const Center(
-          child: Text('No growth data available to display charts.'),
+          child: Column(
+            children: [
+              Text('No growth data available to display charts.'),
+              ElevatedButton(
+                onPressed: null,
+                child: Text("Add measurement"),
+              )
+            ]
+          ),
         ),
       );
     }
