@@ -124,7 +124,26 @@ class _ResultsPageState extends State<ResultsPage> with SingleTickerProviderStat
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Growth Chart Results')),
+      appBar: AppBar(
+        title: Text('Growth Chart - ${appState.sex?.name ?? ''}'),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.display_settings),
+            onPressed: () => showDialog<String>(
+              context: context,
+              builder: (BuildContext context) => AlertDialog(
+                content: const Text('AlertDialog description'),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, 'OK'),
+                    child: const Text('OK')
+                  ),
+                ],
+              ),
+            )
+          ),
+        ]
+      ),
       body: DefaultTabController(
         length: ResultsTab.values.length,
         initialIndex: currentTab,
