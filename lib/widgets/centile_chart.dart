@@ -560,25 +560,6 @@ class _CentileChartState extends State<CentileChart> {
 
   @override
   Widget build(BuildContext context) {
-    // Determine chart title based on measurementMethod and sex
-
-    String chartTitle = '';
-    switch (widget.measurementMethod) {
-      case MeasurementMethod.height:
-        chartTitle = 'Height for ${widget.sex == Sex.male ? 'Boys' : 'Girls'}';
-        break;
-      case MeasurementMethod.weight:
-        chartTitle = 'Weight for ${widget.sex == Sex.male ? 'Boys' : 'Girls'}';
-        break;
-      case MeasurementMethod.ofc:
-        chartTitle =
-            'Head Circumference for ${widget.sex == Sex.male ? 'Boys' : 'Girls'}';
-        break;
-      case MeasurementMethod.bmi:
-        chartTitle = 'BMI for ${widget.sex == Sex.male ? 'Boys' : 'Girls'}';
-        break;
-    }
-
     final List<Map<String, dynamic>> scatterDataWithDetails =
         _generateScatterSpots();
     final List<ScatterSpot> scatterSpots = scatterDataWithDetails
@@ -598,11 +579,6 @@ class _CentileChartState extends State<CentileChart> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          Text(
-            chartTitle,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
           // Toggle buttons
           RCPCHSegmentedButtonWidget(
             selectedPlotType: _selectedPlotType,
