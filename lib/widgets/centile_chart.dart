@@ -6,7 +6,6 @@ import '../definitions/enums.dart';
 import '../classes/digital_growth_charts_api_response.dart';
 import 'package:digital_growth_charts_app/services/centile_chart_data_utils.dart';
 import '../classes/digital_growth_charts_chart_coordinates_response.dart';
-import './segmented_buttons.dart';
 import '../classes/vertical_lines.dart';
 
 class CentileChart extends StatefulWidget {
@@ -15,6 +14,7 @@ class CentileChart extends StatefulWidget {
   final Sex sex;
   final List<GrowthDataResponse> growthDataForMethod;
   final DateTime dob;
+  final AgeCorrectionMethod ageCorrectionMethod;
   final int? gestationWeeks;
   final int? gestationDays;
 
@@ -25,6 +25,7 @@ class CentileChart extends StatefulWidget {
     required this.sex,
     required this.growthDataForMethod,
     required this.dob,
+    required this.ageCorrectionMethod,
     this.gestationWeeks,
     this.gestationDays,
   });
@@ -34,8 +35,6 @@ class CentileChart extends StatefulWidget {
 }
 
 class _CentileChartState extends State<CentileChart> {
-  AgeCorrectionMethod _selectedPlotType = AgeCorrectionMethod.chronological;
-
   static const double _paddingFactor = 0.05; // 5% padding
 
   bool _isLifeCourseView = false; // Default to not life course view (zoomed in)
@@ -326,8 +325,8 @@ class _CentileChartState extends State<CentileChart> {
           response.plottableData?.centileData?.correctedDecimalAgeData;
 
       // Add chronological point if selected to show or if 'both' is selected
-      if (_selectedPlotType == AgeCorrectionMethod.chronological ||
-          _selectedPlotType == AgeCorrectionMethod.both) {
+      if (widget.ageCorrectionMethod == AgeCorrectionMethod.chronological ||
+          widget.ageCorrectionMethod == AgeCorrectionMethod.both) {
         if (chronologicalData?.x != null && chronologicalData?.y != null) {
           spotsOutput.add({
             'spot': ScatterSpot(
@@ -346,8 +345,8 @@ class _CentileChartState extends State<CentileChart> {
       }
 
       // Add corrected point if selected to show or if 'both' is selected
-      if (_selectedPlotType == AgeCorrectionMethod.corrected ||
-          _selectedPlotType == AgeCorrectionMethod.both) {
+      if (widget.ageCorrectionMethod == AgeCorrectionMethod.corrected ||
+          widget.ageCorrectionMethod == AgeCorrectionMethod.both) {
         if (correctedData?.x != null && correctedData?.y != null) {
           spotsOutput.add({
             'spot': ScatterSpot(
@@ -373,7 +372,7 @@ class _CentileChartState extends State<CentileChart> {
     final List<LineChartBarData> connectingLines = [];
 
     // Only generate these lines if 'both' is selected
-    if (_selectedPlotType == AgeCorrectionMethod.both) {
+    if (widget.ageCorrectionMethod == AgeCorrectionMethod.both) {
       for (final response in widget.growthDataForMethod) {
         final chronologicalData =
             response.plottableData?.centileData?.chronologicalDecimalAgeData;
@@ -501,15 +500,6 @@ class _CentileChartState extends State<CentileChart> {
     );
   }
 
-  // callback from toggle buttons
-  void _handlePlotTypeChanged(AgeCorrectionMethod newPlotType) {
-    if (_selectedPlotType != newPlotType) {
-      setState(() {
-        _selectedPlotType = newPlotType;
-      });
-    }
-  }
-
   List<VerticalLine> _generateUKWHOLines(Sex sex) {
     // creates vertical line cut offs for UK-WHO chart
     List<VerticalLine> ukWHOVerticalLines = [];
@@ -560,25 +550,6 @@ class _CentileChartState extends State<CentileChart> {
 
   @override
   Widget build(BuildContext context) {
-    // Determine chart title based on measurementMethod and sex
-
-    String chartTitle = '';
-    switch (widget.measurementMethod) {
-      case MeasurementMethod.height:
-        chartTitle = 'Height for ${widget.sex == Sex.male ? 'Boys' : 'Girls'}';
-        break;
-      case MeasurementMethod.weight:
-        chartTitle = 'Weight for ${widget.sex == Sex.male ? 'Boys' : 'Girls'}';
-        break;
-      case MeasurementMethod.ofc:
-        chartTitle =
-            'Head Circumference for ${widget.sex == Sex.male ? 'Boys' : 'Girls'}';
-        break;
-      case MeasurementMethod.bmi:
-        chartTitle = 'BMI for ${widget.sex == Sex.male ? 'Boys' : 'Girls'}';
-        break;
-    }
-
     final List<Map<String, dynamic>> scatterDataWithDetails =
         _generateScatterSpots();
     final List<ScatterSpot> scatterSpots = scatterDataWithDetails
@@ -598,17 +569,6 @@ class _CentileChartState extends State<CentileChart> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          Text(
-            chartTitle,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          // Toggle buttons
-          RCPCHSegmentedButtonWidget(
-            selectedPlotType: _selectedPlotType,
-            onPlotTypeChanged: _handlePlotTypeChanged,
-          ),
-          const SizedBox(height: 12),
           // Chart area
           Expanded(
             child: LayoutBuilder(
