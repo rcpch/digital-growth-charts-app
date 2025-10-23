@@ -11,10 +11,7 @@ import '../classes/app_state.dart';
 import '../widgets/enum_radio_group.dart';
 
 class ResultsPage extends StatefulWidget {
-  ResultsPage({
-    super.key,
-    this.initialMeasurementMethod
-  });
+  ResultsPage({super.key, this.initialMeasurementMethod});
 
   final MeasurementMethod? initialMeasurementMethod;
 
@@ -22,14 +19,10 @@ class ResultsPage extends StatefulWidget {
   State<ResultsPage> createState() => _ResultsPageState();
 }
 
-enum ResultsTab {
-  data,
-  height,
-  weight,
-  ofc
-}
+enum ResultsTab { data, height, weight, ofc }
 
-class _ResultsPageState extends State<ResultsPage> with SingleTickerProviderStateMixin {
+class _ResultsPageState extends State<ResultsPage>
+    with SingleTickerProviderStateMixin {
   AgeCorrectionMethod _ageCorrectionMethod = AgeCorrectionMethod.chronological;
 
   Widget buildPlaceholder(MeasurementMethod? method) {
@@ -43,13 +36,13 @@ class _ResultsPageState extends State<ResultsPage> with SingleTickerProviderStat
             Navigator.of(context).pop();
           },
           child: Text("Add measurement"),
-        )
-      ]
+        ),
+      ],
     );
   }
 
   Widget buildChart(MeasurementMethod method, AppState appState) {
-    if(!appState.organizedGrowthData.containsKey(method)) {
+    if (!appState.organizedGrowthData.containsKey(method)) {
       return buildPlaceholder(method);
     }
 
@@ -106,11 +99,8 @@ class _ResultsPageState extends State<ResultsPage> with SingleTickerProviderStat
           child: Column(
             children: [
               Text('No growth data available to display charts.'),
-              ElevatedButton(
-                onPressed: null,
-                child: Text("Add measurement"),
-              )
-            ]
+              ElevatedButton(onPressed: null, child: Text("Add measurement")),
+            ],
           ),
         ),
       );
@@ -124,16 +114,18 @@ class _ResultsPageState extends State<ResultsPage> with SingleTickerProviderStat
           widget.initialMeasurementMethod,
         )) {
       // Start on the tab for the specified measurement method
-      final measurementMethodIndex = appState.organizedGrowthData.keys.toList().indexOf(
-        widget.initialMeasurementMethod!,
-      );
-      
+      final measurementMethodIndex = appState.organizedGrowthData.keys
+          .toList()
+          .indexOf(widget.initialMeasurementMethod!);
+
       currentTab = measurementMethodIndex + 1;
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Growth Chart - ${appState.sex != null ? toBeginningOfSentenceCase(appState.sex!.name) : ''}'),
+        title: Text(
+          'Growth Chart - ${appState.sex != null ? toBeginningOfSentenceCase(appState.sex!.name) : ''}',
+        ),
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.display_settings),
@@ -151,51 +143,56 @@ class _ResultsPageState extends State<ResultsPage> with SingleTickerProviderStat
                         ),
                       ),
                       StatefulBuilder(
-                        builder: (BuildContext context, StateSetter setDialogState) {
-                          return EnumRadioGroup<AgeCorrectionMethod>(
-                            groupValue: _ageCorrectionMethod,
-                            itemsPerRow: 1,
-                            onChanged: (value) {
-                              setState(() {
-                                _ageCorrectionMethod = value!;
-                              });
-                              setDialogState(() {}); // Update the dialog state
+                        builder:
+                            (BuildContext context, StateSetter setDialogState) {
+                              return EnumRadioGroup<AgeCorrectionMethod>(
+                                groupValue: _ageCorrectionMethod,
+                                itemsPerRow: 1,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _ageCorrectionMethod = value!;
+                                  });
+                                  setDialogState(
+                                    () {},
+                                  ); // Update the dialog state
+                                },
+                                values: AgeCorrectionMethod.values,
+                                labelBuilder: (m) {
+                                  return toBeginningOfSentenceCase(m.name);
+                                },
+                              );
                             },
-                            values: AgeCorrectionMethod.values,
-                            labelBuilder: (m) {
-                              return toBeginningOfSentenceCase(m.name);
-                            },
-                          );
-                        }
-                      )
-                    ]
+                      ),
+                    ],
                   ),
                   actions: <Widget>[
                     TextButton(
                       onPressed: () => Navigator.pop(context, 'OK'),
-                      child: const Text('OK')
+                      child: const Text('OK'),
                     ),
                   ],
                 );
-              }
-            )
+              },
+            ),
           ),
-        ]
+        ],
       ),
       body: DefaultTabController(
         length: ResultsTab.values.length,
         initialIndex: currentTab,
         child: Scaffold(
           body: TabBarView(
-            children: [for (var tab in ResultsTab.values) buildTab(tab, appState)]
+            children: [
+              for (var tab in ResultsTab.values) buildTab(tab, appState),
+            ],
           ),
           bottomNavigationBar: TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,
-            tabs: [for (var tab in ResultsTab.values) buildTabLink(tab)]
+            tabs: [for (var tab in ResultsTab.values) buildTabLink(tab)],
           ),
-        )
-      )
+        ),
+      ),
     );
   }
 }
