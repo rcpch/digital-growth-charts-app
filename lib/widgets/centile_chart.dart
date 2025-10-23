@@ -6,7 +6,6 @@ import '../definitions/enums.dart';
 import '../classes/digital_growth_charts_api_response.dart';
 import 'package:digital_growth_charts_app/services/centile_chart_data_utils.dart';
 import '../classes/digital_growth_charts_chart_coordinates_response.dart';
-import './segmented_buttons.dart';
 import '../classes/vertical_lines.dart';
 
 class CentileChart extends StatefulWidget {
