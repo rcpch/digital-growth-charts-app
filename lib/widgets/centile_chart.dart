@@ -100,7 +100,7 @@ class _CentileChartState extends State<CentileChart> {
         .toList();
   }
 
-  double get minX {
+  double _calculateMinX() {
     final measurementXValues = _getMeasurementXValues();
 
     if (measurementXValues.isEmpty || _isLifeCourseView) {
@@ -128,7 +128,7 @@ class _CentileChartState extends State<CentileChart> {
         padding; // Ensure this allows negative values if dataMinX is negative
   }
 
-  double get maxX {
+  double _calculateMaxX() {
     final measurementXValues = _getMeasurementXValues();
 
     if (measurementXValues.isEmpty || _isLifeCourseView) {
@@ -154,7 +154,7 @@ class _CentileChartState extends State<CentileChart> {
     return dataMaxX + padding;
   }
 
-  double get minY {
+  double _calculateMinY(double minX, double maxX) {
     // For the focused view, consider Y values of measurements and visible centile segments
     final currentMinX =
         minX; // Get the already calculated minX for the current view
@@ -205,7 +205,7 @@ class _CentileChartState extends State<CentileChart> {
     ); // Clamp Y at 0, common for growth charts
   }
 
-  double get maxY {
+  double _calculateMaxY(double minX, double maxX) {
     final currentMinX = minX;
     final currentMaxX = maxX;
     final List<double> relevantYValues = [];
@@ -244,7 +244,7 @@ class _CentileChartState extends State<CentileChart> {
     return dataMaxY + padding;
   }
 
-  List<LineChartBarData> _generateLineBarsData() {
+  List<LineChartBarData> _generateLineBarsData(double minX, double maxX) {
     final List<LineChartBarData> centileLines = [];
 
     // Get the centile data for the specific sex and measurement method from the organized cache
@@ -420,7 +420,7 @@ class _CentileChartState extends State<CentileChart> {
   }
 
   // Determine the appropriate title for the axes based on the measurement method
-  String _getXAxisTitle() {
+  String _getXAxisTitle(double maxX) {
     if (maxX <= 0.0383) {
       return 'Gestational age (weeks)';
     } else if (maxX <= 2) {
@@ -557,7 +557,17 @@ class _CentileChartState extends State<CentileChart> {
         .toList();
     final List<LineChartBarData> connectingMeasurementLines =
         _generateConnectingMeasurementLines();
-    final List<LineChartBarData> centileLines = _generateLineBarsData();
+
+    final minX = _calculateMinX();
+    final maxX = _calculateMaxX();
+
+    final minY = _calculateMinY(minX, maxX);
+    final maxY = _calculateMaxY(minX, maxX);
+
+    final List<LineChartBarData> centileLines = _generateLineBarsData(
+      minX,
+      maxX,
+    );
     // slightly untidy but we are using the LineChart to plot the lines that connect chronological and corrected measurements
     // this means that the connecting lines, if present, need to be bundled with the centile line data
     final List<LineChartBarData> allLineBarsData = [
@@ -585,7 +595,7 @@ class _CentileChartState extends State<CentileChart> {
                             sideTitles:
                                 _getBottomTitles(), // This will need to be adjusted when we scope the x-axis to the data
                             axisNameWidget: Text(
-                              _getXAxisTitle(),
+                              _getXAxisTitle(maxX),
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
@@ -655,7 +665,7 @@ class _CentileChartState extends State<CentileChart> {
                             bottomTitles: AxisTitles(
                               sideTitles: _getBottomTitles(),
                               axisNameWidget: Text(
-                                _getXAxisTitle(),
+                                _getXAxisTitle(maxX),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,
