@@ -5,3 +5,5 @@ enum MeasurementMethod { height, weight, ofc, bmi }
 enum Sex { male, female }
 
 enum AgeCorrectionMethod { chronological, corrected, both }
+
+enum FeatureFlag { login }

@@ -12,6 +12,8 @@ class AppState with ChangeNotifier {
   int? _gestationWeeks;
   int? _gestationDays;
 
+  List<FeatureFlag> _featureFlags = [];
+
   final Map<MeasurementMethod, List<GrowthDataResponse>> _organizedGrowthData =
       {};
   final OrganizedCentileLines _organizedCentileLines = {
@@ -102,6 +104,24 @@ class AppState with ChangeNotifier {
     );
 
     notifyListeners();
+  }
+
+  bool isFeatureFlagEnabled(FeatureFlag flag) {
+    return _featureFlags.contains(flag);
+  }
+
+  void setFeatureFlag(FeatureFlag flag, bool isEnabled) {
+    if (isEnabled) {
+      if (!_featureFlags.contains(flag)) {
+        _featureFlags.add(flag);
+        notifyListeners();
+      }
+    } else {
+      if (_featureFlags.contains(flag)) {
+        _featureFlags.remove(flag);
+        notifyListeners();
+      }
+    }
   }
 
   void reset() {
