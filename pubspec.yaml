@@ -32,7 +32,7 @@ dependencies:
     sdk: flutter
   intl: ^0.20.2
   json_annotation: ^4.9.0
-  http: ^1.4.0
+  http: ^1.5.0
   flutter_dotenv: ^6.0.0
   fl_chart: ^1.1.0
   smooth_page_indicator: ^1.2.1
@@ -41,7 +41,13 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+
   provider: ^6.1.5+1
+  crypto: ^3.0.6
+  web: ^1.1.1
+  flutter_appauth_platform_interface: ^11.0.0
+  flutter_appauth: ^11.0.0
+  dart_jsonwebtoken: ^3.3.1
 
 dev_dependencies:
   flutter_test:
@@ -88,7 +94,6 @@ flutter:
     - .env
     - assets/images/pixelated_rcpch_incubator_alpha.png
     - assets/images/incubator_alpha.png
-
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
