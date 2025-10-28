@@ -18,6 +18,6 @@ void main() {
     await tester.pumpWidget(const DGCApp());
 
     // Dummy test to check everything is mounted
-    expect(find.text('RCPCH Digital Growth Charts'), findsOneWidget);
+    expect(find.text('RCPCH Growth Charts'), findsOneWidget);
   });
 }
