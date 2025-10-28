@@ -12,6 +12,12 @@ flutter pub get
 
 flutter test
 
-# Android
-flutter build appbundle --release \
-  --build-number ${BUILD_NUMBER}
+if [ $1 = "android" ]; then
+  flutter build appbundle --release \
+    --build-number ${BUILD_NUMBER}
+elif [ $1 = "web" ]; then
+  flutter build web --release
+else
+  echo "Unknown platform: $1"
+  exit 1
+fi

@@ -50,7 +50,7 @@ jobs:
           API_KEY: ${{ secrets.DGC_API_KEY }}
           MICROSOFT_LOGIN_CLIENT_ID: ${{ secrets.MICROSOFT_LOGIN_CLIENT_ID }}
           MICROSOFT_LOGIN_ISSUER: ${{ secrets.MICROSOFT_LOGIN_ISSUER }}
-        run: ./s/ci
+        run: ./s/ci android
 
       - id: authenticate
         name: Authenticate with Google
@@ -86,24 +86,14 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Get Flutter dependencies
-        run: flutter pub get
-
-      - name: Run Flutter tests (Web context)
+      - name: Run CI script (test and build)
         env:
           BUILD_NUMBER: ${{github.run_number}}
-          DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
-          DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
-          # Make sure to add to the s/pr-check script and pr-check.yml too
-        run: s/pr-check
-
-      - name: Build Flutter Web
-        env:
-          DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
-          DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
+          API_URL: ${{ secrets.DGC_BASE_URL }}
+          API_KEY: ${{ secrets.DGC_API_KEY }}
           MICROSOFT_LOGIN_CLIENT_ID: ${{ secrets.MICROSOFT_LOGIN_CLIENT_ID }}
           MICROSOFT_LOGIN_ISSUER: ${{ secrets.MICROSOFT_LOGIN_ISSUER }}
-        run: flutter build web --release
+        run: ./s/ci web
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
