@@ -22,8 +22,10 @@ class Settings extends StatelessWidget {
 
   Widget buildLoginTest(AppState appState) {
     if (appState.isFeatureFlagEnabled(FeatureFlag.login)) {
-      if (appState.email != null) {
-        return Column(children: [Text('Logged in as ${appState.email}')]);
+      if (appState.authData != null) {
+        return Column(
+          children: [Text('Logged in as ${appState.authData!.email}')],
+        );
       }
 
       return ElevatedButton(
