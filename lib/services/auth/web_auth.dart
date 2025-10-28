@@ -15,7 +15,12 @@ class WebAuth implements AuthProvider {
 
     // TODO MRB: needs timeout and error handling
     void onMessage(MessageEvent event) {
-      final data = event.data as String;
+      if (!event.data.isA<JSString>()) {
+        thunk.completeError(Exception('Invalid message data type'));
+        return;
+      }
+
+      final data = (event.data as JSString).toString();
       final Map<String, dynamic> tokenData = jsonDecode(data);
 
       final accessToken = tokenData['access_token'] as String;
