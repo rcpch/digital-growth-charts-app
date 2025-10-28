@@ -75,7 +75,10 @@
         requireIdToken: true,
     });
 
-    console.log(result);
+    const channel = new BroadcastChannel('uk.ac.rcpch.dgc-app-test.oauth-channel');
+    channel.postMessage(JSON.stringify(result));
+
+    window.close();
 </script>
 
 </html>
