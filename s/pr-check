@@ -2,8 +2,8 @@
 
 # These should match the list in pr-check.yml
 cat << EOF > .env
-DGC_BASE_URL: ${DGC_BASE_URL}
-DGC_API_KEY: ${DGC_API_KEY}
+DGC_BASE_URL=${DGC_BASE_URL}
+DGC_API_KEY=${DGC_API_KEY}
 EOF
 
 flutter pub get

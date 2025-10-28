@@ -8,9 +8,14 @@ class NativeAuth implements AuthProvider {
   @override
   Future<AuthData> login() async {
     final clientId = AppConfig.microsoftLoginClientId;
+    final issuer = AppConfig.microsoftLoginIssuer;
 
     if (clientId == null) {
       throw Exception('Missing Microsoft Login Client ID');
+    }
+
+    if (issuer == null) {
+      throw Exception('Missing Microsoft Login Issuer');
     }
 
     final result = await _appAuth.authorizeAndExchangeCode(
@@ -19,11 +24,11 @@ class NativeAuth implements AuthProvider {
         'uk.ac.rcpch.dgc-app-test://oauth-callback',
         serviceConfiguration: AuthorizationServiceConfiguration(
           authorizationEndpoint:
-              'https://login.microsoftonline.com/dd8f9931-cb78-4406-8a01-01ac61c10d4a/oauth2/v2.0/authorize',
+              'https://login.microsoftonline.com/$issuer/oauth2/v2.0/authorize',
           tokenEndpoint:
-              'https://login.microsoftonline.com/dd8f9931-cb78-4406-8a01-01ac61c10d4a/oauth2/v2.0/token',
+              'https://login.microsoftonline.com/$issuer/oauth2/v2.0/token',
           endSessionEndpoint:
-              'https://login.microsoftonline.com/dd8f9931-cb78-4406-8a01-01ac61c10d4a/oauth2/v2.0/logout',
+              'https://login.microsoftonline.com/$issuer/oauth2/v2.0/logout',
         ),
         scopes: ['openid', 'profile', 'email'],
       ),

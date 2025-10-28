@@ -55,7 +55,8 @@
     throw new Error('Missing MICROSOFT_LOGIN_ISSUER in .env');
   }
 
-  issuer = new URL(issuer);
+  issuer = new URL(`https://login.microsoftonline.com/${issuer}/v2.0`);
+
   const params = new URLSearchParams(window.location.search);
 
   if (params.has('code')) {

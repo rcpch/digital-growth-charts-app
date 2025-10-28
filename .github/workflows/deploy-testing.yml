@@ -52,18 +52,8 @@ jobs:
           API_URL: ${{ secrets.DGC_BASE_URL }}
           API_KEY: ${{ secrets.DGC_API_KEY }}
           MICROSOFT_LOGIN_CLIENT_ID: ${{ secrets.MICROSOFT_LOGIN_CLIENT_ID }}
-        run: |
-          DEFINES_FOR_SCRIPT=""
-          if [ -n "${{ secrets.DGC_BASE_URL }}" ]; then
-            DEFINES_FOR_SCRIPT="--dart-define=DGC_BASE_URL=${{ secrets.DGC_BASE_URL }} $DEFINES_FOR_SCRIPT"
-          fi
-          if [ -n "${{ secrets.DGC_API_KEY }}" ]; then
-            DEFINES_FOR_SCRIPT="--dart-define=DGC_API_KEY=${{ secrets.DGC_API_KEY }} $DEFINES_FOR_SCRIPT"
-          fi
-          if [ -n "${{ secrets.MICROSOFT_LOGIN_CLIENT_ID }}" ]; then
-            DEFINES_FOR_SCRIPT="--dart-define=MICROSOFT_LOGIN_CLIENT_ID=${{ secrets.MICROSOFT_LOGIN_CLIENT_ID }} $DEFINES_FOR_SCRIPT"
-          fi
-          ./s/ci "$DEFINES_FOR_SCRIPT"
+          MICROSOFT_LOGIN_ISSUER: ${{ secrets.MICROSOFT_LOGIN_ISSUER }}
+        run: ./s/ci
 
       - id: authenticate
         name: Authenticate with Google
@@ -107,47 +97,19 @@ jobs:
 
       - name: Run Flutter tests (Web context)
         env:
-          # These environment variables are available within THIS run script block
-          # Their names (LOCAL_ENV_API_BASE_URL, LOCAL_ENV_API_KEY) are chosen to be clear
-          # that they are just temporary shell variables holding the secret values.
-          LOCAL_ENV_DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
-          LOCAL_ENV_DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
-        run: |
-          DEFINES_TO_PASS=""
-          # Check the shell variable that holds the secret's value
-          if [ -n "$LOCAL_ENV_DGC_BASE_URL" ]; then
-          DEFINES_TO_PASS="--dart-define=DGC_BASE_URL=$LOCAL_ENV_DGC_BASE_URL $DEFINES_TO_PASS"
-          fi
-          if [ -n "$LOCAL_ENV_DGC_API_KEY" ]; then
-          DEFINES_TO_PASS="--dart-define=DGC_API_KEY=$LOCAL_ENV_DGC_API_KEY $DEFINES_TO_PASS"
-          fi
-          echo "Running flutter test (web context) with defines: ${DEFINES_TO_PASS}"
-          flutter test ${DEFINES_TO_PASS}
+          BUILD_NUMBER: ${{github.run_number}}
+          DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
+          DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
+          # Make sure to add to the s/pr-check script and pr-check.yml too
+        run: s/pr-check
 
       - name: Build Flutter Web
         env:
           DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
           DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
           MICROSOFT_LOGIN_CLIENT_ID: ${{ secrets.MICROSOFT_LOGIN_CLIENT_ID }}
-        run: |
-          FLUTTER_WEB_BUILD_COMMAND="flutter build web --release"
-          
-          # Add dart-defines for web build
-          if [ -n "$DGC_BASE_URL" ]; then
-            # Dart define KEY is 'DGC_BASE_URL', VALUE is from shell variable '$DGC_BASE_URL'
-            FLUTTER_WEB_BUILD_COMMAND="$FLUTTER_WEB_BUILD_COMMAND --dart-define=DGC_BASE_URL=$DGC_BASE_URL"
-          fi
-          if [ -n "$DGC_API_KEY" ]; then
-            # Dart define KEY is 'DGC_API_KEY', VALUE is from shell variable '$DGC_API_KEY'
-            FLUTTER_WEB_BUILD_COMMAND="$FLUTTER_WEB_BUILD_COMMAND --dart-define=DGC_API_KEY=$DGC_API_KEY"
-          fi
-          if [ -n "$MICROSOFT_LOGIN_CLIENT_ID" ]; then
-            # Dart define KEY is 'MICROSOFT_LOGIN_CLIENT_ID', VALUE is from shell variable '$MICROSOFT_LOGIN_CLIENT_ID'
-            FLUTTER_WEB_BUILD_COMMAND="$FLUTTER_WEB_BUILD_COMMAND --dart-define=MICROSOFT_LOGIN_CLIENT_ID=$MICROSOFT_LOGIN_CLIENT_ID"
-          fi
-          
-          echo "Running Web Build: $FLUTTER_WEB_BUILD_COMMAND"
-          $FLUTTER_WEB_BUILD_COMMAND
+          MICROSOFT_LOGIN_ISSUER: ${{ secrets.MICROSOFT_LOGIN_ISSUER }}
+        run: flutter build web --release
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5

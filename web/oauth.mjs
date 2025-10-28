@@ -17,8 +17,6 @@ export async function fetchConfig() {
 export async function oauthStart(clientId, issuer) {
   const redirectUri = `${window.location.origin}/oauth.html`;
 
-  // End of prerequisites
-
   const as = await oauth
     .discoveryRequest(issuer)
     .then((response) => oauth.processDiscoveryResponse(issuer, response));

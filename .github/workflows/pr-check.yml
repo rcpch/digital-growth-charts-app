@@ -32,5 +32,5 @@ jobs:
           BUILD_NUMBER: ${{github.run_number}}
           DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
           DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
-          # Make sure to add to the s/pr-check script too
+          # Make sure to add to the s/pr-check script and deploy-testing.yml too
         run: s/pr-check
