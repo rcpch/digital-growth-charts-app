@@ -14,10 +14,8 @@ export async function fetchConfig() {
   return env;
 }
 
-export async function oauthStart(clientId) {
-  const redirectUri = "http://localhost:59683/oauth.html";
-
-  const issuer = new URL("https://login.microsoftonline.com/dd8f9931-cb78-4406-8a01-01ac61c10d4a/v2.0");
+export async function oauthStart(clientId, issuer) {
+  const redirectUri = `${window.location.origin}/oauth.html`;
 
   // End of prerequisites
 
@@ -51,14 +49,12 @@ export async function oauthStart(clientId) {
   window.location.href = authorizationUrl.toString();
 }
 
-export async function oauthCallback(clientId) {
+export async function oauthCallback(clientId, issuer) {
   const client = {
     client_id: clientId,
   };
 
-  const redirectUri = "http://localhost:59683/oauth.html";
-
-  const issuer = new URL("https://login.microsoftonline.com/dd8f9931-cb78-4406-8a01-01ac61c10d4a/v2.0");
+  const redirectUri = `${window.location.origin}/oauth.html`;
 
   // End of prerequisites
 

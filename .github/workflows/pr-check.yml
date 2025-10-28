@@ -32,14 +32,5 @@ jobs:
           BUILD_NUMBER: ${{github.run_number}}
           DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
           DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
-        run: |
-          DEFINES_FOR_SCRIPT=""
-          if [ -n "${{ secrets.DGC_BASE_URL }}" ]; then
-            DEFINES_FOR_SCRIPT="--dart-define=DGC_BASE_URL=${{ secrets.DGC_BASE_URL }} $DEFINES_FOR_SCRIPT"
-          fi
-          if [ -n "${{ secrets.DGC_API_KEY }}" ]; then
-            DEFINES_FOR_SCRIPT="--dart-define=DGC_API_KEY=${{ secrets.DGC_API_KEY }} $DEFINES_FOR_SCRIPT"
-          fi
-          
-          # Call script, ensuring the defines are passed as a single argument
-          ./s/pr-check "$DEFINES_FOR_SCRIPT"
+          # Make sure to add to the s/pr-check script too
+        run: s/pr-check

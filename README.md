@@ -36,6 +36,7 @@ DGC_API_KEY=********* //your key here **DO NOT COMMIT THIS TO VERSION CONTROL**
 
 # Only required if testing login - work ongoing
 MICROSOFT_LOGIN_CLIENT_ID=
+MICROSOFT_LOGIN_ISSUER=
 ```
 
 3. Run the application (web browser)

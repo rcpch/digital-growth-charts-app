@@ -1,29 +1,16 @@
 #!/bin/bash -e
 
-# These environment variables DGC_BASE_URL and DGC_API_KEY
-# are expected to be set by the calling GitHub Actions workflow step's 'env:' block.
-# BUILD_NUMBER is also expected from the environment.
-
-DEFINES_TO_PASS=""
-if [ -n "$DGC_BASE_URL" ]; then
-    DEFINES_TO_PASS="--dart-define=DGC_BASE_URL=$DGC_BASE_URL $DEFINES_TO_PASS"
-fi
-if [ -n "$DGC_API_KEY" ]; then
-    DEFINES_TO_PASS="--dart-define=DGC_API_KEY=$DGC_API_KEY $DEFINES_TO_PASS"
-fi
-if [ -n "$MICROSOFT_LOGIN_CLIENT_ID" ]; then
-    DEFINES_TO_PASS="--dart-define=MICROSOFT_LOGIN_CLIENT_ID=$MICROSOFT_LOGIN_CLIENT_ID $DEFINES_TO_PASS"
-fi
-# Add any other dart-defines you need in a similar way
+# These should match the list in pr-check.yml
+cat << EOF > .env
+DGC_BASE_URL: ${DGC_BASE_URL}
+DGC_API_KEY: ${DGC_API_KEY}
+EOF
 
 flutter pub get
 
-echo "Running flutter test with defines: ${DEFINES_TO_PASS}"
-flutter test ${DEFINES_TO_PASS}
+flutter test
 
 # Android
-echo "Building APK with defines: ${DEFINES_TO_PASS}"
 flutter build apk \
-            --debug \
-            --build-number "$BUILD_NUMBER" \
-            ${DEFINES_TO_PASS}
+    --debug \
+    --build-number "$BUILD_NUMBER"

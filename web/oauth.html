@@ -45,17 +45,23 @@
   const config = await fetchConfig();
 
   const clientId = config['MICROSOFT_LOGIN_CLIENT_ID'];
+  let issuer = config['MICROSOFT_LOGIN_ISSUER'];
 
   if (!clientId) {
     throw new Error('Missing MICROSOFT_LOGIN_CLIENT_ID in .env');
   }
 
+  if (!issuer) {
+    throw new Error('Missing MICROSOFT_LOGIN_ISSUER in .env');
+  }
+
+  issuer = new URL(issuer);
   const params = new URLSearchParams(window.location.search);
 
   if (params.has('code')) {
-    await oauthCallback(clientId);
+    await oauthCallback(clientId, issuer);
   } else {
-    await oauthStart(clientId);
+    await oauthStart(clientId, issuer);
   }
 </script>
 
