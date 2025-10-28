@@ -33,6 +33,9 @@ dart pub get
 ```shell
 DGC_BASE_URL=https://api.rcpch.ac.uk/growth/v1
 DGC_API_KEY=********* //your key here **DO NOT COMMIT THIS TO VERSION CONTROL**
+
+# Only required if testing login - work ongoing
+MICROSOFT_LOGIN_CLIENT_ID=
 ```
 
 3. Run the application (web browser)

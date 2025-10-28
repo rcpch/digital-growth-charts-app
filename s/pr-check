@@ -11,6 +11,9 @@ fi
 if [ -n "$DGC_API_KEY" ]; then
     DEFINES_TO_PASS="--dart-define=DGC_API_KEY=$DGC_API_KEY $DEFINES_TO_PASS"
 fi
+if [ -n "$MICROSOFT_LOGIN_CLIENT_ID" ]; then
+    DEFINES_TO_PASS="--dart-define=MICROSOFT_LOGIN_CLIENT_ID=$MICROSOFT_LOGIN_CLIENT_ID $DEFINES_TO_PASS"
+fi
 # Add any other dart-defines you need in a similar way
 
 flutter pub get

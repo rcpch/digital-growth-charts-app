@@ -29,7 +29,7 @@ class WebAuth implements AuthProvider {
 
     channel.onmessage = onMessage.toJS;
 
-    window.open("/start-oauth.html");
+    window.open("/oauth.html");
 
     return thunk.future;
   }

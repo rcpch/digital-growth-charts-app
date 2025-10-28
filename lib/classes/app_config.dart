@@ -60,4 +60,16 @@ class AppConfig {
     // Only access dotenv.env if we explicitly loaded from a file
     return _dotenvLoadedFromFile ? (dotenv.env['DGC_API_KEY'] ?? '') : '';
   }
+
+  static String? get microsoftLoginClientId {
+    const String define = String.fromEnvironment(
+      'MICROSOFT_LOGIN_CLIENT_ID',
+      defaultValue: '',
+    );
+    if (define.isNotEmpty) return define;
+    // Only access dotenv.env if we explicitly loaded from a file
+    return _dotenvLoadedFromFile
+        ? dotenv.env['MICROSOFT_LOGIN_CLIENT_ID']
+        : null;
+  }
 }

@@ -51,6 +51,7 @@ jobs:
           BUILD_NUMBER: ${{github.run_number}}
           API_URL: ${{ secrets.DGC_BASE_URL }}
           API_KEY: ${{ secrets.DGC_API_KEY }}
+          MICROSOFT_LOGIN_CLIENT_ID: ${{ secrets.MICROSOFT_LOGIN_CLIENT_ID }}
         run: |
           DEFINES_FOR_SCRIPT=""
           if [ -n "${{ secrets.DGC_BASE_URL }}" ]; then
@@ -58,6 +59,9 @@ jobs:
           fi
           if [ -n "${{ secrets.DGC_API_KEY }}" ]; then
             DEFINES_FOR_SCRIPT="--dart-define=DGC_API_KEY=${{ secrets.DGC_API_KEY }} $DEFINES_FOR_SCRIPT"
+          fi
+          if [ -n "${{ secrets.MICROSOFT_LOGIN_CLIENT_ID }}" ]; then
+            DEFINES_FOR_SCRIPT="--dart-define=MICROSOFT_LOGIN_CLIENT_ID=${{ secrets.MICROSOFT_LOGIN_CLIENT_ID }} $DEFINES_FOR_SCRIPT"
           fi
           ./s/ci "$DEFINES_FOR_SCRIPT"
 
@@ -122,19 +126,24 @@ jobs:
 
       - name: Build Flutter Web
         env:
-          LOCAL_ENV_DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
-          LOCAL_ENV_DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
+          DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
+          DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
+          MICROSOFT_LOGIN_CLIENT_ID: ${{ secrets.MICROSOFT_LOGIN_CLIENT_ID }}
         run: |
           FLUTTER_WEB_BUILD_COMMAND="flutter build web --release"
           
           # Add dart-defines for web build
-          if [ -n "$LOCAL_ENV_DGC_BASE_URL" ]; then
-            # Dart define KEY is 'DGC_BASE_URL', VALUE is from shell variable '$LOCAL_ENV_DGC_BASE_URL'
-            FLUTTER_WEB_BUILD_COMMAND="$FLUTTER_WEB_BUILD_COMMAND --dart-define=DGC_BASE_URL=$LOCAL_ENV_DGC_BASE_URL"
+          if [ -n "$DGC_BASE_URL" ]; then
+            # Dart define KEY is 'DGC_BASE_URL', VALUE is from shell variable '$DGC_BASE_URL'
+            FLUTTER_WEB_BUILD_COMMAND="$FLUTTER_WEB_BUILD_COMMAND --dart-define=DGC_BASE_URL=$DGC_BASE_URL"
           fi
-          if [ -n "$LOCAL_ENV_DGC_API_KEY" ]; then
-            # Dart define KEY is 'DGC_API_KEY', VALUE is from shell variable '$LOCAL_ENV_DGC_API_KEY'
-            FLUTTER_WEB_BUILD_COMMAND="$FLUTTER_WEB_BUILD_COMMAND --dart-define=DGC_API_KEY=$LOCAL_ENV_DGC_API_KEY"
+          if [ -n "$DGC_API_KEY" ]; then
+            # Dart define KEY is 'DGC_API_KEY', VALUE is from shell variable '$DGC_API_KEY'
+            FLUTTER_WEB_BUILD_COMMAND="$FLUTTER_WEB_BUILD_COMMAND --dart-define=DGC_API_KEY=$DGC_API_KEY"
+          fi
+          if [ -n "$MICROSOFT_LOGIN_CLIENT_ID" ]; then
+            # Dart define KEY is 'MICROSOFT_LOGIN_CLIENT_ID', VALUE is from shell variable '$MICROSOFT_LOGIN_CLIENT_ID'
+            FLUTTER_WEB_BUILD_COMMAND="$FLUTTER_WEB_BUILD_COMMAND --dart-define=MICROSOFT_LOGIN_CLIENT_ID=$MICROSOFT_LOGIN_CLIENT_ID"
           fi
           
           echo "Running Web Build: $FLUTTER_WEB_BUILD_COMMAND"

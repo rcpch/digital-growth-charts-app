@@ -1,3 +1,4 @@
+import 'package:digital_growth_charts_app/classes/app_config.dart';
 import 'package:digital_growth_charts_app/services/auth/auth_provider.dart';
 import 'package:flutter_appauth/flutter_appauth.dart';
 
@@ -6,9 +7,15 @@ class NativeAuth implements AuthProvider {
 
   @override
   Future<AuthData> login() async {
+    final clientId = AppConfig.microsoftLoginClientId;
+
+    if (clientId == null) {
+      throw Exception('Missing Microsoft Login Client ID');
+    }
+
     final result = await _appAuth.authorizeAndExchangeCode(
       AuthorizationTokenRequest(
-        '19f9ef35-8ed9-46c9-a9b8-f9acdb01ba53',
+        clientId,
         'uk.ac.rcpch.dgc-app-test://oauth-callback',
         serviceConfiguration: AuthorizationServiceConfiguration(
           authorizationEndpoint:
