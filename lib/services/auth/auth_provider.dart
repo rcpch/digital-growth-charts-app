@@ -15,6 +15,7 @@ class AuthData {
 
   String get email {
     // TODO MRB: verify the token. Very important even though the backend does it too.
+    // https://github.com/rcpch/digital-growth-charts-app/issues/39
     final jwt = JWT.decode(_idToken);
     return jwt.payload['email'] as String;
   }

@@ -1,9 +1,0 @@
-{
-    "editor.formatOnSave": true,
-    "files.associations": {
-        "flutter_bootstrap.js": "flutter-bootstrap"
-    },
-    "[flutter-bootstrap]": {
-        "editor.formatOnSave": false
-    }
-}

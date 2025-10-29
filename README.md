@@ -39,10 +39,12 @@ MICROSOFT_LOGIN_CLIENT_ID=
 MICROSOFT_LOGIN_ISSUER=
 ```
 
-3. Run the application (web browser)
+1. Run the application (web browser)
+
+You must specify the web port for redirection after login to work correctly.
 
 ```shell
-flutter run
+flutter run -d chrome --web-port=8989
 ```
 
 1. Run the application (Android emulator)
