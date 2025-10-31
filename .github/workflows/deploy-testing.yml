@@ -46,8 +46,8 @@ jobs:
       - name: Run CI script (test and build)
         env:
           BUILD_NUMBER: ${{github.run_number}}
-          API_URL: ${{ secrets.DGC_BASE_URL }}
-          API_KEY: ${{ secrets.DGC_API_KEY }}
+          DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
+          DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
           MICROSOFT_LOGIN_CLIENT_ID: ${{ secrets.MICROSOFT_LOGIN_CLIENT_ID }}
           MICROSOFT_LOGIN_ISSUER: ${{ secrets.MICROSOFT_LOGIN_ISSUER }}
         run: ./s/ci android
