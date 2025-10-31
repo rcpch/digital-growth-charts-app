@@ -18,28 +18,10 @@ jobs:
         with:
           flutter-version: '3.35.3'
 
-      - name: Create dummy .env for CI build (if needed by pubspec.yaml assets)
-        run: touch .env # Creates an empty .env file: this is necessary to satisfy pubspec.yaml assets declaration, but it is empty so dart-defines will be used
-
-      - name: Check for formatting issues
-        run: dart format --output=none --set-exit-if-changed .
-
-      - name: Analyze project source
-        run: flutter analyze
-
-      - name: Run PR check script (test and build)
+      - name: Run PR check script (check formatting, analyze, test and build)
         env:
           BUILD_NUMBER: ${{github.run_number}}
           DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
           DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
-        run: |
-          DEFINES_FOR_SCRIPT=""
-          if [ -n "${{ secrets.DGC_BASE_URL }}" ]; then
-            DEFINES_FOR_SCRIPT="--dart-define=DGC_BASE_URL=${{ secrets.DGC_BASE_URL }} $DEFINES_FOR_SCRIPT"
-          fi
-          if [ -n "${{ secrets.DGC_API_KEY }}" ]; then
-            DEFINES_FOR_SCRIPT="--dart-define=DGC_API_KEY=${{ secrets.DGC_API_KEY }} $DEFINES_FOR_SCRIPT"
-          fi
-          
-          # Call script, ensuring the defines are passed as a single argument
-          ./s/pr-check "$DEFINES_FOR_SCRIPT"
+          # Make sure to add to the s/pr-check script and deploy-testing.yml too
+        run: s/pr-check

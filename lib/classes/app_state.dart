@@ -1,6 +1,7 @@
+import 'package:digital_growth_charts_app/services/auth/auth_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
-import 'package:digital_growth_charts_app/definitions/enums.dart';
+import '../definitions/enums.dart';
 import '../classes/digital_growth_charts_api_response.dart';
 import '../services/centile_chart_data_utils.dart';
 import '../services/digital_growth_charts_services.dart';
@@ -12,12 +13,16 @@ class AppState with ChangeNotifier {
   int? _gestationWeeks;
   int? _gestationDays;
 
+  final List<FeatureFlag> _featureFlags = [];
+
   final Map<MeasurementMethod, List<GrowthDataResponse>> _organizedGrowthData =
       {};
   final OrganizedCentileLines _organizedCentileLines = {
     Sex.male: {},
     Sex.female: {},
   };
+
+  AuthData? _authData;
 
   final DigitalGrowthChartsService _dgcApi = DigitalGrowthChartsService();
 
@@ -49,6 +54,8 @@ class AppState with ChangeNotifier {
     _gestationDays = newDays;
     notifyListeners();
   }
+
+  AuthData? get authData => _authData;
 
   Future<void> addMeasurement({
     required String observationDate,
@@ -101,6 +108,29 @@ class AppState with ChangeNotifier {
       ifAbsent: () => [apiResponse],
     );
 
+    notifyListeners();
+  }
+
+  bool isFeatureFlagEnabled(FeatureFlag flag) {
+    return _featureFlags.contains(flag);
+  }
+
+  void setFeatureFlag(FeatureFlag flag, bool isEnabled) {
+    if (isEnabled) {
+      if (!_featureFlags.contains(flag)) {
+        _featureFlags.add(flag);
+        notifyListeners();
+      }
+    } else {
+      if (_featureFlags.contains(flag)) {
+        _featureFlags.remove(flag);
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<void> login() async {
+    _authData = await AuthProvider().login();
     notifyListeners();
   }
 

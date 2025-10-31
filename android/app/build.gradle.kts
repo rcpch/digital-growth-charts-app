@@ -37,6 +37,13 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders.putAll(
+            mapOf(
+                // TODO MRB: use https redirection instead
+                // https://github.com/rcpch/digital-growth-charts-app/issues/38
+                "appAuthRedirectScheme" to "uk.ac.rcpch.dgc-app-test"
+            )
+        )
     }
 
     signingConfigs {

@@ -7,6 +7,7 @@ import '/classes/app_config.dart';
 import './themes/colours.dart';
 import './widgets/input.dart';
 import './classes/app_state.dart';
+import './widgets/settings.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,18 +26,32 @@ class DGCApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => AppState(),
       child: MaterialApp(
-        title: 'RCPCH Digital Growth Charts',
+        title: 'RCPCH Growth Charts',
         theme: DigitalGrowthChartsTheme.defaultTheme,
         home: Scaffold(
           appBar: AppBar(
             title: const Text(
-              'RCPCH Digital Growth Charts',
+              'RCPCH Growth Charts',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
             centerTitle: true,
+            actions: <Widget>[
+              // Needs to be a sub-widget to use the Navigator provider by MaterialApp
+              Builder(
+                builder: (context) => IconButton(
+                  icon: Icon(Icons.settings, color: Colors.white),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Settings()),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),

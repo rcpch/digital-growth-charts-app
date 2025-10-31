@@ -33,12 +33,18 @@ dart pub get
 ```shell
 DGC_BASE_URL=https://api.rcpch.ac.uk/growth/v1
 DGC_API_KEY=********* //your key here **DO NOT COMMIT THIS TO VERSION CONTROL**
+
+# Only required if testing login - work ongoing
+MICROSOFT_LOGIN_CLIENT_ID=
+MICROSOFT_LOGIN_ISSUER=
 ```
 
-3. Run the application (web browser)
+1. Run the application (web browser)
+
+You must specify the web port for redirection after login to work correctly.
 
 ```shell
-flutter run
+flutter run -d chrome --web-port=8989
 ```
 
 1. Run the application (Android emulator)
