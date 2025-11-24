@@ -6,16 +6,16 @@ class NativeAuth implements AuthProvider {
   final FlutterAppAuth _appAuth = FlutterAppAuth();
 
   @override
-  Future<AuthData> login() async {
+  Future<AuthProviderTokens> login() async {
     final clientId = AppConfig.microsoftLoginClientId;
-    final issuer = AppConfig.microsoftLoginIssuer;
+    final oauthServer = AppConfig.microsoftLoginOAuthServer;
 
     if (clientId == null) {
       throw Exception('Missing Microsoft Login Client ID');
     }
 
-    if (issuer == null) {
-      throw Exception('Missing Microsoft Login Issuer');
+    if (oauthServer == null) {
+      throw Exception('Missing Microsoft Login OAuth Server');
     }
 
     final result = await _appAuth.authorizeAndExchangeCode(
@@ -23,12 +23,9 @@ class NativeAuth implements AuthProvider {
         clientId,
         'uk.ac.rcpch.dgc-app-test://oauth-callback',
         serviceConfiguration: AuthorizationServiceConfiguration(
-          authorizationEndpoint:
-              'https://login.microsoftonline.com/$issuer/oauth2/v2.0/authorize',
-          tokenEndpoint:
-              'https://login.microsoftonline.com/$issuer/oauth2/v2.0/token',
-          endSessionEndpoint:
-              'https://login.microsoftonline.com/$issuer/oauth2/v2.0/logout',
+          authorizationEndpoint: '$oauthServer/authorize',
+          tokenEndpoint: '$oauthServer/token',
+          endSessionEndpoint:'$oauthServer/logout',
         ),
         scopes: ['openid', 'profile', 'email'],
       ),
@@ -42,7 +39,7 @@ class NativeAuth implements AuthProvider {
       throw Exception('Missing ID token');
     }
 
-    return AuthData(result.refreshToken!, result.idToken!);
+    return AuthProviderTokens(result.idToken!, result.refreshToken!);
   }
 }
 

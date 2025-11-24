@@ -11,24 +11,28 @@ import "auth_stub.dart"
     if (dart.library.io) "native_auth.dart";
 
 class AuthData {
-  final String _idToken;
   final String _refreshToken;
+  final String? _accessToken;
 
-  AuthData(this._idToken, this._refreshToken);
+  final String? _name;
+  final String? _email;
 
-  String get idToken => _idToken;
+  AuthData(this._refreshToken, this._accessToken, this._name, this._email);
+
   String get refreshToken => _refreshToken;
+  String? get name => _name;
+  String? get email => _email;
+}
 
-  String get email {
-    // TODO MRB: verify the token. Very important even though the backend does it too.
-    // https://github.com/rcpch/digital-growth-charts-app/issues/39
-    final jwt = JWT.decode(_idToken);
-    return jwt.payload['email'] as String;
-  }
+class AuthProviderTokens {
+  final String idToken;
+  final String refreshToken;
+
+  AuthProviderTokens(this.idToken, this.refreshToken);
 }
 
 abstract class AuthProvider {
-  Future<AuthData> login();
+  Future<AuthProviderTokens> login();
 
   factory AuthProvider() => getAuthProvider();
 }
@@ -40,27 +44,32 @@ class AuthProviderWrapper {
   AuthProviderWrapper(this._authProvider);
 
   Future<AuthData?> load() async {
-    final idToken = await storage.read(key: 'id_token');
     final refreshToken = await storage.read(key: 'refresh_token');
-    
-    if (idToken != null && refreshToken != null) {
-      return AuthData(idToken, refreshToken);
+    final accessToken = await storage.read(key: 'access_token');
+
+    final name = await storage.read(key: 'name');
+    final email = await storage.read(key: 'email');
+
+    if (refreshToken != null) {
+      return AuthData(refreshToken, accessToken, name, email);
     }
 
     return null;
   }
 
   Future<AuthData> login() async {
-    final authData = await _authProvider.login();
+    final tokens = await _authProvider.login();
+
+    String? accessToken;
+    String? name;
+    String? email;
 
     if (AppConfig.storageUrl != null && AppConfig.microsoftLoginOAuthServer != null) {
       final url = Uri.parse('${AppConfig.storageUrl}/api/token');
       final requestBody = {
         'oauth_server': AppConfig.microsoftLoginOAuthServer,
-        'id_token': authData.idToken
+        'id_token': tokens.idToken
       };
-
-      print(authData.idToken);
 
       try {
         final response = await http.post(
@@ -74,16 +83,19 @@ class AuthProviderWrapper {
         if (response.statusCode == 200) {
           // API call successful, parse the JSON response
           final Map<String, dynamic> responseData = jsonDecode(response.body);
-          print('Token storage response: $responseData');
+          
+          accessToken = responseData['access_token'] as String?;
+          name = responseData['name'] as String?;
+          email = responseData['email'] as String?;
         } else {
           throw Exception('${response.statusCode}: ${response.body}');
         }
       } catch (e) {
         // Handle any exceptions during the API call (e.g., network errors)
         developer.log(
-          'Error submitting growth data: $e',
+          'Error fetching token: $e',
           level: LogLevel.warning,
-          name: 'DigitalGrowthChartsService',
+          name: 'StorageService',
           error: e,
           stackTrace: StackTrace.current,
         );
@@ -92,14 +104,25 @@ class AuthProviderWrapper {
       }
     }
 
-    await storage.write(key: 'id_token', value: authData.idToken);
-    await storage.write(key: 'refresh_token', value: authData.refreshToken);
+    if(accessToken != null) {
+      await storage.write(key: 'access_token', value: accessToken);
+    }
 
-    return authData;
+    if(name != null) {
+      await storage.write(key: 'name', value: name);
+    }
+
+    if(email != null) {
+      await storage.write(key: 'email', value: email);
+    }
+
+    await storage.write(key: 'refresh_token', value: tokens.refreshToken);
+
+    return AuthData(tokens.refreshToken, accessToken, name, email);
   }
 
   Future<void> logout() async {
-    await storage.delete(key: 'id_token');
+    await storage.delete(key: 'access_token');
     await storage.delete(key: 'refresh_token');
   }
 }
