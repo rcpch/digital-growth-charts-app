@@ -34,15 +34,15 @@ class NativeAuth implements AuthProvider {
       ),
     );
 
-    if (result.accessToken == null) {
-      throw Exception('Missing access token');
+    if (result.refreshToken == null) {
+      throw Exception('Missing refresh token');
     }
 
     if (result.idToken == null) {
       throw Exception('Missing ID token');
     }
 
-    return AuthData(result.accessToken!, result.idToken!);
+    return AuthData(result.refreshToken!, result.idToken!);
   }
 }
 

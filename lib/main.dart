@@ -23,8 +23,11 @@ class DGCApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    var state = AppState();
+    state.loadAuthData();
+
     return ChangeNotifierProvider(
-      create: (_) => AppState(),
+      create: (_) => state,
       child: MaterialApp(
         title: 'RCPCH Growth Charts',
         theme: DigitalGrowthChartsTheme.defaultTheme,
