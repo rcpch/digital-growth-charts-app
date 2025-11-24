@@ -18,11 +18,15 @@ class AppConfig {
     return (dotenv.env['DGC_API_KEY'] ?? '');
   }
 
+  static String? get storageUrl {
+    return dotenv.env['DGC_STORAGE_BASE_URL'];
+  }
+
   static String? get microsoftLoginClientId {
     return dotenv.env['MICROSOFT_LOGIN_CLIENT_ID'];
   }
 
-  static String? get microsoftLoginIssuer {
-    return dotenv.env['MICROSOFT_LOGIN_ISSUER'];
+  static String? get microsoftLoginOAuthServer {
+    return dotenv.env['MICROSOFT_LOGIN_OAUTH_SERVER'];
   }
 }

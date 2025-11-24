@@ -35,8 +35,9 @@ DGC_BASE_URL=https://api.rcpch.ac.uk/growth/v1
 DGC_API_KEY=********* //your key here **DO NOT COMMIT THIS TO VERSION CONTROL**
 
 # Only required if testing login - work ongoing
+DGC_STORAGE_BASE_URL=https://localhost
 MICROSOFT_LOGIN_CLIENT_ID=
-MICROSOFT_LOGIN_ISSUER=
+MICROSOFT_LOGIN_OAUTH_SERVER=
 ```
 
 1. Run the application (web browser)
@@ -87,6 +88,9 @@ The app has been tested on:
 - If your Dart SDK isn't the correct version (at the time of writing it needs to be >3) then you can run `flutter upgrade` to update both Flutter and Dart. For some reason this was even required on a new install of Flutter in one case.
 
 - The Android Virtual Device Manager defaults to a very low amount of disk space for virtual Android devices, and quite often this disk space is insufficient to actually load an app into, causing failure of the app to run. There will be a 'not enough disk space' or similar error. To increase disk space, you can Edit the Virtual Device in Android Studio, select 'Advanced' and increase the device disk storage to something bigger.
+
+- If you are testing saving data, you must accept the Caddy self-signed certificate by visiting the API running on `localhost`
+directly in the browser in a new tab.
 
 
 ## Troubleshooting

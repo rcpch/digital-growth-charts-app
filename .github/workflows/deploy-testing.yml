@@ -49,7 +49,7 @@ jobs:
           DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
           DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
           MICROSOFT_LOGIN_CLIENT_ID: ${{ secrets.MICROSOFT_LOGIN_CLIENT_ID }}
-          MICROSOFT_LOGIN_ISSUER: ${{ secrets.MICROSOFT_LOGIN_ISSUER }}
+          MICROSOFT_LOGIN_OAUTH_SERVER: ${{ secrets.MICROSOFT_LOGIN_OAUTH_SERVER }}
         run: ./s/ci android
 
       - id: authenticate
@@ -92,7 +92,7 @@ jobs:
           DGC_BASE_URL: ${{ secrets.DGC_BASE_URL }}
           DGC_API_KEY: ${{ secrets.DGC_API_KEY }}
           MICROSOFT_LOGIN_CLIENT_ID: ${{ secrets.MICROSOFT_LOGIN_CLIENT_ID }}
-          MICROSOFT_LOGIN_ISSUER: ${{ secrets.MICROSOFT_LOGIN_ISSUER }}
+          MICROSOFT_LOGIN_OAUTH_SERVER: ${{ secrets.MICROSOFT_LOGIN_OAUTH_SERVER }}
         run: ./s/ci web
 
       - name: Setup GitHub Pages

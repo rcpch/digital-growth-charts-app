@@ -143,6 +143,12 @@ class AppState with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> logout() async {
+    await _authProviderWrapper.logout();
+    _authData = null;
+    notifyListeners();
+  }
+
   void reset() {
     _dob = null;
     _sex = null;

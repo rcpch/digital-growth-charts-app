@@ -20,22 +20,34 @@ class Settings extends StatelessWidget {
     );
   }
 
-  Widget buildLoginTest(AppState appState) {
+  List<Widget> buildLoginTest(AppState appState) {
     if (appState.isFeatureFlagEnabled(FeatureFlag.login)) {
       if (appState.authData != null) {
-        return Column(
-          children: [Text('Logged in as ${appState.authData!.email}')],
-        );
+        return [
+          Column(
+            children: [Text('Logged in as ${appState.authData!.email}')],
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await appState.logout();
+            },
+            child: const Text('Logout'),
+          )
+        ];
       }
 
-      return ElevatedButton(
-        onPressed: () async {
-          await appState.login();
-        },
-        child: const Text('Login'),
-      );
+      return [
+        ElevatedButton(
+          onPressed: () async {
+            await appState.login();
+          },
+          child: const Text('Login'),
+        )
+      ];
     } else {
-      return const SizedBox.shrink();
+      return [
+        const SizedBox.shrink()
+      ];
     }
   }
 
@@ -61,7 +73,7 @@ class Settings extends StatelessWidget {
               appState.isFeatureFlagEnabled(flag),
             ),
           ),
-          buildLoginTest(appState),
+          ...buildLoginTest(appState),
         ],
       ),
     );
