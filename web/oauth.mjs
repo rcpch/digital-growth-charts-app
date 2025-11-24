@@ -7,7 +7,11 @@ export async function fetchConfig() {
   const env = {};
 
   for (const line of envText.split('\n')) {
-    const [key, value] = line.split('=');
+    const [uncommented] = line.split("#");
+
+    if (!uncommented.trim()) continue;
+
+    const [key, value] = uncommented.split('=');
     env[key.trim()] = value.trim();
   }
 
