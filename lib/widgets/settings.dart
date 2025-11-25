@@ -24,15 +24,13 @@ class Settings extends StatelessWidget {
     if (appState.isFeatureFlagEnabled(FeatureFlag.login)) {
       if (appState.authData != null) {
         return [
-          Column(
-            children: [Text('Logged in as ${appState.authData!.email}')],
-          ),
+          Column(children: [Text('Logged in as ${appState.authData!.email}')]),
           ElevatedButton(
             onPressed: () async {
               await appState.logout();
             },
             child: const Text('Logout'),
-          )
+          ),
         ];
       }
 
@@ -42,12 +40,10 @@ class Settings extends StatelessWidget {
             await appState.login();
           },
           child: const Text('Login'),
-        )
+        ),
       ];
     } else {
-      return [
-        const SizedBox.shrink()
-      ];
+      return [const SizedBox.shrink()];
     }
   }
 

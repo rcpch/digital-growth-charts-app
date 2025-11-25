@@ -34,7 +34,8 @@ class NativeAuth implements AuthProvider {
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
 
-        authorizationEndpoint = responseData['authorization_endpoint'] as String;
+        authorizationEndpoint =
+            responseData['authorization_endpoint'] as String;
         tokenEndpoint = responseData['token_endpoint'] as String;
         endSessionEndpoint = responseData['end_session_endpoint'] as String;
       } else {

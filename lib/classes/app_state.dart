@@ -7,7 +7,9 @@ import '../services/centile_chart_data_utils.dart';
 import '../services/digital_growth_charts_services.dart';
 
 class AppState with ChangeNotifier {
-  final AuthProviderWrapper _authProviderWrapper = AuthProviderWrapper(AuthProvider());
+  final AuthProviderWrapper _authProviderWrapper = AuthProviderWrapper(
+    AuthProvider(),
+  );
 
   DateTime? _dob;
   Sex? _sex;

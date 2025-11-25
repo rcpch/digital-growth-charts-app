@@ -63,11 +63,12 @@ class AuthProviderWrapper {
     String? name;
     String? email;
 
-    if (AppConfig.storageUrl != null && AppConfig.microsoftLoginOAuthServer != null) {
+    if (AppConfig.storageUrl != null &&
+        AppConfig.microsoftLoginOAuthServer != null) {
       final url = Uri.parse('${AppConfig.storageUrl}/api/token');
       final requestBody = {
         'oauth_server': AppConfig.microsoftLoginOAuthServer,
-        'id_token': tokens.idToken
+        'id_token': tokens.idToken,
       };
 
       try {
@@ -82,7 +83,7 @@ class AuthProviderWrapper {
         if (response.statusCode == 200) {
           // API call successful, parse the JSON response
           final Map<String, dynamic> responseData = jsonDecode(response.body);
-          
+
           accessToken = responseData['access_token'] as String?;
           name = responseData['name'] as String?;
           email = responseData['email'] as String?;
@@ -103,15 +104,15 @@ class AuthProviderWrapper {
       }
     }
 
-    if(accessToken != null) {
+    if (accessToken != null) {
       await storage.write(key: 'access_token', value: accessToken);
     }
 
-    if(name != null) {
+    if (name != null) {
       await storage.write(key: 'name', value: name);
     }
 
-    if(email != null) {
+    if (email != null) {
       await storage.write(key: 'email', value: email);
     }
 
