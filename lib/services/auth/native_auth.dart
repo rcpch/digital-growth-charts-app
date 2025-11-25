@@ -66,10 +66,6 @@ class NativeAuth implements AuthProvider {
       ),
     );
 
-    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-    print('ID token: ${result.idToken}');
-    print('Refresh token: ${result.refreshToken}');
-
     if (result.refreshToken == null) {
       throw Exception('Missing refresh token');
     }
