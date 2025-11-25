@@ -18,12 +18,14 @@ export async function fetchConfig() {
   return env;
 }
 
-export async function oauthStart(clientId, issuer) {
+export async function oauthStart(clientId, oauthServer) {
+  console.log(`!! Starting OAuth with server: ${oauthServer}`);
+
   const redirectUri = `${window.location.origin}/oauth.html`;
 
   const as = await oauth
-    .discoveryRequest(issuer)
-    .then((response) => oauth.processDiscoveryResponse(issuer, response));
+    .discoveryRequest(oauthServer)
+    .then((response) => oauth.processDiscoveryResponse(oauthServer, response));
 
   const codeChallengeMethod = 'S256'
   /**
@@ -43,7 +45,7 @@ export async function oauthStart(clientId, issuer) {
   authorizationUrl.searchParams.set('client_id', clientId);
   authorizationUrl.searchParams.set('redirect_uri', redirectUri);
   authorizationUrl.searchParams.set('response_type', 'code');
-  authorizationUrl.searchParams.set('scope', 'openid email');
+  authorizationUrl.searchParams.set('scope', 'openid profile email');
   authorizationUrl.searchParams.set('code_challenge', codeChallenge);
   authorizationUrl.searchParams.set('code_challenge_method', codeChallengeMethod);
   authorizationUrl.searchParams.set('nonce', nonce);
@@ -51,7 +53,7 @@ export async function oauthStart(clientId, issuer) {
   window.location.href = authorizationUrl.toString();
 }
 
-export async function oauthCallback(clientId, issuer) {
+export async function oauthCallback(clientId, oauthServer) {
   const client = {
     client_id: clientId,
   };
@@ -61,8 +63,8 @@ export async function oauthCallback(clientId, issuer) {
   // End of prerequisites
 
   const as = await oauth
-    .discoveryRequest(issuer)
-    .then((response) => oauth.processDiscoveryResponse(issuer, response));
+    .discoveryRequest(oauthServer)
+    .then((response) => oauth.processDiscoveryResponse(oauthServer, response));
 
   const params = oauth.validateAuthResponse(as, client, new URL(window.location.href));
 

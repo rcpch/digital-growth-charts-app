@@ -6,8 +6,8 @@ import 'package:web/web.dart';
 
 class WebAuth implements AuthProvider {
   @override
-  Future<AuthData> login() async {
-    final Completer<AuthData> thunk = Completer<AuthData>();
+  Future<AuthProviderTokens> login() async {
+    final Completer<AuthProviderTokens> thunk = Completer<AuthProviderTokens>();
 
     BroadcastChannel channel = BroadcastChannel(
       'uk.ac.rcpch.dgc-app-test.oauth-channel',
@@ -23,13 +23,13 @@ class WebAuth implements AuthProvider {
       final data = (event.data as JSString).toString();
       final Map<String, dynamic> tokenData = jsonDecode(data);
 
-      final accessToken = tokenData['access_token'] as String;
+      final refreshToken = tokenData['refresh_token'] as String;
       final idToken = tokenData['id_token'] as String;
 
       // Clean up the listener
       channel.close();
 
-      thunk.complete(AuthData(accessToken, idToken));
+      thunk.complete(AuthProviderTokens(idToken, refreshToken));
     }
 
     channel.onmessage = onMessage.toJS;

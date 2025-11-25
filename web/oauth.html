@@ -45,24 +45,25 @@
   const config = await fetchConfig();
 
   const clientId = config['MICROSOFT_LOGIN_CLIENT_ID'];
-  let issuer = config['MICROSOFT_LOGIN_ISSUER'];
+  let oauthServer = config['MICROSOFT_LOGIN_OAUTH_SERVER'];
 
   if (!clientId) {
     throw new Error('Missing MICROSOFT_LOGIN_CLIENT_ID in .env');
   }
 
-  if (!issuer) {
-    throw new Error('Missing MICROSOFT_LOGIN_ISSUER in .env');
+  if (!oauthServer) {
+    throw new Error('Missing MICROSOFT_LOGIN_OAUTH_SERVER in .env');
   }
 
-  issuer = new URL(`https://login.microsoftonline.com/${issuer}/v2.0`);
+  console.log(`!! Using OAuth server: ${oauthServer}`);
+  oauthServer = new URL(oauthServer);
 
   const params = new URLSearchParams(window.location.search);
 
   if (params.has('code')) {
-    await oauthCallback(clientId, issuer);
+    await oauthCallback(clientId, oauthServer);
   } else {
-    await oauthStart(clientId, issuer);
+    await oauthStart(clientId, oauthServer);
   }
 </script>
 

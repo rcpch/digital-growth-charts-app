@@ -7,6 +7,10 @@ import '../services/centile_chart_data_utils.dart';
 import '../services/digital_growth_charts_services.dart';
 
 class AppState with ChangeNotifier {
+  final AuthProviderWrapper _authProviderWrapper = AuthProviderWrapper(
+    AuthProvider(),
+  );
+
   DateTime? _dob;
   Sex? _sex;
 
@@ -129,8 +133,21 @@ class AppState with ChangeNotifier {
     }
   }
 
+  Future<void> loadAuthData() async {
+    _authData = await _authProviderWrapper.load();
+    if (_authData != null) {
+      notifyListeners();
+    }
+  }
+
   Future<void> login() async {
-    _authData = await AuthProvider().login();
+    _authData = await _authProviderWrapper.login();
+    notifyListeners();
+  }
+
+  Future<void> logout() async {
+    await _authProviderWrapper.logout();
+    _authData = null;
     notifyListeners();
   }
 
