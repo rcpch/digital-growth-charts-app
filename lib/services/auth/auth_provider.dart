@@ -11,6 +11,7 @@ import "auth_stub.dart"
 
 class AuthData {
   final String _refreshToken;
+  // ignore: unused_field
   final String? _accessToken;
 
   final String? _name;
