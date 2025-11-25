@@ -1,7 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'dart:developer' as developer;
 import 'dart:convert';
-import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:digital_growth_charts_app/classes/app_config.dart';
 import '/classes/log_levels.dart';
