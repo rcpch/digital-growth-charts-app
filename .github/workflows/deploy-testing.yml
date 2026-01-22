@@ -54,7 +54,7 @@ jobs:
 
       - id: authenticate
         name: Authenticate with Google
-        uses: google-github-actions/auth@v2 # latest as at April 2025
+        uses: google-github-actions/auth@v3 # latest as at April 2025
         with:
           service_account: rcpch-growth-charts-app@rcpch-growth-charts-app.iam.gserviceaccount.com
           workload_identity_provider: projects/221963061860/locations/global/workloadIdentityPools/github/providers/rcpch-growth-charts-app
