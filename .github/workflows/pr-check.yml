@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v6 # latest as at April 2025
+        uses: actions/checkout@v6
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
