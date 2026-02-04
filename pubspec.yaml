@@ -43,7 +43,7 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   provider: ^6.1.5+1
-  crypto: ^3.0.6
+  crypto: ^3.0.7
   web: ^1.1.1
   flutter_appauth_platform_interface: ^11.0.0
   flutter_appauth: ^11.0.0
