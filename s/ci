@@ -8,6 +8,9 @@ MICROSOFT_LOGIN_CLIENT_ID=${MICROSOFT_LOGIN_CLIENT_ID}
 MICROSOFT_LOGIN_OAUTH_SERVER=${MICROSOFT_LOGIN_OAUTH_SERVER}
 EOF
 
+echo 'Generated .env file:'
+cat .env
+
 flutter pub get
 
 flutter test
@@ -16,6 +19,8 @@ if [ $1 = "android" ]; then
   flutter build appbundle --release \
     --build-number ${BUILD_NUMBER}
 elif [ $1 = "web" ]; then
+  echo '.env file before web build:'
+  cat .env
   flutter build web --release
 else
   echo "Unknown platform: $1"
