@@ -8,9 +8,6 @@ MICROSOFT_LOGIN_CLIENT_ID=${MICROSOFT_LOGIN_CLIENT_ID}
 MICROSOFT_LOGIN_OAUTH_SERVER=${MICROSOFT_LOGIN_OAUTH_SERVER}
 EOF
 
-echo 'Generated .env file:'
-cat .env
-
 flutter pub get
 
 flutter test
@@ -22,6 +19,9 @@ elif [ $1 = "web" ]; then
   echo '.env file before web build:'
   cat .env
   flutter build web --release
+  echo '.env file after web build:'
+  ls -al build/web/assets/
+  cat build/web/assets/.env
 else
   echo "Unknown platform: $1"
   exit 1
