@@ -96,7 +96,7 @@ jobs:
         run: ./s/ci web
 
       - name: Setup GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v3
