@@ -99,11 +99,12 @@ jobs:
         uses: actions/configure-pages@v6
 
       - name: Upload artifact for GitHub Pages
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           # Path to the directory containing the static assets to be deployed.
           # Flutter web builds to 'build/web' by default.
           path: './build/web'
+          include-hidden-files: true
 
       - name: Deploy to GitHub Pages
         id: deployment
