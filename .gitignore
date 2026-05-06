@@ -8,9 +8,6 @@ build/
 # If you're building an application, you may want to check-in your pubspec.lock
 pubspec.lock
 
-# Firebase config - contains API keys, do not commit to public repos
-lib/firebase_options.dart
-
 # Directory created by dartdoc
 # If you don't generate documentation locally you can remove this line.
 doc/api/

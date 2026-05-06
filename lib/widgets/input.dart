@@ -1,5 +1,4 @@
 import 'dart:developer' as developer;
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 // RCPCH imports
@@ -10,6 +9,7 @@ import '../definitions/enums.dart';
 import './results.dart';
 import '../widgets/enum_radio_group.dart';
 import '../classes/app_state.dart';
+import '../services/analytics.dart';
 
 class InputFormState extends State<InputForm> {
   // A GlobalKey to uniquely identify the Form widget
@@ -214,7 +214,7 @@ class InputFormState extends State<InputForm> {
           value: observationValue,
         );
 
-        await FirebaseAnalytics.instance.logEvent(
+        await Analytics.logEvent(
           name: 'measurement_submitted',
           parameters: {'measurement_type': measurementMethod.name},
         );
