@@ -216,9 +216,7 @@ class InputFormState extends State<InputForm> {
 
         await FirebaseAnalytics.instance.logEvent(
           name: 'measurement_submitted',
-          parameters: {
-            'measurement_type': measurementMethod.name,
-          },
+          parameters: {'measurement_type': measurementMethod.name},
         );
 
         _resetForm();
