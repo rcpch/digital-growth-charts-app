@@ -8,6 +8,15 @@ MICROSOFT_LOGIN_CLIENT_ID=${MICROSOFT_LOGIN_CLIENT_ID}
 MICROSOFT_LOGIN_OAUTH_SERVER=${MICROSOFT_LOGIN_OAUTH_SERVER}
 EOF
 
+# Generate firebase_options.dart from the Firebase project
+npm install -g firebase-tools
+dart pub global activate flutterfire_cli
+export PATH="$PATH":"$HOME/.pub-cache/bin"
+flutterfire configure \
+  --project=rcpch-growth-charts-app \
+  --platforms=android,web,ios \
+  --yes
+
 flutter pub get
 
 flutter test
