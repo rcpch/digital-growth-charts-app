@@ -24,8 +24,19 @@ void main() async {
   runApp(const DGCApp());
 }
 
-class DGCApp extends StatelessWidget {
+class DGCApp extends StatefulWidget {
   const DGCApp({super.key});
+
+  @override
+  State<DGCApp> createState() => _DGCAppState();
+}
+
+class _DGCAppState extends State<DGCApp> {
+  @override
+  void initState() {
+    super.initState();
+    FirebaseAnalytics.instance.logAppOpen();
+  }
 
   // This widget is the root of your application.
   @override

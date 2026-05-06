@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 // RCPCH imports
@@ -211,6 +212,13 @@ class InputFormState extends State<InputForm> {
           observationDate: clinicDate,
           method: measurementMethod,
           value: observationValue,
+        );
+
+        await FirebaseAnalytics.instance.logEvent(
+          name: 'measurement_submitted',
+          parameters: {
+            'measurement_type': measurementMethod.name,
+          },
         );
 
         _resetForm();
