@@ -1,4 +1,5 @@
 // package and library imports
+import 'package:digital_growth_charts_app/services/device_id.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer' as developer;
@@ -62,6 +63,7 @@ class DigitalGrowthChartsService {
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Subscription-Key': _apiKey,
+          'X-Device-Id': await getHashedDeviceId() ?? 'unknown',
         },
         body: jsonEncode(requestBody), // Encode the Map to a JSON string
       );
