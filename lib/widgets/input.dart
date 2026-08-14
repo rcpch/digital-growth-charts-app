@@ -19,15 +19,11 @@ class InputFormState extends State<InputForm> {
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _observationDateController =
       TextEditingController();
-  final TextEditingController _measurementController = TextEditingController();
+  final TextEditingController _heightController = TextEditingController();
 
   // Variables to hold the selected dates (stored as DateTime objects for comparisons)
   DateTime? _selectedDob;
   DateTime? _selectedClinicDate;
-
-  // Variable to hold the selected measurement type
-  MeasurementMethod? _selectedMeasurementMethod =
-      MeasurementMethod.height; // Default to Height
 
   // Variable to hold the selected Sex
   Sex _selectedSex = Sex.male; // Default to Male
@@ -43,8 +39,7 @@ class InputFormState extends State<InputForm> {
     // Validate the form and update the _canSubmit state
     // The null check for currentState is important if the form might not be built yet.
     if (_formKey.currentState != null &&
-        _formKey.currentState!.validate() &&
-        _selectedMeasurementMethod != null) {
+        _formKey.currentState!.validate()) {
       if (!_canSubmit) {
         setState(() {
           _canSubmit = true;
@@ -119,29 +114,28 @@ class InputFormState extends State<InputForm> {
   }
 
   // Function to get the hint text for the measurement input based on the selected type
-  String _getMeasurementHintText() {
-    switch (_selectedMeasurementMethod) {
-      case MeasurementMethod.height:
-        return 'Enter height in cm';
-      case MeasurementMethod.weight:
-        return 'Enter weight in kg';
-      case MeasurementMethod.ofc:
-        return 'Enter head circumference in cm';
-      case MeasurementMethod.bmi:
-        return 'Enter BMI in kg/m²';
-      case null:
-        return "";
-    }
-  }
+  // TODO: MRB this advice inline
+  // String _getMeasurementHintText() {
+  //   switch (_selectedMeasurementMethod) {
+  //     case MeasurementMethod.height:
+  //       return 'Enter height in cm';
+  //     case MeasurementMethod.weight:
+  //       return 'Enter weight in kg';
+  //     case MeasurementMethod.ofc:
+  //       return 'Enter head circumference in cm';
+  //     case MeasurementMethod.bmi:
+  //       return 'Enter BMI in kg/m²';
+  //     case null:
+  //       return "";
+  //   }
+  // }
 
   void _resetForm() {
-    _measurementController.clear();
+    _heightController.clear();
 
     setState(() {
       // Don't reset the observation date, it's annoying to have to select it again
       // https://github.com/rcpch/digital-growth-charts-app/issues/21
-      // You do have to select the measurement type though to avoid mistakes
-      _selectedMeasurementMethod = null;
       _canSubmit = false;
     });
   }
@@ -151,15 +145,13 @@ class InputFormState extends State<InputForm> {
     appState.reset();
 
     _observationDateController.clear();
-    _measurementController.clear();
+    _heightController.clear();
     _dobController.clear();
     _selectedClinicDate = null;
     _selectedDob = null;
-    _selectedMeasurementMethod = MeasurementMethod.height;
     _selectedSex = Sex.male;
     setState(() {
       _selectedClinicDate = null;
-      _selectedMeasurementMethod = MeasurementMethod.height;
     });
   }
 
@@ -177,8 +169,10 @@ class InputFormState extends State<InputForm> {
 
       // Access the entered values:
       final String clinicDate = _observationDateController.text;
-      final String observationValue = _measurementController.text;
-      final MeasurementMethod measurementMethod = _selectedMeasurementMethod!;
+
+      // TODO MRB: build up measurements based on text boxes filled in
+      final String observationValue = _heightController.text;
+      final MeasurementMethod measurementMethod = MeasurementMethod.height; // Placeholder, replace with actual selected method
 
       if (appState.organizedGrowthData.isNotEmpty) {
         // If there's existing data, check if the current demographics match the fixed ones
@@ -261,7 +255,7 @@ class InputFormState extends State<InputForm> {
     // Clean up the controllers when the widget is disposed
     _dobController.dispose();
     _observationDateController.dispose();
-    _measurementController.dispose();
+    _heightController.dispose();
     super.dispose();
   }
 
@@ -494,47 +488,14 @@ class InputFormState extends State<InputForm> {
             const SizedBox(height: 16),
             // Spacing after Sex validation
 
-            // Measurement Type Radio Buttons
-            const Text(
-              'Select Measurement Type:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            EnumRadioGroup<MeasurementMethod>(
-              groupValue: _selectedMeasurementMethod,
-              enabled: true,
-              onChanged: (value) {
-                setState(() {
-                  _selectedMeasurementMethod = value!;
-                  _measurementController.clear();
-                });
-                _checkFormValidity();
-              },
-              values: MeasurementMethod.values, // all enum values
-              labelBuilder: (m) {
-                switch (m) {
-                  case MeasurementMethod.height:
-                    return 'Height';
-                  case MeasurementMethod.weight:
-                    return 'Weight';
-                  case MeasurementMethod.ofc:
-                    return 'Head Circ.';
-                  case MeasurementMethod.bmi:
-                    return 'BMI';
-                }
-              },
-              itemsPerRow: 2, // 2 radiobuttons per row
-            ),
-            const SizedBox(height: 16),
-
             // Measurement Input Field (Hint changes based on selection)
             TextFormField(
-              controller: _measurementController,
+              controller: _heightController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ), // Allow decimal input
               decoration: InputDecoration(
-                labelText: 'Measurement',
-                hintText: _getMeasurementHintText(), // Dynamic hint text
+                labelText: 'Height (cm)',
                 border: const OutlineInputBorder(),
               ),
               validator: (value) {
