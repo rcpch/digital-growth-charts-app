@@ -1,5 +1,6 @@
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 // RCPCH imports
 import 'package:digital_growth_charts_app/themes/colours.dart';
@@ -20,6 +21,8 @@ class InputFormState extends State<InputForm> {
   final TextEditingController _observationDateController =
       TextEditingController();
   final TextEditingController _heightController = TextEditingController();
+  final TextEditingController _weightController = TextEditingController();
+  final TextEditingController _ofcController = TextEditingController();
 
   // Variables to hold the selected dates (stored as DateTime objects for comparisons)
   DateTime? _selectedDob;
@@ -132,6 +135,8 @@ class InputFormState extends State<InputForm> {
 
   void _resetForm() {
     _heightController.clear();
+    _weightController.clear();
+    _ofcController.clear();
 
     setState(() {
       // Don't reset the observation date, it's annoying to have to select it again
@@ -146,6 +151,8 @@ class InputFormState extends State<InputForm> {
 
     _observationDateController.clear();
     _heightController.clear();
+    _weightController.clear();
+    _ofcController.clear();
     _dobController.clear();
     _selectedClinicDate = null;
     _selectedDob = null;
@@ -256,6 +263,8 @@ class InputFormState extends State<InputForm> {
     _dobController.dispose();
     _observationDateController.dispose();
     _heightController.dispose();
+    _weightController.dispose();
+    _ofcController.dispose();
     super.dispose();
   }
 
@@ -453,10 +462,6 @@ class InputFormState extends State<InputForm> {
             // --- End of New Gestation Section ---
 
             // Sex Radio Buttons
-            const Text(
-              'Select Sex:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
             EnumRadioGroup<Sex>(
               groupValue: _selectedSex,
               onChanged: (value) {
@@ -488,7 +493,7 @@ class InputFormState extends State<InputForm> {
             const SizedBox(height: 16),
             // Spacing after Sex validation
 
-            // Measurement Input Field (Hint changes based on selection)
+            // Height Input Field
             TextFormField(
               controller: _heightController,
               keyboardType: const TextInputType.numberWithOptions(
@@ -499,17 +504,56 @@ class InputFormState extends State<InputForm> {
                 border: const OutlineInputBorder(),
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a measurement value';
-                }
-                // You could add more specific validation here based on MeasurementMethod (e.g., check if it's a valid number, within a reasonable range)
-                // Example: check if it's a number
-                if (double.tryParse(value) == null) {
+                // TODO MRB: validate up front (SDS validation as per Python package)
+                if (value != null && value.isNotEmpty && double.tryParse(value) == null) {
                   return 'Please enter a valid number';
                 }
                 return null; // Valid
               },
             ),
+            const SizedBox(height: 16),
+            // Spacing after Height validation
+
+            // Weight Input Field
+            TextFormField(
+              controller: _weightController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ), // Allow decimal input
+              decoration: InputDecoration(
+                labelText: 'Weight (kg)',
+                border: const OutlineInputBorder(),
+              ),
+              validator: (value) {
+                // TODO MRB: validate up front (SDS validation as per Python package)
+                if (value != null && value.isNotEmpty && double.tryParse(value) == null) {
+                  return 'Please enter a valid number';
+                }
+                return null; // Valid
+              },
+            ),
+            const SizedBox(height: 16),
+            // Spacing after Weight validation
+
+            // Head Circumference (ofc) Input Field
+            TextFormField(
+              controller: _ofcController,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ), // Allow decimal input
+              decoration: InputDecoration(
+                labelText: 'Head Circumference (cm)',
+                border: const OutlineInputBorder(),
+              ),
+              validator: (value) {
+                // TODO MRB: validate up front (SDS validation as per Python package)
+                if (value != null && value.isNotEmpty && double.tryParse(value) == null) {
+                  return 'Please enter a valid number';
+                }
+                return null; // Valid
+              },
+            ),
+
             const SizedBox(height: 24),
 
             // Submit Button
