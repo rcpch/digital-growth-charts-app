@@ -1,6 +1,5 @@
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 // RCPCH imports
 import 'package:digital_growth_charts_app/themes/colours.dart';
@@ -10,6 +9,7 @@ import '../definitions/enums.dart';
 import './results.dart';
 import '../widgets/enum_radio_group.dart';
 import '../classes/app_state.dart';
+import '../definitions/helpers.dart';
 
 class InputFormState extends State<InputForm> {
   // A GlobalKey to uniquely identify the Form widget
@@ -23,7 +23,9 @@ class InputFormState extends State<InputForm> {
   final TextEditingController _heightController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _ofcController = TextEditingController();
+
   final TextEditingController _bmiController = TextEditingController();
+  final TextEditingController _derivedBmiController = TextEditingController();
 
   // Variables to hold the selected dates (stored as DateTime objects for comparisons)
   DateTime? _selectedDob;
@@ -58,6 +60,21 @@ class InputFormState extends State<InputForm> {
     }
   }
 
+  void _updateBmi() {
+    if (_heightController.text.isNotEmpty && _weightController.text.isNotEmpty) {
+      final height = double.tryParse(_heightController.text);
+      final weight = double.tryParse(_weightController.text);
+      if (height != null && weight != null) {
+        final bmi = calculateBmi(weight, height);
+        if (bmi != null) {
+          _derivedBmiController.text = bmi.toStringAsFixed(2);
+        }
+      }
+    } else {
+      _derivedBmiController.clear();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -80,6 +97,9 @@ class InputFormState extends State<InputForm> {
       _selectedGestationDays = appState.gestationDays!;
       _showGestationFields = true; // Expand gestation section if data exists
     }
+
+    _heightController.addListener(_updateBmi);
+    _weightController.addListener(_updateBmi);
   }
 
   // Function to show the date picker and update the text field and state
@@ -238,6 +258,21 @@ class InputFormState extends State<InputForm> {
             value: _bmiController.text,
           ),
         );
+      } else if(_weightController.text.isNotEmpty && _heightController.text.isNotEmpty) {
+        final bmi = calculateBmi(
+          double.tryParse(_weightController.text) ?? 0,
+          double.tryParse(_heightController.text) ?? 0,
+        );
+
+        if (bmi != null) {
+          tasks.add(
+            appState.addMeasurement(
+              observationDate: clinicDate,
+              method: MeasurementMethod.bmi,
+              value: bmi.toStringAsFixed(2),
+            ),
+          );
+        }
       }
 
       try {
@@ -291,7 +326,9 @@ class InputFormState extends State<InputForm> {
     // Clean up the controllers when the widget is disposed
     _dobController.dispose();
     _observationDateController.dispose();
+    _heightController.removeListener(_updateBmi);
     _heightController.dispose();
+    _weightController.removeListener(_updateBmi);
     _weightController.dispose();
     _ofcController.dispose();
     _bmiController.dispose();
@@ -525,6 +562,7 @@ class InputFormState extends State<InputForm> {
             // Height Input Field
             TextFormField(
               controller: _heightController,
+              enabled: _bmiController.text.isEmpty,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ), // Allow decimal input
@@ -548,6 +586,7 @@ class InputFormState extends State<InputForm> {
             // Weight Input Field
             TextFormField(
               controller: _weightController,
+              enabled: _bmiController.text.isEmpty,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ), // Allow decimal input
@@ -582,6 +621,7 @@ class InputFormState extends State<InputForm> {
                       // Head Circumference (ofc) Input Field
                       TextFormField(
                         controller: _ofcController,
+                        enabled: _bmiController.text.isEmpty,
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ), // Allow decimal input
@@ -600,28 +640,38 @@ class InputFormState extends State<InputForm> {
                         },
                       ),
                       const SizedBox(height: 16),
-                      // BMI Input Field
-                      TextFormField(
-                        controller: _bmiController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ), // Allow decimal input
-                        decoration: InputDecoration(
-                          labelText: 'BMI (kg/m²)',
-                          helperText: 'Automatically calculated when height and weight are set',
-                          helperMaxLines:  2,
-                          border: const OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          // TODO MRB: validate up front (SDS validation as per Python package)
-                          if (value != null &&
-                              value.isNotEmpty &&
-                              double.tryParse(value) == null) {
-                            return 'Please enter a valid number';
-                          }
-                          return null; // Valid
-                        },
-                      ),
+                      // Derived BMI if height and weight set otherwise
+                      _heightController.text.isEmpty && _weightController.text.isEmpty && _ofcController.text.isEmpty
+                          ? // BMI Input Field
+                          TextFormField(
+                            controller: _bmiController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: InputDecoration(
+                              labelText: 'BMI (kg/m²)',
+                              border: const OutlineInputBorder(),
+                            ),
+                            validator: (value) {
+                              // TODO MRB: validate up front (SDS validation as per Python package)
+                              if (value != null &&
+                                  value.isNotEmpty &&
+                                  double.tryParse(value) == null) {
+                                return 'Please enter a valid number';
+                              }
+                              return null; // Valid
+                            },
+                          )
+                          : TextFormField(
+                            controller: _derivedBmiController,
+                              enabled: false,
+                              decoration: InputDecoration(
+                                labelText: 'BMI (kg/m²)',
+                                helperText: _weightController.text.isEmpty || _heightController.text.isEmpty ? 'Calculated automatically from weight and height' : '',
+                                helperMaxLines: 2,
+                                border: const OutlineInputBorder(),
+                              )
+                            )
                     ]
                   )
                 ),

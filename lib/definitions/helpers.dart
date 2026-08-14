@@ -25,3 +25,10 @@ String getMeasurementMethodUnits(String? measurementMethod) {
     return "";
   }
 }
+
+double? calculateBmi(double weight, double height) {
+  if (height <= 0) {
+    return null;
+  }
+  return weight / ((height / 100) * (height / 100));
+}
