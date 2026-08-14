@@ -41,8 +41,7 @@ class InputFormState extends State<InputForm> {
   void _checkFormValidity() {
     // Validate the form and update the _canSubmit state
     // The null check for currentState is important if the form might not be built yet.
-    if (_formKey.currentState != null &&
-        _formKey.currentState!.validate()) {
+    if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       if (!_canSubmit) {
         setState(() {
           _canSubmit = true;
@@ -179,7 +178,8 @@ class InputFormState extends State<InputForm> {
 
       // TODO MRB: build up measurements based on text boxes filled in
       final String observationValue = _heightController.text;
-      final MeasurementMethod measurementMethod = MeasurementMethod.height; // Placeholder, replace with actual selected method
+      final MeasurementMethod measurementMethod = MeasurementMethod
+          .height; // Placeholder, replace with actual selected method
 
       if (appState.organizedGrowthData.isNotEmpty) {
         // If there's existing data, check if the current demographics match the fixed ones
@@ -207,12 +207,40 @@ class InputFormState extends State<InputForm> {
 
       setState(() => _loading = true);
 
-      try {
-        await appState.addMeasurement(
-          observationDate: clinicDate,
-          method: measurementMethod,
-          value: observationValue,
+      final List<Future> tasks = [];
+
+      if (_heightController.text.isNotEmpty) {
+        tasks.add(
+          appState.addMeasurement(
+            observationDate: clinicDate,
+            method: MeasurementMethod.height,
+            value: _heightController.text,
+          ),
         );
+      }
+
+      if (_weightController.text.isNotEmpty) {
+        tasks.add(
+          appState.addMeasurement(
+            observationDate: clinicDate,
+            method: MeasurementMethod.weight,
+            value: _weightController.text,
+          ),
+        );
+      }
+
+      if (_ofcController.text.isNotEmpty) {
+        tasks.add(
+          appState.addMeasurement(
+            observationDate: clinicDate,
+            method: MeasurementMethod.ofc,
+            value: _ofcController.text,
+          ),
+        );
+      }
+
+      try {
+        await Future.wait(tasks);
 
         _resetForm();
 
@@ -505,7 +533,9 @@ class InputFormState extends State<InputForm> {
               ),
               validator: (value) {
                 // TODO MRB: validate up front (SDS validation as per Python package)
-                if (value != null && value.isNotEmpty && double.tryParse(value) == null) {
+                if (value != null &&
+                    value.isNotEmpty &&
+                    double.tryParse(value) == null) {
                   return 'Please enter a valid number';
                 }
                 return null; // Valid
@@ -526,7 +556,9 @@ class InputFormState extends State<InputForm> {
               ),
               validator: (value) {
                 // TODO MRB: validate up front (SDS validation as per Python package)
-                if (value != null && value.isNotEmpty && double.tryParse(value) == null) {
+                if (value != null &&
+                    value.isNotEmpty &&
+                    double.tryParse(value) == null) {
                   return 'Please enter a valid number';
                 }
                 return null; // Valid
@@ -547,7 +579,9 @@ class InputFormState extends State<InputForm> {
               ),
               validator: (value) {
                 // TODO MRB: validate up front (SDS validation as per Python package)
-                if (value != null && value.isNotEmpty && double.tryParse(value) == null) {
+                if (value != null &&
+                    value.isNotEmpty &&
+                    double.tryParse(value) == null) {
                   return 'Please enter a valid number';
                 }
                 return null; // Valid
