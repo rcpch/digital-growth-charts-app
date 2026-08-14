@@ -28,6 +28,7 @@ doc/api/
 .env
 android/key.properties
 
+.idea
 android/.idea
 .flutter-plugins-dependencies
 
