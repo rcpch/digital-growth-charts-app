@@ -41,18 +41,17 @@ class InputFormState extends State<InputForm> {
   void _checkFormValidity() {
     // Validate the form and update the _canSubmit state
     // The null check for currentState is important if the form might not be built yet.
-    if (_formKey.currentState != null && _formKey.currentState!.validate()) {
-      if (!_canSubmit) {
-        setState(() {
-          _canSubmit = true;
-        });
-      }
-    } else {
-      if (_canSubmit) {
-        setState(() {
-          _canSubmit = false;
-        });
-      }
+    final formValid =
+        _formKey.currentState != null && _formKey.currentState!.validate();
+    // At least one measurement (height, weight, or OFC) must be supplied.
+    final hasMeasurement = _heightController.text.isNotEmpty ||
+        _weightController.text.isNotEmpty ||
+        _ofcController.text.isNotEmpty;
+    final canSubmit = formValid && hasMeasurement;
+    if (canSubmit != _canSubmit) {
+      setState(() {
+        _canSubmit = canSubmit;
+      });
     }
   }
 
