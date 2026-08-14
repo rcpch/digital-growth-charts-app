@@ -23,6 +23,7 @@ class InputFormState extends State<InputForm> {
   final TextEditingController _heightController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _ofcController = TextEditingController();
+  final TextEditingController _bmiController = TextEditingController();
 
   // Variables to hold the selected dates (stored as DateTime objects for comparisons)
   DateTime? _selectedDob;
@@ -47,7 +48,8 @@ class InputFormState extends State<InputForm> {
     final hasMeasurement =
         _heightController.text.isNotEmpty ||
         _weightController.text.isNotEmpty ||
-        _ofcController.text.isNotEmpty;
+        _ofcController.text.isNotEmpty ||
+        _bmiController.text.isNotEmpty;
     final canSubmit = formValid && hasMeasurement;
     if (canSubmit != _canSubmit) {
       setState(() {
@@ -119,6 +121,7 @@ class InputFormState extends State<InputForm> {
     _heightController.clear();
     _weightController.clear();
     _ofcController.clear();
+    _bmiController.clear();
 
     setState(() {
       // Don't reset the observation date, it's annoying to have to select it again
@@ -135,6 +138,7 @@ class InputFormState extends State<InputForm> {
     _heightController.clear();
     _weightController.clear();
     _ofcController.clear();
+    _bmiController.clear();
     _dobController.clear();
     _selectedClinicDate = null;
     _selectedDob = null;
@@ -186,7 +190,7 @@ class InputFormState extends State<InputForm> {
       setState(() => _loading = true);
 
       final List<Future> tasks = [];
-      MeasurementMethod? firstMeasurementMethod = null;
+      MeasurementMethod? firstMeasurementMethod;
 
       if (_heightController.text.isNotEmpty) {
         firstMeasurementMethod ??= MeasurementMethod.height;
@@ -220,6 +224,18 @@ class InputFormState extends State<InputForm> {
             observationDate: clinicDate,
             method: MeasurementMethod.ofc,
             value: _ofcController.text,
+          ),
+        );
+      }
+
+      if (_bmiController.text.isNotEmpty) {
+        firstMeasurementMethod ??= MeasurementMethod.bmi;
+
+        tasks.add(
+          appState.addMeasurement(
+            observationDate: clinicDate,
+            method: MeasurementMethod.bmi,
+            value: _bmiController.text,
           ),
         );
       }
@@ -278,6 +294,7 @@ class InputFormState extends State<InputForm> {
     _heightController.dispose();
     _weightController.dispose();
     _ofcController.dispose();
+    _bmiController.dispose();
     super.dispose();
   }
 
@@ -554,28 +571,61 @@ class InputFormState extends State<InputForm> {
             ExpansionTile(
               title: const Text('Other measurement types'),
               children: [
-                const SizedBox(height: 8),
-                // Head Circumference (ofc) Input Field
-                TextFormField(
-                  controller: _ofcController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ), // Allow decimal input
-                  decoration: InputDecoration(
-                    labelText: 'Head Circumference (cm)',
-                    border: const OutlineInputBorder(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 16.0,
                   ),
-                  validator: (value) {
-                    // TODO MRB: validate up front (SDS validation as per Python package)
-                    if (value != null &&
-                        value.isNotEmpty &&
-                        double.tryParse(value) == null) {
-                      return 'Please enter a valid number';
-                    }
-                    return null; // Valid
-                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Head Circumference (ofc) Input Field
+                      TextFormField(
+                        controller: _ofcController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ), // Allow decimal input
+                        decoration: InputDecoration(
+                          labelText: 'Head Circumference (cm)',
+                          border: const OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          // TODO MRB: validate up front (SDS validation as per Python package)
+                          if (value != null &&
+                              value.isNotEmpty &&
+                              double.tryParse(value) == null) {
+                            return 'Please enter a valid number';
+                          }
+                          return null; // Valid
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      // BMI Input Field
+                      TextFormField(
+                        controller: _bmiController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ), // Allow decimal input
+                        decoration: InputDecoration(
+                          labelText: 'BMI (kg/m²)',
+                          helperText: 'Automatically calculated when height and weight are set',
+                          helperMaxLines:  2,
+                          border: const OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          // TODO MRB: validate up front (SDS validation as per Python package)
+                          if (value != null &&
+                              value.isNotEmpty &&
+                              double.tryParse(value) == null) {
+                            return 'Please enter a valid number';
+                          }
+                          return null; // Valid
+                        },
+                      ),
+                    ]
+                  )
                 ),
-              ],
+              ]
             ),
 
             const SizedBox(height: 24),
