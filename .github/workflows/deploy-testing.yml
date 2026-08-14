@@ -8,7 +8,7 @@ on:
 permissions:
   id-token: write # For Google Play auth
   contents: write # For committing to repo for GitHub Pages for actions/deploy-pages
-  pages: write    # Required for actions/deploy-pages
+  pages: write # Required for actions/deploy-pages
 
 jobs:
   build-and-publish-android:
@@ -18,10 +18,10 @@ jobs:
     # ============================
     steps:
       - name: Check out code
-        uses: actions/checkout@v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: '3.47.0'
 
@@ -54,14 +54,14 @@ jobs:
 
       - id: authenticate
         name: Authenticate with Google
-        uses: google-github-actions/auth@v3
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
         with:
           service_account: rcpch-growth-charts-app@rcpch-growth-charts-app.iam.gserviceaccount.com
           workload_identity_provider: projects/221963061860/locations/global/workloadIdentityPools/github/providers/rcpch-growth-charts-app
           create_credentials_file: true
 
       - name: Upload to Internal Test Track
-        uses: r0adkll/upload-google-play@v1
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1
         with:
           serviceAccountJson: ${{ steps.authenticate.outputs.credentials_file_path }}
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
@@ -77,10 +77,10 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: '3.47.0'
           channel: 'stable'
@@ -96,16 +96,16 @@ jobs:
         run: ./s/ci web
 
       - name: Setup GitHub Pages
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
 
       - name: Upload artifact for GitHub Pages
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
           # Path to the directory containing the static assets to be deployed.
           # Flutter web builds to 'build/web' by default.
-          path: './build/web'
+          path: "./build/web"
           include-hidden-files: true
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5
