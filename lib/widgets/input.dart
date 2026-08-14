@@ -176,11 +176,6 @@ class InputFormState extends State<InputForm> {
       // Access the entered values:
       final String clinicDate = _observationDateController.text;
 
-      // TODO MRB: build up measurements based on text boxes filled in
-      final String observationValue = _heightController.text;
-      final MeasurementMethod measurementMethod = MeasurementMethod
-          .height; // Placeholder, replace with actual selected method
-
       if (appState.organizedGrowthData.isNotEmpty) {
         // If there's existing data, check if the current demographics match the fixed ones
         if (_selectedDob != appState.dob ||
