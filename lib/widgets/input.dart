@@ -61,7 +61,8 @@ class InputFormState extends State<InputForm> {
   }
 
   void _updateBmi() {
-    if (_heightController.text.isNotEmpty && _weightController.text.isNotEmpty) {
+    if (_heightController.text.isNotEmpty &&
+        _weightController.text.isNotEmpty) {
       final height = double.tryParse(_heightController.text);
       final weight = double.tryParse(_weightController.text);
       if (height != null && weight != null) {
@@ -258,7 +259,8 @@ class InputFormState extends State<InputForm> {
             value: _bmiController.text,
           ),
         );
-      } else if(_weightController.text.isNotEmpty && _heightController.text.isNotEmpty) {
+      } else if (_weightController.text.isNotEmpty &&
+          _heightController.text.isNotEmpty) {
         final bmi = calculateBmi(
           double.tryParse(_weightController.text) ?? 0,
           double.tryParse(_heightController.text) ?? 0,
@@ -641,41 +643,48 @@ class InputFormState extends State<InputForm> {
                       ),
                       const SizedBox(height: 16),
                       // Derived BMI if height and weight set otherwise
-                      _heightController.text.isEmpty && _weightController.text.isEmpty && _ofcController.text.isEmpty
+                      _heightController.text.isEmpty &&
+                              _weightController.text.isEmpty &&
+                              _ofcController.text.isEmpty
                           ? // BMI Input Field
-                          TextFormField(
-                            controller: _bmiController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            decoration: InputDecoration(
-                              labelText: 'BMI (kg/m²)',
-                              border: const OutlineInputBorder(),
-                            ),
-                            validator: (value) {
-                              // TODO MRB: validate up front (SDS validation as per Python package)
-                              if (value != null &&
-                                  value.isNotEmpty &&
-                                  double.tryParse(value) == null) {
-                                return 'Please enter a valid number';
-                              }
-                              return null; // Valid
-                            },
-                          )
+                            TextFormField(
+                              controller: _bmiController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              decoration: InputDecoration(
+                                labelText: 'BMI (kg/m²)',
+                                border: const OutlineInputBorder(),
+                              ),
+                              validator: (value) {
+                                // TODO MRB: validate up front (SDS validation as per Python package)
+                                if (value != null &&
+                                    value.isNotEmpty &&
+                                    double.tryParse(value) == null) {
+                                  return 'Please enter a valid number';
+                                }
+                                return null; // Valid
+                              },
+                            )
                           : TextFormField(
-                            controller: _derivedBmiController,
+                              controller: _derivedBmiController,
                               enabled: false,
                               decoration: InputDecoration(
                                 labelText: 'BMI (kg/m²)',
-                                helperText: _weightController.text.isEmpty || _heightController.text.isEmpty ? 'Calculated automatically from weight and height' : '',
+                                helperText:
+                                    _weightController.text.isEmpty ||
+                                        _heightController.text.isEmpty
+                                    ? 'Calculated automatically from weight and height'
+                                    : '',
                                 helperMaxLines: 2,
                                 border: const OutlineInputBorder(),
-                              )
-                            )
-                    ]
-                  )
+                              ),
+                            ),
+                    ],
+                  ),
                 ),
-              ]
+              ],
             ),
 
             const SizedBox(height: 24),
