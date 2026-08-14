@@ -44,7 +44,8 @@ class InputFormState extends State<InputForm> {
     final formValid =
         _formKey.currentState != null && _formKey.currentState!.validate();
     // At least one measurement (height, weight, or OFC) must be supplied.
-    final hasMeasurement = _heightController.text.isNotEmpty ||
+    final hasMeasurement =
+        _heightController.text.isNotEmpty ||
         _weightController.text.isNotEmpty ||
         _ofcController.text.isNotEmpty;
     final canSubmit = formValid && hasMeasurement;
@@ -369,7 +370,7 @@ class InputFormState extends State<InputForm> {
 
             // --- Start of New Gestation Section ---
             ExpansionTile(
-              title: const Text('Add Gestation if Known'),
+              title: const Text('Add gestation if known'),
               onExpansionChanged: (bool expanded) {
                 setState(() {
                   _showGestationFields = expanded;
@@ -380,7 +381,7 @@ class InputFormState extends State<InputForm> {
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16.0,
-                    vertical: 8.0,
+                    vertical: 16.0,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -470,7 +471,6 @@ class InputFormState extends State<InputForm> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
             // --- End of New Gestation Section ---
 
             // Sex Radio Buttons
@@ -502,7 +502,7 @@ class InputFormState extends State<InputForm> {
                 return const SizedBox.shrink(); // Hide the error message when a Sex is selected or form not validated yet
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             // Spacing after Sex validation
 
             // Height Input Field
@@ -551,25 +551,31 @@ class InputFormState extends State<InputForm> {
             const SizedBox(height: 16),
             // Spacing after Weight validation
 
-            // Head Circumference (ofc) Input Field
-            TextFormField(
-              controller: _ofcController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ), // Allow decimal input
-              decoration: InputDecoration(
-                labelText: 'Head Circumference (cm)',
-                border: const OutlineInputBorder(),
-              ),
-              validator: (value) {
-                // TODO MRB: validate up front (SDS validation as per Python package)
-                if (value != null &&
-                    value.isNotEmpty &&
-                    double.tryParse(value) == null) {
-                  return 'Please enter a valid number';
-                }
-                return null; // Valid
-              },
+            ExpansionTile(
+              title: const Text('Other measurement types'),
+              children: [
+                const SizedBox(height: 8),
+                // Head Circumference (ofc) Input Field
+                TextFormField(
+                  controller: _ofcController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ), // Allow decimal input
+                  decoration: InputDecoration(
+                    labelText: 'Head Circumference (cm)',
+                    border: const OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    // TODO MRB: validate up front (SDS validation as per Python package)
+                    if (value != null &&
+                        value.isNotEmpty &&
+                        double.tryParse(value) == null) {
+                      return 'Please enter a valid number';
+                    }
+                    return null; // Valid
+                  },
+                ),
+              ],
             ),
 
             const SizedBox(height: 24),
