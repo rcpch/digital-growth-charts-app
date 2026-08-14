@@ -115,23 +115,6 @@ class InputFormState extends State<InputForm> {
     }
   }
 
-  // Function to get the hint text for the measurement input based on the selected type
-  // TODO: MRB this advice inline
-  // String _getMeasurementHintText() {
-  //   switch (_selectedMeasurementMethod) {
-  //     case MeasurementMethod.height:
-  //       return 'Enter height in cm';
-  //     case MeasurementMethod.weight:
-  //       return 'Enter weight in kg';
-  //     case MeasurementMethod.ofc:
-  //       return 'Enter head circumference in cm';
-  //     case MeasurementMethod.bmi:
-  //       return 'Enter BMI in kg/m²';
-  //     case null:
-  //       return "";
-  //   }
-  // }
-
   void _resetForm() {
     _heightController.clear();
     _weightController.clear();
@@ -203,8 +186,11 @@ class InputFormState extends State<InputForm> {
       setState(() => _loading = true);
 
       final List<Future> tasks = [];
+      MeasurementMethod? firstMeasurementMethod = null;
 
       if (_heightController.text.isNotEmpty) {
+        firstMeasurementMethod ??= MeasurementMethod.height;
+
         tasks.add(
           appState.addMeasurement(
             observationDate: clinicDate,
@@ -215,6 +201,8 @@ class InputFormState extends State<InputForm> {
       }
 
       if (_weightController.text.isNotEmpty) {
+        firstMeasurementMethod ??= MeasurementMethod.weight;
+
         tasks.add(
           appState.addMeasurement(
             observationDate: clinicDate,
@@ -225,6 +213,8 @@ class InputFormState extends State<InputForm> {
       }
 
       if (_ofcController.text.isNotEmpty) {
+        firstMeasurementMethod ??= MeasurementMethod.ofc;
+
         tasks.add(
           appState.addMeasurement(
             observationDate: clinicDate,
@@ -245,7 +235,7 @@ class InputFormState extends State<InputForm> {
             context,
             MaterialPageRoute(
               builder: (context) =>
-                  ResultsPage(initialMeasurementMethod: measurementMethod),
+                  ResultsPage(initialMeasurementMethod: firstMeasurementMethod),
             ),
           );
         }
