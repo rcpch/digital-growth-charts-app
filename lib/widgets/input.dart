@@ -46,7 +46,7 @@ class InputFormState extends State<InputForm> {
     // The null check for currentState is important if the form might not be built yet.
     final formValid =
         _formKey.currentState != null && _formKey.currentState!.validate();
-    // At least one measurement (height, weight, or OFC) must be supplied.
+    // At least one measurement must be supplied.
     final hasMeasurement =
         _heightController.text.isNotEmpty ||
         _weightController.text.isNotEmpty ||
