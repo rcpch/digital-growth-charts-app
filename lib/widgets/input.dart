@@ -9,6 +9,7 @@ import '../definitions/enums.dart';
 import './results.dart';
 import '../widgets/enum_radio_group.dart';
 import '../classes/app_state.dart';
+import '../definitions/helpers.dart';
 
 class InputFormState extends State<InputForm> {
   // A GlobalKey to uniquely identify the Form widget
@@ -19,15 +20,16 @@ class InputFormState extends State<InputForm> {
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _observationDateController =
       TextEditingController();
-  final TextEditingController _measurementController = TextEditingController();
+  final TextEditingController _heightController = TextEditingController();
+  final TextEditingController _weightController = TextEditingController();
+  final TextEditingController _ofcController = TextEditingController();
+
+  final TextEditingController _bmiController = TextEditingController();
+  final TextEditingController _derivedBmiController = TextEditingController();
 
   // Variables to hold the selected dates (stored as DateTime objects for comparisons)
   DateTime? _selectedDob;
   DateTime? _selectedClinicDate;
-
-  // Variable to hold the selected measurement type
-  MeasurementMethod? _selectedMeasurementMethod =
-      MeasurementMethod.height; // Default to Height
 
   // Variable to hold the selected Sex
   Sex _selectedSex = Sex.male; // Default to Male
@@ -42,20 +44,35 @@ class InputFormState extends State<InputForm> {
   void _checkFormValidity() {
     // Validate the form and update the _canSubmit state
     // The null check for currentState is important if the form might not be built yet.
-    if (_formKey.currentState != null &&
-        _formKey.currentState!.validate() &&
-        _selectedMeasurementMethod != null) {
-      if (!_canSubmit) {
-        setState(() {
-          _canSubmit = true;
-        });
+    final formValid =
+        _formKey.currentState != null && _formKey.currentState!.validate();
+    // At least one measurement must be supplied.
+    final hasMeasurement =
+        _heightController.text.isNotEmpty ||
+        _weightController.text.isNotEmpty ||
+        _ofcController.text.isNotEmpty ||
+        _bmiController.text.isNotEmpty;
+    final canSubmit = formValid && hasMeasurement;
+    if (canSubmit != _canSubmit) {
+      setState(() {
+        _canSubmit = canSubmit;
+      });
+    }
+  }
+
+  void _updateBmi() {
+    if (_heightController.text.isNotEmpty &&
+        _weightController.text.isNotEmpty) {
+      final height = double.tryParse(_heightController.text);
+      final weight = double.tryParse(_weightController.text);
+      if (height != null && weight != null) {
+        final bmi = calculateBmi(weight, height);
+        if (bmi != null) {
+          _derivedBmiController.text = bmi.toStringAsFixed(2);
+        }
       }
     } else {
-      if (_canSubmit) {
-        setState(() {
-          _canSubmit = false;
-        });
-      }
+      _derivedBmiController.clear();
     }
   }
 
@@ -81,6 +98,9 @@ class InputFormState extends State<InputForm> {
       _selectedGestationDays = appState.gestationDays!;
       _showGestationFields = true; // Expand gestation section if data exists
     }
+
+    _heightController.addListener(_updateBmi);
+    _weightController.addListener(_updateBmi);
   }
 
   // Function to show the date picker and update the text field and state
@@ -118,30 +138,15 @@ class InputFormState extends State<InputForm> {
     }
   }
 
-  // Function to get the hint text for the measurement input based on the selected type
-  String _getMeasurementHintText() {
-    switch (_selectedMeasurementMethod) {
-      case MeasurementMethod.height:
-        return 'Enter height in cm';
-      case MeasurementMethod.weight:
-        return 'Enter weight in kg';
-      case MeasurementMethod.ofc:
-        return 'Enter head circumference in cm';
-      case MeasurementMethod.bmi:
-        return 'Enter BMI in kg/m²';
-      case null:
-        return "";
-    }
-  }
-
   void _resetForm() {
-    _measurementController.clear();
+    _heightController.clear();
+    _weightController.clear();
+    _ofcController.clear();
+    _bmiController.clear();
 
     setState(() {
       // Don't reset the observation date, it's annoying to have to select it again
       // https://github.com/rcpch/digital-growth-charts-app/issues/21
-      // You do have to select the measurement type though to avoid mistakes
-      _selectedMeasurementMethod = null;
       _canSubmit = false;
     });
   }
@@ -151,15 +156,16 @@ class InputFormState extends State<InputForm> {
     appState.reset();
 
     _observationDateController.clear();
-    _measurementController.clear();
+    _heightController.clear();
+    _weightController.clear();
+    _ofcController.clear();
+    _bmiController.clear();
     _dobController.clear();
     _selectedClinicDate = null;
     _selectedDob = null;
-    _selectedMeasurementMethod = MeasurementMethod.height;
     _selectedSex = Sex.male;
     setState(() {
       _selectedClinicDate = null;
-      _selectedMeasurementMethod = MeasurementMethod.height;
     });
   }
 
@@ -177,8 +183,6 @@ class InputFormState extends State<InputForm> {
 
       // Access the entered values:
       final String clinicDate = _observationDateController.text;
-      final String observationValue = _measurementController.text;
-      final MeasurementMethod measurementMethod = _selectedMeasurementMethod!;
 
       if (appState.organizedGrowthData.isNotEmpty) {
         // If there's existing data, check if the current demographics match the fixed ones
@@ -206,12 +210,75 @@ class InputFormState extends State<InputForm> {
 
       setState(() => _loading = true);
 
-      try {
-        await appState.addMeasurement(
-          observationDate: clinicDate,
-          method: measurementMethod,
-          value: observationValue,
+      final List<Future> tasks = [];
+      MeasurementMethod? firstMeasurementMethod;
+
+      if (_heightController.text.isNotEmpty) {
+        firstMeasurementMethod ??= MeasurementMethod.height;
+
+        tasks.add(
+          appState.addMeasurement(
+            observationDate: clinicDate,
+            method: MeasurementMethod.height,
+            value: _heightController.text,
+          ),
         );
+      }
+
+      if (_weightController.text.isNotEmpty) {
+        firstMeasurementMethod ??= MeasurementMethod.weight;
+
+        tasks.add(
+          appState.addMeasurement(
+            observationDate: clinicDate,
+            method: MeasurementMethod.weight,
+            value: _weightController.text,
+          ),
+        );
+      }
+
+      if (_ofcController.text.isNotEmpty) {
+        firstMeasurementMethod ??= MeasurementMethod.ofc;
+
+        tasks.add(
+          appState.addMeasurement(
+            observationDate: clinicDate,
+            method: MeasurementMethod.ofc,
+            value: _ofcController.text,
+          ),
+        );
+      }
+
+      if (_bmiController.text.isNotEmpty) {
+        firstMeasurementMethod ??= MeasurementMethod.bmi;
+
+        tasks.add(
+          appState.addMeasurement(
+            observationDate: clinicDate,
+            method: MeasurementMethod.bmi,
+            value: _bmiController.text,
+          ),
+        );
+      } else if (_weightController.text.isNotEmpty &&
+          _heightController.text.isNotEmpty) {
+        final bmi = calculateBmi(
+          double.tryParse(_weightController.text) ?? 0,
+          double.tryParse(_heightController.text) ?? 0,
+        );
+
+        if (bmi != null) {
+          tasks.add(
+            appState.addMeasurement(
+              observationDate: clinicDate,
+              method: MeasurementMethod.bmi,
+              value: bmi.toStringAsFixed(2),
+            ),
+          );
+        }
+      }
+
+      try {
+        await Future.wait(tasks);
 
         _resetForm();
 
@@ -221,7 +288,7 @@ class InputFormState extends State<InputForm> {
             context,
             MaterialPageRoute(
               builder: (context) =>
-                  ResultsPage(initialMeasurementMethod: measurementMethod),
+                  ResultsPage(initialMeasurementMethod: firstMeasurementMethod),
             ),
           );
         }
@@ -261,7 +328,12 @@ class InputFormState extends State<InputForm> {
     // Clean up the controllers when the widget is disposed
     _dobController.dispose();
     _observationDateController.dispose();
-    _measurementController.dispose();
+    _heightController.removeListener(_updateBmi);
+    _heightController.dispose();
+    _weightController.removeListener(_updateBmi);
+    _weightController.dispose();
+    _ofcController.dispose();
+    _bmiController.dispose();
     super.dispose();
   }
 
@@ -354,7 +426,7 @@ class InputFormState extends State<InputForm> {
 
             // --- Start of New Gestation Section ---
             ExpansionTile(
-              title: const Text('Add Gestation if Known'),
+              title: const Text('Add gestation if known'),
               onExpansionChanged: (bool expanded) {
                 setState(() {
                   _showGestationFields = expanded;
@@ -365,7 +437,7 @@ class InputFormState extends State<InputForm> {
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16.0,
-                    vertical: 8.0,
+                    vertical: 16.0,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -455,14 +527,9 @@ class InputFormState extends State<InputForm> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
             // --- End of New Gestation Section ---
 
             // Sex Radio Buttons
-            const Text(
-              'Select Sex:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
             EnumRadioGroup<Sex>(
               groupValue: _selectedSex,
               onChanged: (value) {
@@ -491,64 +558,135 @@ class InputFormState extends State<InputForm> {
                 return const SizedBox.shrink(); // Hide the error message when a Sex is selected or form not validated yet
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             // Spacing after Sex validation
 
-            // Measurement Type Radio Buttons
-            const Text(
-              'Select Measurement Type:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            EnumRadioGroup<MeasurementMethod>(
-              groupValue: _selectedMeasurementMethod,
-              enabled: true,
-              onChanged: (value) {
-                setState(() {
-                  _selectedMeasurementMethod = value!;
-                  _measurementController.clear();
-                });
-                _checkFormValidity();
-              },
-              values: MeasurementMethod.values, // all enum values
-              labelBuilder: (m) {
-                switch (m) {
-                  case MeasurementMethod.height:
-                    return 'Height';
-                  case MeasurementMethod.weight:
-                    return 'Weight';
-                  case MeasurementMethod.ofc:
-                    return 'Head Circ.';
-                  case MeasurementMethod.bmi:
-                    return 'BMI';
-                }
-              },
-              itemsPerRow: 2, // 2 radiobuttons per row
-            ),
-            const SizedBox(height: 16),
-
-            // Measurement Input Field (Hint changes based on selection)
+            // Height Input Field
             TextFormField(
-              controller: _measurementController,
+              controller: _heightController,
+              enabled: _bmiController.text.isEmpty,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ), // Allow decimal input
               decoration: InputDecoration(
-                labelText: 'Measurement',
-                hintText: _getMeasurementHintText(), // Dynamic hint text
+                labelText: 'Height (cm)',
                 border: const OutlineInputBorder(),
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a measurement value';
-                }
-                // You could add more specific validation here based on MeasurementMethod (e.g., check if it's a valid number, within a reasonable range)
-                // Example: check if it's a number
-                if (double.tryParse(value) == null) {
+                // TODO MRB: validate up front (SDS validation as per Python package)
+                if (value != null &&
+                    value.isNotEmpty &&
+                    double.tryParse(value) == null) {
                   return 'Please enter a valid number';
                 }
                 return null; // Valid
               },
             ),
+            const SizedBox(height: 16),
+            // Spacing after Height validation
+
+            // Weight Input Field
+            TextFormField(
+              controller: _weightController,
+              enabled: _bmiController.text.isEmpty,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ), // Allow decimal input
+              decoration: InputDecoration(
+                labelText: 'Weight (kg)',
+                border: const OutlineInputBorder(),
+              ),
+              validator: (value) {
+                // TODO MRB: validate up front (SDS validation as per Python package)
+                if (value != null &&
+                    value.isNotEmpty &&
+                    double.tryParse(value) == null) {
+                  return 'Please enter a valid number';
+                }
+                return null; // Valid
+              },
+            ),
+            const SizedBox(height: 16),
+            // Spacing after Weight validation
+
+            ExpansionTile(
+              title: const Text('Other measurement types'),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 16.0,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Head Circumference (ofc) Input Field
+                      TextFormField(
+                        controller: _ofcController,
+                        enabled: _bmiController.text.isEmpty,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ), // Allow decimal input
+                        decoration: InputDecoration(
+                          labelText: 'Head Circumference (cm)',
+                          border: const OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          // TODO MRB: validate up front (SDS validation as per Python package)
+                          if (value != null &&
+                              value.isNotEmpty &&
+                              double.tryParse(value) == null) {
+                            return 'Please enter a valid number';
+                          }
+                          return null; // Valid
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      // Derived BMI if height and weight set otherwise
+                      _heightController.text.isEmpty &&
+                              _weightController.text.isEmpty &&
+                              _ofcController.text.isEmpty
+                          ? // BMI Input Field
+                            TextFormField(
+                              controller: _bmiController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              decoration: InputDecoration(
+                                labelText: 'BMI (kg/m²)',
+                                border: const OutlineInputBorder(),
+                              ),
+                              validator: (value) {
+                                // TODO MRB: validate up front (SDS validation as per Python package)
+                                if (value != null &&
+                                    value.isNotEmpty &&
+                                    double.tryParse(value) == null) {
+                                  return 'Please enter a valid number';
+                                }
+                                return null; // Valid
+                              },
+                            )
+                          : TextFormField(
+                              controller: _derivedBmiController,
+                              enabled: false,
+                              decoration: InputDecoration(
+                                labelText: 'BMI (kg/m²)',
+                                helperText:
+                                    _weightController.text.isEmpty ||
+                                        _heightController.text.isEmpty
+                                    ? 'Calculated automatically from weight and height'
+                                    : '',
+                                helperMaxLines: 2,
+                                border: const OutlineInputBorder(),
+                              ),
+                            ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
             const SizedBox(height: 24),
 
             // Submit Button
