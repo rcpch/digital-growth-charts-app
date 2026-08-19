@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../definitions/enums.dart';
 import '../widgets/enum_radio_group.dart';
 import '../classes/app_state.dart';
+import './results.dart';
 
 class GeneratorFormState extends State<GeneratorForm> {
   // A GlobalKey to uniquely identify the Form widget
@@ -49,7 +50,7 @@ class GeneratorFormState extends State<GeneratorForm> {
 
     var appState = Provider.of<AppState>(context, listen: false);
 
-    appState.generateFictionalData(
+    await appState.generateFictionalData(
       gestationWeeks: _selectedGestationWeeks,
       gestationDays: _selectedGestationDays,
       sex: _selectedSex,
@@ -58,6 +59,14 @@ class GeneratorFormState extends State<GeneratorForm> {
       measurementIntervalNumber: double.parse(_interval.text),
       measurementIntervalType: _intervalUnit.toLowerCase(),
       measurementMethod: _measurementMethod,
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            ResultsPage(initialMeasurementMethod: _measurementMethod),
+      ),
     );
   }
 
