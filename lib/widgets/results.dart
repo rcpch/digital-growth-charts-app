@@ -185,19 +185,21 @@ class _ResultsPageState extends State<ResultsPage>
           ),
         ],
       ),
-      body: DefaultTabController(
-        length: ResultsTab.values.length,
-        initialIndex: currentTab,
-        child: Scaffold(
-          body: TabBarView(
-            children: [
-              for (var tab in ResultsTab.values) buildTab(tab, appState),
-            ],
-          ),
-          bottomNavigationBar: TabBar(
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            tabs: [for (var tab in ResultsTab.values) buildTabLink(tab)],
+      body: SafeArea(
+        child: DefaultTabController(
+          length: ResultsTab.values.length,
+          initialIndex: currentTab,
+          child: Scaffold(
+            body: TabBarView(
+              children: [
+                for (var tab in ResultsTab.values) buildTab(tab, appState),
+              ],
+            ),
+            bottomNavigationBar: TabBar(
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              tabs: [for (var tab in ResultsTab.values) buildTabLink(tab)],
+            ),
           ),
         ),
       ),
