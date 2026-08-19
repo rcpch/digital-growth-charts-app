@@ -9,7 +9,7 @@ import '../classes/app_state.dart';
 class GeneratorFormState extends State<GeneratorForm> {
   // A GlobalKey to uniquely identify the Form widget
   final _formKey = GlobalKey<FormState>();
-  bool _canSubmit = false;
+  bool _canSubmit = true;
 
   final List<String> _ageUnits = ['Years', 'Months', 'Weeks', 'Days'];
 
@@ -17,13 +17,13 @@ class GeneratorFormState extends State<GeneratorForm> {
   int _selectedGestationDays = 0;
   Sex _selectedSex = Sex.male;
 
-  final TextEditingController _startAge = TextEditingController();
+  final TextEditingController _startAge = TextEditingController(text: '0');
   String _startAgeUnit = 'Years';
 
-  final TextEditingController _endAge = TextEditingController();
+  final TextEditingController _endAge = TextEditingController(text: '20');
   String _endAgeUnit = 'Years';
 
-  final TextEditingController _interval = TextEditingController();
+  final TextEditingController _interval = TextEditingController(text: '1');
   String _intervalUnit = 'Years';
 
   bool _loading = false;
@@ -184,6 +184,7 @@ class GeneratorFormState extends State<GeneratorForm> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const SizedBox(height: 16),
                     Row(
                       children: [
                         Expanded(
@@ -224,6 +225,7 @@ class GeneratorFormState extends State<GeneratorForm> {
                         // ),
                       ],
                     ),
+                    const SizedBox(height: 16),
                     Row(
                       children: [
                         Expanded(
@@ -264,6 +266,7 @@ class GeneratorFormState extends State<GeneratorForm> {
                         // ),
                       ],
                     ),
+                    const SizedBox(height: 16),
                     Row(
                       children: [
                         Expanded(
