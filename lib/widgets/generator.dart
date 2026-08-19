@@ -26,6 +26,8 @@ class GeneratorFormState extends State<GeneratorForm> {
   final TextEditingController _interval = TextEditingController(text: '1');
   String _intervalUnit = 'Years';
 
+  MeasurementMethod _measurementMethod = MeasurementMethod.height;
+
   bool _loading = false;
 
   void _checkFormValidity() {
@@ -38,11 +40,37 @@ class GeneratorFormState extends State<GeneratorForm> {
     }
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() {
         _loading = true;
       });
+    }
+
+    var appState = Provider.of<AppState>(context, listen: false);
+
+    appState.generateFictionalData(
+      gestationWeeks: _selectedGestationWeeks,
+      gestationDays: _selectedGestationDays,
+      sex: _selectedSex,
+      startChronologicalAge: double.parse(_startAge.text),
+      endAge: double.parse(_endAge.text),
+      measurementIntervalNumber: double.parse(_interval.text),
+      measurementIntervalType: _intervalUnit.toLowerCase(),
+      measurementMethod: _measurementMethod,
+    );
+  }
+
+  String _measurementMethodToString(MeasurementMethod method) {
+    switch (method) {
+      case MeasurementMethod.height:
+        return 'Height';
+      case MeasurementMethod.weight:
+        return 'Weight';
+      case MeasurementMethod.ofc:
+        return 'Head Cm.';
+      case MeasurementMethod.bmi:
+        return 'BMI';
     }
   }
 
@@ -55,7 +83,8 @@ class GeneratorFormState extends State<GeneratorForm> {
       body: Center(
         child: Column(
           children: [
-            Form(
+            Expanded(
+              child: Form(
               // Wrap form content in a Form widget
               key: _formKey, // Assign the GlobalKey
               autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -306,6 +335,19 @@ class GeneratorFormState extends State<GeneratorForm> {
                       ],
                     ),
                     const SizedBox(height: 16),
+                    EnumRadioGroup<MeasurementMethod>(
+                      groupValue: _measurementMethod,
+                      onChanged: (value) {
+                        setState(() {
+                          _measurementMethod = value!;
+                        });
+                        _checkFormValidity();
+                      },
+                      enabled: appState.organizedGrowthData.isEmpty,
+                      values: MeasurementMethod.values,
+                      labelBuilder: _measurementMethodToString
+                    ),
+                    const SizedBox(height: 16),
 
                     // Submit Button
                     ElevatedButton(
@@ -337,6 +379,7 @@ class GeneratorFormState extends State<GeneratorForm> {
                   ],
                 ),
               ),
+            ),
             ),
           ],
         ),

@@ -115,6 +115,30 @@ class AppState with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> generateFictionalData({
+    required int gestationWeeks,
+    required int gestationDays,
+    required Sex sex,
+    required double startChronologicalAge,
+    required double endAge,
+    required double measurementIntervalNumber,
+    required String measurementIntervalType,
+    required MeasurementMethod measurementMethod,
+  }) async {
+    final apiResponse = await _dgcApi.generateFictionalChildData(
+      gestationWeeks: gestationWeeks,
+      gestationDays: gestationDays,
+      sex: sex,
+      startChronologicalAge: startChronologicalAge,
+      endAge: endAge,
+      measurementIntervalNumber: measurementIntervalNumber,
+      measurementIntervalType: measurementIntervalType,
+      measurementMethod: measurementMethod,
+    );
+
+    print('Generated fictional data for $measurementMethod: ${apiResponse.length} entries');
+  }
+
   bool isFeatureFlagEnabled(FeatureFlag flag) {
     return _featureFlags.contains(flag);
   }
