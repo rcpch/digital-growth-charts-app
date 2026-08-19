@@ -1,4 +1,6 @@
 import 'package:digital_growth_charts_app/definitions/enums.dart';
+import 'package:digital_growth_charts_app/themes/colours.dart';
+import 'package:digital_growth_charts_app/widgets/generator.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../classes/app_state.dart';
@@ -55,6 +57,30 @@ class Settings extends StatelessWidget {
       appBar: AppBar(title: const Text('RCPCH Growth Charts')),
       body: Column(
         children: [
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => GeneratorForm()),
+              );
+            },
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.resolveWith<Color?>((
+                Set<WidgetState> states,
+              ) {
+                return primaryColour; // Use the component's default.
+              }),
+              shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
+              ),
+            ),
+            child: Text(
+              'Generate Test Data',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          const SizedBox(height: 16),
           const Text(
             'Test new features 🚀',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
