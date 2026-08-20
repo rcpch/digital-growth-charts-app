@@ -86,8 +86,6 @@ class GeneratorFormState extends State<GeneratorForm> {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<AppState>();
-
     return Scaffold(
       appBar: AppBar(title: const Text('Generate data')),
       body: SafeArea(
@@ -138,9 +136,7 @@ class GeneratorFormState extends State<GeneratorForm> {
                                       );
                                     })
                                     .toList(),
-                            onChanged: appState.organizedGrowthData.isNotEmpty
-                                ? null
-                                : (int? newValue) {
+                            onChanged: (int? newValue) {
                                     if (newValue != null) {
                                       setState(() {
                                         _selectedGestationWeeks = newValue;
@@ -173,9 +169,7 @@ class GeneratorFormState extends State<GeneratorForm> {
                                       );
                                     })
                                     .toList(),
-                            onChanged: appState.organizedGrowthData.isNotEmpty
-                                ? null
-                                : (int? newValue) {
+                            onChanged: (int? newValue) {
                                     if (newValue != null) {
                                       setState(() {
                                         _selectedGestationDays = newValue;
@@ -205,7 +199,6 @@ class GeneratorFormState extends State<GeneratorForm> {
                           });
                           _checkFormValidity();
                         },
-                        enabled: appState.organizedGrowthData.isEmpty,
                         values: Sex.values,
                         labelBuilder: (m) {
                           switch (m) {
@@ -354,7 +347,6 @@ class GeneratorFormState extends State<GeneratorForm> {
                           });
                           _checkFormValidity();
                         },
-                        enabled: appState.organizedGrowthData.isEmpty,
                         values: MeasurementMethod.values,
                         labelBuilder: _measurementMethodToString
                       ),
