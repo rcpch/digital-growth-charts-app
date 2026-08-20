@@ -19,10 +19,14 @@ class GeneratorFormState extends State<GeneratorForm> {
   Sex _selectedSex = Sex.male;
 
   final TextEditingController _startAge = TextEditingController(text: '0');
-  String _startAgeUnit = 'Years';
+  // TODO MRB: put back once available in API
+  // https://github.com/rcpch/rcpchgrowth-python/pull/99
+  // String _startAgeUnit = 'Years';
 
   final TextEditingController _endAge = TextEditingController(text: '20');
-  String _endAgeUnit = 'Years';
+  // TODO MRB: put back once available in API
+  // https://github.com/rcpch/rcpchgrowth-python/pull/99
+  // String _endAgeUnit = 'Years';
 
   final TextEditingController _interval = TextEditingController(text: '1');
   String _intervalUnit = 'Years';
@@ -33,12 +37,10 @@ class GeneratorFormState extends State<GeneratorForm> {
 
   void _checkFormValidity() {
     // Validate the form and update the _canSubmit state
-    // The null check for currentState is important if the form might not be built yet.
-    if (_formKey.currentState != null && _formKey.currentState!.validate()) {
-      setState(() {
-        _canSubmit = !_canSubmit;
-      });
-    }
+    setState(() {
+      _canSubmit =
+          _formKey.currentState != null && _formKey.currentState!.validate();
+    });
   }
 
   void _submitForm() async {
