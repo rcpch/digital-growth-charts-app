@@ -131,12 +131,22 @@ class _MeasurementOccasion {
   final String? correctedAgeComment;
   final List<_TaggedMeasurement> measurements;
 
-  String get ageSummary => [
-    if (ageLabel.isNotEmpty) ageLabel,
-    if (correctedAgeLabel != null) 'corrected $correctedAgeLabel',
-  ].join('  ·  ');
-
   String get dateSummary => dateLabel.isEmpty ? 'Unknown date' : dateLabel;
+
+  /// Age to show on the card header, honouring the page's age-correction
+  /// selection. Corrected age falls back to chronological when it wasn't
+  /// computed (e.g. term child), so the header never reads "Unknown age".
+  String displayAge(AgeCorrectionMethod method) {
+    switch (method) {
+      case AgeCorrectionMethod.corrected:
+        return correctedAgeLabel?.isNotEmpty == true
+            ? correctedAgeLabel!
+            : ageLabel;
+      case AgeCorrectionMethod.both:
+      case AgeCorrectionMethod.chronological:
+        return ageLabel;
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -148,7 +158,17 @@ class ResultsDataTable extends StatelessWidget {
   /// regroups them by observation date for display.
   final Map<MeasurementMethod, List<GrowthDataResponse>> organizedGrowthData;
 
-  const ResultsDataTable({super.key, required this.organizedGrowthData});
+  /// Which age the card header should show: the chronological age, the
+  /// corrected age (falling back to chronological when there's no
+  /// correction), or both. Mirrors the toggle in [ResultsPage]'s header
+  /// dialog.
+  final AgeCorrectionMethod ageCorrectionMethod;
+
+  const ResultsDataTable({
+    super.key,
+    required this.organizedGrowthData,
+    this.ageCorrectionMethod = AgeCorrectionMethod.chronological,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -169,6 +189,7 @@ class ResultsDataTable extends StatelessWidget {
               final occasion = occasions[index];
               return _OccasionCard(
                 occasion: occasion,
+                ageCorrectionMethod: ageCorrectionMethod,
                 onTap: () => _showDetailsModal(context, occasion),
               );
             },
@@ -340,9 +361,14 @@ class _ColumnHeaderDelegate extends SliverPersistentHeaderDelegate {
 // ---------------------------------------------------------------------------
 
 class _OccasionCard extends StatelessWidget {
-  const _OccasionCard({required this.occasion, this.onTap});
+  const _OccasionCard({
+    required this.occasion,
+    required this.ageCorrectionMethod,
+    this.onTap,
+  });
 
   final _MeasurementOccasion occasion;
+  final AgeCorrectionMethod ageCorrectionMethod;
   final VoidCallback? onTap;
 
   @override
@@ -369,7 +395,7 @@ class _OccasionCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _OccasionHeader(
-                  ageSummary: occasion.ageSummary,
+                  ageLabel: occasion.displayAge(ageCorrectionMethod),
                   dateSummary: occasion.dateSummary,
                   showChevron: onTap != null,
                 ),
@@ -393,12 +419,12 @@ class _OccasionCard extends StatelessWidget {
 
 class _OccasionHeader extends StatelessWidget {
   const _OccasionHeader({
-    required this.ageSummary,
+    required this.ageLabel,
     required this.dateSummary,
     required this.showChevron,
   });
 
-  final String ageSummary;
+  final String ageLabel;
   final String dateSummary;
   final bool showChevron;
 
@@ -413,7 +439,7 @@ class _OccasionHeader extends StatelessWidget {
             TextSpan(
               children: [
                 TextSpan(
-                  text: ageSummary.isEmpty ? 'Unknown age' : ageSummary,
+                  text: ageLabel.isEmpty ? 'Unknown age' : ageLabel,
                   style: theme.textTheme.titleSmall,
                 ),
                 if (dateSummary.isNotEmpty)

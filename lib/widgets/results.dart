@@ -69,6 +69,7 @@ class _ResultsPageState extends State<ResultsPage>
       case ResultsTab.data:
         return ResultsDataTable(
           organizedGrowthData: appState.organizedGrowthData,
+          ageCorrectionMethod: _ageCorrectionMethod,
         );
     }
   }
