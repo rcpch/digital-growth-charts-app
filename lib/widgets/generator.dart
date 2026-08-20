@@ -271,7 +271,7 @@ class GeneratorFormState extends State<GeneratorForm> {
                                 keyboardType:
                                     const TextInputType.numberWithOptions(),
                                 decoration: InputDecoration(
-                                  labelText: 'Start (years)',
+                                  labelText: 'Start',
                                   border: const OutlineInputBorder(),
                                 ),
                                 validator: (value) {
@@ -312,7 +312,7 @@ class GeneratorFormState extends State<GeneratorForm> {
                                 keyboardType:
                                     const TextInputType.numberWithOptions(),
                                 decoration: InputDecoration(
-                                  labelText: 'End (years)',
+                                  labelText: 'End',
                                   border: const OutlineInputBorder(),
                                 ),
                                 validator: (value) {
