@@ -187,7 +187,8 @@ class DigitalGrowthChartsService {
       if (response.statusCode == 200) {
         final List<dynamic> responseData = jsonDecode(response.body);
 
-        return responseData.map((item) => GrowthDataResponse.fromJson(item))
+        return responseData
+            .map((item) => GrowthDataResponse.fromJson(item))
             .toList();
       } else {
         developer.log(

@@ -96,295 +96,302 @@ class GeneratorFormState extends State<GeneratorForm> {
             children: [
               Expanded(
                 child: Form(
-                // Wrap form content in a Form widget
-                key: _formKey, // Assign the GlobalKey
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                onChanged: () {
-                  setState(() {
-                    _canSubmit = _formKey.currentState?.validate() ?? false;
-                  });
-                  _checkFormValidity();
-                },
-                child: SingleChildScrollView(
-                  // Add SingleChildScrollView to prevent overflow on smaller screens
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Gestation Weeks:',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
+                  // Wrap form content in a Form widget
+                  key: _formKey, // Assign the GlobalKey
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  onChanged: () {
+                    setState(() {
+                      _canSubmit = _formKey.currentState?.validate() ?? false;
+                    });
+                    _checkFormValidity();
+                  },
+                  child: SingleChildScrollView(
+                    // Add SingleChildScrollView to prevent overflow on smaller screens
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Gestation Weeks:',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          DropdownButtonFormField<int>(
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
+                            DropdownButtonFormField<int>(
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                              ),
+                              initialValue: _selectedGestationWeeks,
+                              items:
+                                  List.generate(
+                                        19,
+                                        (index) => index + 24,
+                                      ) // Weeks 24 to 42
+                                      .map((int weeks) {
+                                        return DropdownMenuItem<int>(
+                                          value: weeks,
+                                          child: Text('$weeks'),
+                                        );
+                                      })
+                                      .toList(),
+                              onChanged: (int? newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    _selectedGestationWeeks = newValue;
+                                  });
+                                }
+                              },
+                              validator: (value) {
+                                return null;
+                              },
                             ),
-                            initialValue: _selectedGestationWeeks,
-                            items:
-                                List.generate(
-                                      19,
-                                      (index) => index + 24,
-                                    ) // Weeks 24 to 42
-                                    .map((int weeks) {
-                                      return DropdownMenuItem<int>(
-                                        value: weeks,
-                                        child: Text('$weeks'),
-                                      );
-                                    })
-                                    .toList(),
-                            onChanged: (int? newValue) {
-                                    if (newValue != null) {
-                                      setState(() {
-                                        _selectedGestationWeeks = newValue;
-                                      });
-                                    }
-                                  },
-                            validator: (value) {
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Gestation Days:',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Gestation Days:',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          DropdownButtonFormField<int>(
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
+                            DropdownButtonFormField<int>(
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                              ),
+                              initialValue: _selectedGestationDays,
+                              items:
+                                  List.generate(
+                                        7,
+                                        (index) => index,
+                                      ) // Days 0 to 6
+                                      .map((int days) {
+                                        return DropdownMenuItem<int>(
+                                          value: days,
+                                          child: Text('$days'),
+                                        );
+                                      })
+                                      .toList(),
+                              onChanged: (int? newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    _selectedGestationDays = newValue;
+                                  });
+                                }
+                              },
+                              validator: (value) {
+                                return null;
+                              },
                             ),
-                            initialValue: _selectedGestationDays,
-                            items:
-                                List.generate(7, (index) => index) // Days 0 to 6
-                                    .map((int days) {
-                                      return DropdownMenuItem<int>(
-                                        value: days,
-                                        child: Text('$days'),
-                                      );
-                                    })
-                                    .toList(),
-                            onChanged: (int? newValue) {
-                                    if (newValue != null) {
-                                      setState(() {
-                                        _selectedGestationDays = newValue;
-                                      });
-                                    }
-                                  },
-                            validator: (value) {
-                              return null;
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Sex Radio Buttons
-                      const Text(
-                        'Sex:',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                          ],
                         ),
-                      ),
-                      EnumRadioGroup<Sex>(
-                        groupValue: _selectedSex,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedSex = value!;
-                          });
-                          _checkFormValidity();
-                        },
-                        values: Sex.values,
-                        labelBuilder: (m) {
-                          switch (m) {
-                            case Sex.male:
-                              return 'Boy';
-                            case Sex.female:
-                              return 'Girl';
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Ages:',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                        const SizedBox(height: 16),
+                        // Sex Radio Buttons
+                        const Text(
+                          'Sex:',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _startAge,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(),
-                              decoration: InputDecoration(
-                                labelText: 'Start (years)',
-                                border: const OutlineInputBorder(),
+                        EnumRadioGroup<Sex>(
+                          groupValue: _selectedSex,
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedSex = value!;
+                            });
+                            _checkFormValidity();
+                          },
+                          values: Sex.values,
+                          labelBuilder: (m) {
+                            switch (m) {
+                              case Sex.male:
+                                return 'Boy';
+                              case Sex.female:
+                                return 'Girl';
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Ages:',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _startAge,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(),
+                                decoration: InputDecoration(
+                                  labelText: 'Start (years)',
+                                  border: const OutlineInputBorder(),
+                                ),
+                                validator: (value) {
+                                  if (value != null &&
+                                      value.isNotEmpty &&
+                                      double.tryParse(value) == null) {
+                                    return 'Please enter a valid number';
+                                  }
+                                  return null; // Valid
+                                },
                               ),
-                              validator: (value) {
-                                if (value != null &&
-                                    value.isNotEmpty &&
-                                    double.tryParse(value) == null) {
-                                  return 'Please enter a valid number';
-                                }
-                                return null; // Valid
+                            ),
+                            const SizedBox(width: 16),
+                            // TODO MRB: put back once available in API
+                            // https://github.com/rcpch/rcpchgrowth-python/pull/99
+                            // DropdownButton<String>(
+                            //   value: _startAgeUnit,
+                            //   items: _ageUnits.map((String value) {
+                            //     return DropdownMenuItem<String>(
+                            //       value: value,
+                            //       child: Text(value),
+                            //     );
+                            //   }).toList(),
+                            //   onChanged: (value) {
+                            //     setState(() {
+                            //       _startAgeUnit = value!;
+                            //     });
+                            //   },
+                            // ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _endAge,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(),
+                                decoration: InputDecoration(
+                                  labelText: 'End (years)',
+                                  border: const OutlineInputBorder(),
+                                ),
+                                validator: (value) {
+                                  if (value != null &&
+                                      value.isNotEmpty &&
+                                      double.tryParse(value) == null) {
+                                    return 'Please enter a valid number';
+                                  }
+                                  return null; // Valid
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            // TODO MRB: put back once available in API
+                            // https://github.com/rcpch/rcpchgrowth-python/pull/99
+                            // DropdownButton<String>(
+                            //   value: _endAgeUnit,
+                            //   items: _ageUnits.map((String value) {
+                            //     return DropdownMenuItem<String>(
+                            //       value: value,
+                            //       child: Text(value),
+                            //     );
+                            //   }).toList(),
+                            //   onChanged: (value) {
+                            //     setState(() {
+                            //       _endAgeUnit = value!;
+                            //     });
+                            //   },
+                            // ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _interval,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(),
+                                decoration: InputDecoration(
+                                  labelText: 'Interval',
+                                  border: const OutlineInputBorder(),
+                                ),
+                                validator: (value) {
+                                  if (value != null &&
+                                      value.isNotEmpty &&
+                                      double.tryParse(value) == null) {
+                                    return 'Please enter a valid number';
+                                  }
+                                  return null; // Valid
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            DropdownButton<String>(
+                              value: _intervalUnit,
+                              items: _ageUnits.map((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _intervalUnit = value!;
+                                });
                               },
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          // TODO MRB: put back once available in API
-                          // https://github.com/rcpch/rcpchgrowth-python/pull/99
-                          // DropdownButton<String>(
-                          //   value: _startAgeUnit,
-                          //   items: _ageUnits.map((String value) {
-                          //     return DropdownMenuItem<String>(
-                          //       value: value,
-                          //       child: Text(value),
-                          //     );
-                          //   }).toList(),
-                          //   onChanged: (value) {
-                          //     setState(() {
-                          //       _startAgeUnit = value!;
-                          //     });
-                          //   },
-                          // ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _endAge,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(),
-                              decoration: InputDecoration(
-                                labelText: 'End (years)',
-                                border: const OutlineInputBorder(),
-                              ),
-                              validator: (value) {
-                                if (value != null &&
-                                    value.isNotEmpty &&
-                                    double.tryParse(value) == null) {
-                                  return 'Please enter a valid number';
-                                }
-                                return null; // Valid
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          // TODO MRB: put back once available in API
-                          // https://github.com/rcpch/rcpchgrowth-python/pull/99
-                          // DropdownButton<String>(
-                          //   value: _endAgeUnit,
-                          //   items: _ageUnits.map((String value) {
-                          //     return DropdownMenuItem<String>(
-                          //       value: value,
-                          //       child: Text(value),
-                          //     );
-                          //   }).toList(),
-                          //   onChanged: (value) {
-                          //     setState(() {
-                          //       _endAgeUnit = value!;
-                          //     });
-                          //   },
-                          // ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _interval,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(),
-                              decoration: InputDecoration(
-                                labelText: 'Interval',
-                                border: const OutlineInputBorder(),
-                              ),
-                              validator: (value) {
-                                if (value != null &&
-                                    value.isNotEmpty &&
-                                    double.tryParse(value) == null) {
-                                  return 'Please enter a valid number';
-                                }
-                                return null; // Valid
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          DropdownButton<String>(
-                            value: _intervalUnit,
-                            items: _ageUnits.map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                _intervalUnit = value!;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      EnumRadioGroup<MeasurementMethod>(
-                        groupValue: _measurementMethod,
-                        onChanged: (value) {
-                          setState(() {
-                            _measurementMethod = value!;
-                          });
-                          _checkFormValidity();
-                        },
-                        values: MeasurementMethod.values,
-                        labelBuilder: _measurementMethodToString
-                      ),
-                      const SizedBox(height: 16),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        EnumRadioGroup<MeasurementMethod>(
+                          groupValue: _measurementMethod,
+                          onChanged: (value) {
+                            setState(() {
+                              _measurementMethod = value!;
+                            });
+                            _checkFormValidity();
+                          },
+                          values: MeasurementMethod.values,
+                          labelBuilder: _measurementMethodToString,
+                        ),
+                        const SizedBox(height: 16),
 
-                      // Submit Button
-                      ElevatedButton(
-                        onPressed: _canSubmit && !_loading ? _submitForm : null,
-                        style: ButtonStyle(
-                          backgroundColor: WidgetStateProperty.resolveWith<Color?>((
-                            Set<WidgetState> states,
-                          ) {
-                            if (states.contains(WidgetState.disabled)) {
-                              return Colors
-                                  .grey; // Optional: custom disabled color
-                            }
-                            if (states.contains(WidgetState.pressed)) {
-                              return secondaryColour;
-                            }
-                            return primaryColour; // Use the component's default.
-                          }),
-                          shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(0),
-                            ),
+                        // Submit Button
+                        ElevatedButton(
+                          onPressed: _canSubmit && !_loading
+                              ? _submitForm
+                              : null,
+                          style: ButtonStyle(
+                            backgroundColor:
+                                WidgetStateProperty.resolveWith<Color?>((
+                                  Set<WidgetState> states,
+                                ) {
+                                  if (states.contains(WidgetState.disabled)) {
+                                    return Colors
+                                        .grey; // Optional: custom disabled color
+                                  }
+                                  if (states.contains(WidgetState.pressed)) {
+                                    return secondaryColour;
+                                  }
+                                  return primaryColour; // Use the component's default.
+                                }),
+                            shape:
+                                WidgetStateProperty.all<RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(0),
+                                  ),
+                                ),
+                          ),
+                          child: Text(
+                            _loading ? 'Loading...' : 'Submit',
+                            style: TextStyle(color: Colors.white),
                           ),
                         ),
-                        child: Text(
-                          _loading ? 'Loading...' : 'Submit',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
               ),
             ],
           ),
