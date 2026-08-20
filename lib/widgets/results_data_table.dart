@@ -1,293 +1,645 @@
+import 'dart:ui' show FontFeature;
+
 import 'package:flutter/material.dart';
-import 'package:digital_growth_charts_app/themes/colours.dart';
+import 'package:intl/intl.dart';
+
 import '../classes/digital_growth_charts_api_response.dart';
 import '../definitions/enums.dart';
 
-class ResultsDataTable extends StatelessWidget {
-  // The list of API response objects
+/// Column widths are fixed and shared between the pinned header and every card
+/// row. This is the thing that makes the list read as a table: if the widths
+/// were intrinsic, each card would size its columns independently and they
+/// would drift apart down the list.
+///
+/// The widths scale with the platform text scale so the layout survives
+/// accessibility settings, but are clamped so very large scales don't squeeze
+/// the measure name to nothing.
+abstract final class GrowthListMetrics {
+  static const double valueColumnBase = 74;
+  static const double centileColumnBase = 54;
+  static const double sdsColumnBase = 52;
 
+  static const double columnGap = 8;
+  static const double cardInset = 12;
+  static const double cardPadding = 12;
+  static const double cardRadius = 12;
+
+  /// Horizontal inset needed to align the pinned header with the card columns.
+  static const double headerInset = cardInset + cardPadding;
+
+  static double scaled(BuildContext context, double base) {
+    final scale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6);
+    return base * scale;
+  }
+
+  static double valueColumn(BuildContext c) => scaled(c, valueColumnBase);
+  static double centileColumn(BuildContext c) => scaled(c, centileColumnBase);
+  static double sdsColumn(BuildContext c) => scaled(c, sdsColumnBase);
+}
+
+// ---------------------------------------------------------------------------
+// Formatting
+// ---------------------------------------------------------------------------
+
+/// Whole centiles in the middle of the range, one decimal place in the tails
+/// where whole numbers stop being informative, and an explicit bound beyond
+/// the outermost plotted centiles. Returns '—' for a missing value so the
+/// column layout still holds.
+String formatCentile(double? centile) {
+  if (centile == null) return '—';
+  if (centile < 0.4) return '<0.4th';
+  if (centile > 99.6) return '>99.6th';
+  if (centile < 1 || centile > 99) return '${centile.toStringAsFixed(1)}th';
+  final rounded = centile.round();
+  return '$rounded${_ordinalSuffix(rounded)}';
+}
+
+String _ordinalSuffix(int n) {
+  if (n % 100 >= 11 && n % 100 <= 13) return 'th';
+  return switch (n % 10) {
+    1 => 'st',
+    2 => 'nd',
+    3 => 'rd',
+    _ => 'th',
+  };
+}
+
+/// Uses a true minus sign (U+2212) rather than a hyphen. In a font with
+/// tabular figures enabled the minus matches the digit width; a hyphen
+/// usually doesn't, and the column stops lining up. Returns '—' for a
+/// missing value.
+String formatSds(double? sds) {
+  if (sds == null) return '—';
+  final magnitude = sds.abs().toStringAsFixed(2);
+  if (sds > 0.005) return '+$magnitude';
+  if (sds < -0.005) return '\u2212$magnitude';
+  return '0.00';
+}
+
+String _spokenSds(double sds) {
+  final magnitude = sds.abs().toStringAsFixed(2);
+  if (sds > 0.005) return 'plus $magnitude';
+  if (sds < -0.005) return 'minus $magnitude';
+  return 'zero';
+}
+
+/// Display metadata for [MeasurementMethod], which the native enum doesn't
+/// carry itself. Kept here so the table can format values like the example
+/// without altering the enum or the API models.
+extension MeasurementMethodPresentation on MeasurementMethod {
+  String get label => switch (this) {
+    MeasurementMethod.height => 'Height',
+    MeasurementMethod.weight => 'Weight',
+    MeasurementMethod.ofc => 'Head circ.',
+    MeasurementMethod.bmi => 'BMI',
+  };
+
+  String? get unit => switch (this) {
+    MeasurementMethod.height || MeasurementMethod.ofc => 'cm',
+    MeasurementMethod.weight => 'kg',
+    MeasurementMethod.bmi => null,
+  };
+
+  int get decimals => 1;
+}
+
+/// A [GrowthDataResponse] tagged with the [MeasurementMethod] it was stored
+/// under. The method is the map key in `organizedGrowthData`, so we carry it
+/// through the grouping rather than re-reading the `measurement_method` string
+/// on the response (which may be null).
+typedef _TaggedMeasurement = ({MeasurementMethod method, GrowthDataResponse response});
+
+/// One date's worth of measurements, grouped for display. Wraps native
+/// [GrowthDataResponse]s rather than replacing them.
+class _MeasurementOccasion {
+  _MeasurementOccasion({
+    required this.sortKey,
+    required this.dateLabel,
+    required this.ageLabel,
+    this.correctedAgeLabel,
+    this.correctedAgeComment,
+    required this.measurements,
+  });
+
+  /// The raw observation-date string, used only for sorting. ISO dates sort
+  /// lexically; empty when the date was missing, so those occasions fall last.
+  final String sortKey;
+
+  final String dateLabel;
+  final String ageLabel;
+  final String? correctedAgeLabel;
+  final String? correctedAgeComment;
+  final List<_TaggedMeasurement> measurements;
+
+  String get ageSummary => [
+    if (ageLabel.isNotEmpty) ageLabel,
+    if (correctedAgeLabel != null) 'corrected $correctedAgeLabel',
+  ].join('  ·  ');
+}
+
+// ---------------------------------------------------------------------------
+// Table
+// ---------------------------------------------------------------------------
+
+class ResultsDataTable extends StatelessWidget {
+  /// Measurements keyed by method, as produced by [AppState]. The table
+  /// regroups them by observation date for display.
   final Map<MeasurementMethod, List<GrowthDataResponse>> organizedGrowthData;
 
   const ResultsDataTable({super.key, required this.organizedGrowthData});
 
-  // Helper function to build RichText (can still be useful for other parts)
-  Widget _buildRichText(String label, String value) {
-    return RichText(
-      text: TextSpan(
-        style: TextStyle(
-          color: primaryColour, // You might adjust the color here
-          fontSize: 16,
+  @override
+  Widget build(BuildContext context) {
+    final occasions = _groupOccasions(organizedGrowthData);
+    if (occasions.isEmpty) return const _EmptyState();
+
+    return CustomScrollView(
+      slivers: [
+        const SliverPersistentHeader(
+          pinned: true,
+          delegate: _ColumnHeaderDelegate(),
         ),
-        children: <TextSpan>[
-          TextSpan(
-            text: label,
-            style: TextStyle(fontWeight: FontWeight.bold),
+        SliverPadding(
+          padding: const EdgeInsets.only(bottom: 24),
+          sliver: SliverList.builder(
+            itemCount: occasions.length,
+            itemBuilder: (context, index) {
+              final occasion = occasions[index];
+              return _OccasionCard(
+                occasion: occasion,
+                onTap: () => _showDetailsModal(context, occasion),
+              );
+            },
           ),
-          TextSpan(text: value),
-        ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Flattens the method-keyed map and regroups by `observation_date`. Most
+/// recent date first; occasions with a missing date sort last.
+List<_MeasurementOccasion> _groupOccasions(
+  Map<MeasurementMethod, List<GrowthDataResponse>> data,
+) {
+  final byDate = <String, List<_TaggedMeasurement>>{};
+  for (final entry in data.entries) {
+    final method = entry.key;
+    for (final response in entry.value) {
+      final key = response.measurementDates?.observationDate ?? '';
+      (byDate[key] ??= <_TaggedMeasurement>[]).add(
+        (method: method, response: response),
+      );
+    }
+  }
+
+  final occasions = <_MeasurementOccasion>[];
+  for (final entry in byDate.entries) {
+    final dates = entry.value.first.response.measurementDates;
+    occasions.add(
+      _MeasurementOccasion(
+        sortKey: entry.key,
+        dateLabel: _formatDate(dates?.observationDate),
+        ageLabel: dates?.chronologicalCalendarAge ?? '',
+        correctedAgeLabel: dates?.correctedCalendarAge,
+        correctedAgeComment:
+            dates?.comments?.clinicianCorrectedDecimalAgeComment,
+        measurements: entry.value,
       ),
     );
   }
 
-  // Function to show the modal with detailed data
-  void _showDetailsModal(BuildContext context, GrowthDataResponse growthData) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Detailed Growth Data'),
-          content: SingleChildScrollView(
-            // Added SingleChildScrollView here for modal content
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Ages',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: secondaryColour,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _buildRichText(
-                  'Chronological Age: ',
-                  growthData.measurementDates?.chronologicalCalendarAge ??
-                      'N/A',
-                ),
-                const SizedBox(height: 8),
-                _buildRichText(
-                  'Corrected Age: ',
-                  growthData.measurementDates?.correctedCalendarAge ?? 'N/A',
-                ),
-                const SizedBox(height: 8),
-                _buildRichText(
-                  'Corrected Age Comment: ',
-                  growthData
-                          .measurementDates
-                          ?.comments
-                          ?.clinicianCorrectedDecimalAgeComment ??
-                      '',
-                ),
-                // Use empty string for comment if null
-                const SizedBox(height: 16),
-                Text(
-                  'Calculated Measurements',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: secondaryColour,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Chronological',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: primaryColour,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                _buildRichText(
-                  'Centile: ',
-                  '${growthData.measurementCalculatedValues?.chronologicalCentile ?? 'N/A'}',
-                ),
-                const SizedBox(height: 8),
-                _buildRichText(
-                  'SDS: ',
-                  '${growthData.measurementCalculatedValues?.chronologicalSds ?? 'N/A'}',
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Corrected',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: primaryColour,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                _buildRichText(
-                  'Centile: ',
-                  '${growthData.measurementCalculatedValues?.correctedCentile ?? 'N/A'}',
-                ),
-                const SizedBox(height: 8),
-                _buildRichText(
-                  'Interpretation: ',
-                  growthData
-                          .measurementCalculatedValues
-                          ?.correctedCentileBand ??
-                      'N/A',
-                ),
-                const SizedBox(height: 8),
-                _buildRichText(
-                  'SDS: ',
-                  '${growthData.measurementCalculatedValues?.correctedSds ?? 'N/A'}',
-                ),
-              ],
-            ),
+  occasions.sort((a, b) => b.sortKey.compareTo(a.sortKey));
+  return occasions;
+}
+
+String _formatDate(String? observationDate) {
+  if (observationDate == null || observationDate.isEmpty) {
+    return 'Unknown date';
+  }
+  final parsed = DateTime.tryParse(observationDate);
+  if (parsed == null) return observationDate;
+  return DateFormat.yMMMd().format(parsed);
+}
+
+String _formatValue(MeasurementMethod method, double? value) {
+  if (value == null) return '—';
+  final v = value.toStringAsFixed(method.decimals);
+  final unit = method.unit;
+  return unit == null ? v : '$v $unit';
+}
+
+String _semanticsLabel(
+  MeasurementMethod method,
+  double? value,
+  MeasurementCalculatedValues? values,
+) {
+  final unit = method.unit;
+  final valuePart = value == null
+      ? 'no value'
+      : unit == null
+          ? value.toStringAsFixed(method.decimals)
+          : '${value.toStringAsFixed(method.decimals)} $unit';
+  final centile = values?.chronologicalCentile;
+  final sds = values?.chronologicalSds;
+  return '${method.label}, $valuePart, '
+      '${centile == null ? 'no centile' : '${formatCentile(centile)} centile'}, '
+      '${sds == null ? 'no SDS' : '${_spokenSds(sds)} SDS'}';
+}
+
+// ---------------------------------------------------------------------------
+// Pinned header
+// ---------------------------------------------------------------------------
+
+/// Pinned so the column labels stay visible while scrolling — without them the
+/// bare numbers lose their meaning a screen or two down.
+class _ColumnHeaderDelegate extends SliverPersistentHeaderDelegate {
+  const _ColumnHeaderDelegate();
+
+  static const double _height = 34;
+
+  @override
+  double get minExtent => _height;
+
+  @override
+  double get maxExtent => _height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlaps) {
+    final theme = Theme.of(context);
+    final style = theme.textTheme.labelSmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+
+    return Container(
+      height: _height,
+      color: theme.colorScheme.surface,
+      padding: const EdgeInsets.symmetric(
+        horizontal: GrowthListMetrics.headerInset,
+      ),
+      alignment: Alignment.bottomCenter,
+      child: ExcludeSemantics(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Row(
+            children: [
+              const Spacer(),
+              _cell(context, 'Value', GrowthListMetrics.valueColumn, style),
+              const SizedBox(width: GrowthListMetrics.columnGap),
+              _cell(context, 'Centile', GrowthListMetrics.centileColumn, style),
+              const SizedBox(width: GrowthListMetrics.columnGap),
+              _cell(context, 'SDS', GrowthListMetrics.sdsColumn, style),
+            ],
           ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
+        ),
+      ),
+    );
+  }
+
+  static Widget _cell(
+    BuildContext context,
+    String text,
+    double Function(BuildContext) width,
+    TextStyle? style,
+  ) {
+    return SizedBox(
+      width: width(context),
+      child: Text(text, textAlign: TextAlign.end, style: style, maxLines: 1),
     );
   }
 
   @override
+  bool shouldRebuild(covariant _ColumnHeaderDelegate oldDelegate) => false;
+}
+
+// ---------------------------------------------------------------------------
+// Card
+// ---------------------------------------------------------------------------
+
+class _OccasionCard extends StatelessWidget {
+  const _OccasionCard({required this.occasion, this.onTap});
+
+  final _MeasurementOccasion occasion;
+  final VoidCallback? onTap;
+
+  @override
   Widget build(BuildContext context) {
-    // Flatten the organizedGrowthData map into a single list of GrowthDataResponse objects.
-    // We iterate through the values of the map (which are Lists of GrowthDataResponse)
-    // and use expand to combine them into a single flat list.
-    final List<GrowthDataResponse> allGrowthData = organizedGrowthData.values
-        .expand((list) => list)
-        .toList();
+    final theme = Theme.of(context);
 
-    // Get the first growth data entry to display child information.
-    // We assume child information like DOB and Sex is consistent across all entries.
-    // Check if the list is not empty before trying to access the first element.
-    final GrowthDataResponse? firstGrowthData = allGrowthData.isNotEmpty
-        ? allGrowthData.first
-        : null;
-
-    // Handle the case where there's no data to display in the table.
-    if (firstGrowthData == null) {
-      // You might want to return a simple widget indicating no data,
-      // NOT a full Scaffold here. The outer Scaffold in ResultsPage
-      // will provide the app bar and overall structure.
-      return const Center(child: Text('No growth data available to display.'));
-    }
-
-    // If there is data, build the table view.
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Display Child Information separately at the top.
-          const Divider(
-            height: 20,
-            thickness: 5,
-            indent: 0,
-            endIndent: 0,
-            color: primaryColour,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Child Information',
-            style: TextStyle(color: secondaryColour, fontSize: 16),
-          ),
-          const SizedBox(height: 8),
-          _buildRichText(
-            'Date of Birth: ',
-            firstGrowthData.birthData?.birthDate ?? 'N/A',
-          ),
-          const SizedBox(height: 8),
-          _buildRichText('Sex: ', firstGrowthData.birthData?.sex ?? 'N/A'),
-          const SizedBox(height: 16),
-          const Divider(
-            height: 20,
-            thickness: 5,
-            indent: 0,
-            endIndent: 0,
-            color: primaryColour,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Measurement Data',
-            style: TextStyle(color: secondaryColour, fontSize: 16),
-          ),
-          const SizedBox(height: 8),
-          // DataTable with reduced columns and expansion icon
-          SingleChildScrollView(
-            // Allows horizontal scrolling if columns are too wide
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              columns: const <DataColumn>[
-                DataColumn(
-                  label: Expanded(
-                    child: Text(
-                      'Measurement Date',
-                      style: TextStyle(fontStyle: FontStyle.italic),
-                    ),
-                  ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: GrowthListMetrics.cardInset,
+        vertical: 5,
+      ),
+      child: Material(
+        color: theme.colorScheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(GrowthListMetrics.cardRadius),
+          side: BorderSide(color: theme.colorScheme.outlineVariant),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(GrowthListMetrics.cardPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _OccasionHeader(
+                  dateLabel: occasion.dateLabel,
+                  ageSummary: occasion.ageSummary,
+                  showChevron: onTap != null,
                 ),
-                DataColumn(
-                  label: Expanded(
-                    child: Text(
-                      'Type',
-                      style: TextStyle(fontStyle: FontStyle.italic),
-                    ),
-                  ),
+                const SizedBox(height: 8),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: theme.colorScheme.outlineVariant,
                 ),
-                DataColumn(
-                  label: Expanded(
-                    child: Text(
-                      'Value',
-                      style: TextStyle(fontStyle: FontStyle.italic),
-                    ),
-                  ),
-                ),
-                DataColumn(
-                  label: Expanded(
-                    child: Text(
-                      'Details',
-                      style: TextStyle(fontStyle: FontStyle.italic),
-                    ),
-                  ),
-                ),
+                const SizedBox(height: 4),
+                for (final measurement in occasion.measurements)
+                  _MeasurementRow(measurement: measurement),
               ],
-              // Generate DataRows from the flattened list of all growth data.
-              rows: allGrowthData.map<DataRow>((growthData) {
-                return DataRow(
-                  cells: <DataCell>[
-                    // Display the observation date
-                    DataCell(
-                      Text(
-                        growthData.measurementDates?.observationDate ?? 'N/A',
-                      ),
-                    ),
-                    // Display the measurement method type.
-                    // Assuming measurementMethod in childObservationValue is a string or can be converted.
-                    // If it's an enum, use .name or a mapping to get a display string.
-                    DataCell(
-                      Text(
-                        growthData.childObservationValue?.measurementMethod ??
-                            'N/A',
-                      ),
-                    ),
-                    // Display the observed value
-                    DataCell(
-                      Text(
-                        '${growthData.childObservationValue?.observationValue ?? 'N/A'}',
-                      ),
-                    ),
-                    // DataCell with an IconButton to show detailed data modal
-                    DataCell(
-                      IconButton(
-                        icon: const Icon(Icons.expand_more),
-                        onPressed: () {
-                          // Call the helper function to show the details modal for this specific data point
-                          _showDetailsModal(context, growthData);
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(), // Convert the mapped rows to a List<DataRow>
             ),
           ),
-          const SizedBox(height: 16),
-        ],
+        ),
       ),
     );
   }
+}
+
+class _OccasionHeader extends StatelessWidget {
+  const _OccasionHeader({
+    required this.dateLabel,
+    required this.ageSummary,
+    required this.showChevron,
+  });
+
+  final String dateLabel;
+  final String ageSummary;
+  final bool showChevron;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Row(
+      children: [
+        Expanded(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: dateLabel,
+                  style: theme.textTheme.titleSmall,
+                ),
+                if (ageSummary.isNotEmpty)
+                  TextSpan(
+                    text: '  ·  $ageSummary',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (showChevron)
+          Icon(
+            Icons.chevron_right,
+            size: 20,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+      ],
+    );
+  }
+}
+
+class _MeasurementRow extends StatelessWidget {
+  const _MeasurementRow({required this.measurement});
+
+  final _TaggedMeasurement measurement;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final method = measurement.method;
+    final response = measurement.response;
+    final values = response.measurementCalculatedValues;
+    final observation = response.childObservationValue?.observationValue;
+
+    final body = theme.textTheme.bodyMedium;
+    // Tabular figures keep the right-aligned columns from wobbling row to row.
+    final numeric = body?.copyWith(
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    final centileStyle = numeric?.copyWith(fontWeight: FontWeight.w600);
+    final sdsStyle = theme.textTheme.bodySmall?.copyWith(
+      fontFeatures: const [FontFeature.tabularFigures()],
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+
+    return Semantics(
+      label: _semanticsLabel(method, observation, values),
+      excludeSemantics: true,
+      child: Padding(
+        // Padding rather than a fixed height so the row grows with text scale.
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                method.label,
+                style: body,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            _cell(
+              context,
+              _formatValue(method, observation),
+              GrowthListMetrics.valueColumn,
+              numeric,
+            ),
+            const SizedBox(width: GrowthListMetrics.columnGap),
+            _cell(
+              context,
+              formatCentile(values?.chronologicalCentile),
+              GrowthListMetrics.centileColumn,
+              centileStyle,
+            ),
+            const SizedBox(width: GrowthListMetrics.columnGap),
+            _cell(
+              context,
+              formatSds(values?.chronologicalSds),
+              GrowthListMetrics.sdsColumn,
+              sdsStyle,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget _cell(
+    BuildContext context,
+    String text,
+    double Function(BuildContext) width,
+    TextStyle? style,
+  ) {
+    return SizedBox(
+      width: width(context),
+      child: Text(text, textAlign: TextAlign.end, style: style, maxLines: 1),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Text(
+          'No growth data available to display.',
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Details modal
+// ---------------------------------------------------------------------------
+
+void _showDetailsModal(BuildContext context, _MeasurementOccasion occasion) {
+  showDialog<void>(
+    context: context,
+    builder: (context) {
+      final theme = Theme.of(context);
+      return AlertDialog(
+        title: const Text('Measurement details'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _sectionTitle('Ages', theme),
+              _labeled('Date: ', occasion.dateLabel, theme),
+              _labeled('Chronological age: ', occasion.ageLabel, theme),
+              if (occasion.correctedAgeLabel != null)
+                _labeled('Corrected age: ', occasion.correctedAgeLabel!, theme),
+              if (occasion.correctedAgeComment != null &&
+                  occasion.correctedAgeComment!.isNotEmpty)
+                _labeled('Comment: ', occasion.correctedAgeComment!, theme),
+              const SizedBox(height: 16),
+              _sectionTitle('Measurements', theme),
+              for (final measurement in occasion.measurements) ...[
+                _MeasurementDetail(measurement: measurement),
+                const SizedBox(height: 12),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+class _MeasurementDetail extends StatelessWidget {
+  const _MeasurementDetail({required this.measurement});
+
+  final _TaggedMeasurement measurement;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final method = measurement.method;
+    final response = measurement.response;
+    final values = response.measurementCalculatedValues;
+    final observation = response.childObservationValue?.observationValue;
+    final chronoBand = values?.chronologicalCentileBand;
+    final correctedBand = values?.correctedCentileBand;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          method.label,
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: theme.colorScheme.primary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        _labeled('Value: ', _formatValue(method, observation), theme),
+        const SizedBox(height: 8),
+        Text(
+          'Chronological',
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.primary,
+          ),
+        ),
+        _labeled('Centile: ', formatCentile(values?.chronologicalCentile), theme),
+        _labeled('SDS: ', formatSds(values?.chronologicalSds), theme),
+        if (chronoBand != null)
+          _labeled('Interpretation: ', chronoBand, theme),
+        const SizedBox(height: 8),
+        Text(
+          'Corrected',
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.primary,
+          ),
+        ),
+        _labeled('Centile: ', formatCentile(values?.correctedCentile), theme),
+        _labeled('SDS: ', formatSds(values?.correctedSds), theme),
+        if (correctedBand != null)
+          _labeled('Interpretation: ', correctedBand, theme),
+      ],
+    );
+  }
+}
+
+Widget _sectionTitle(String text, ThemeData theme) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 4),
+    child: Text(
+      text,
+      style: theme.textTheme.titleSmall?.copyWith(
+        color: theme.colorScheme.secondary,
+      ),
+    ),
+  );
+}
+
+Widget _labeled(String label, String value, ThemeData theme) {
+  return Padding(
+    padding: const EdgeInsets.only(top: 4),
+    child: Text.rich(
+      TextSpan(
+        style: theme.textTheme.bodyMedium,
+        children: [
+          TextSpan(
+            text: label,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          TextSpan(text: value),
+        ],
+      ),
+    ),
+  );
 }
