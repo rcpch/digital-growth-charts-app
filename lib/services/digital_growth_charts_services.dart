@@ -146,39 +146,106 @@ class DigitalGrowthChartsService {
       rethrow;
     }
   }
-}
 
-String parseApiError(String responseBody, int statusCode) {
-  try {
-    if (responseBody.isEmpty) {
-      return 'API Error: Status Code $statusCode (No response body)';
+  Future<List<GrowthDataResponse>> generateFictionalChildData({
+    required int gestationWeeks,
+    required int gestationDays,
+    required Sex sex,
+    required double startChronologicalAge,
+    required double endAge,
+    required double measurementIntervalNumber,
+    required String measurementIntervalType,
+    required MeasurementMethod measurementMethod,
+  }) async {
+    final url = Uri.parse(
+      '$_baseUrl/uk-who/fictional-child-data',
+    ); // Adjust the endpoint if needed
+    final String measurementMethodString = measurementMethod.name;
+    final String sexString = sex.name;
+
+    final Map<String, dynamic> requestBody = {
+      'gestation_weeks': gestationWeeks,
+      'gestation_days': gestationDays,
+      'sex': sexString,
+      'start_chronological_age': startChronologicalAge,
+      'end_age': endAge,
+      'measurement_interval_number': measurementIntervalNumber,
+      'measurement_interval_type': measurementIntervalType,
+      'measurement_method': measurementMethodString,
+    };
+
+    try {
+      final response = await http.post(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Subscription-Key': _apiKey,
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = jsonDecode(response.body);
+
+        return responseData
+            .map((item) => GrowthDataResponse.fromJson(item))
+            .toList();
+      } else {
+        developer.log(
+          'Failed to generate fictional child data: ${response.statusCode}',
+          level: LogLevel.warning,
+          name: 'DigitalGrowthChartsService',
+          error: response.body,
+          stackTrace: StackTrace.current,
+        );
+        throw Exception(
+          'Failed to generate fictional child data: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } catch (e) {
+      developer.log(
+        'Error generating fictional child data: $e',
+        level: LogLevel.severe,
+        name: 'DigitalGrowthChartsService',
+        error: e,
+        stackTrace: StackTrace.current,
+      );
+      rethrow;
     }
+  }
 
-    final Map<String, dynamic> errorJson = jsonDecode(responseBody);
+  String parseApiError(String responseBody, int statusCode) {
+    try {
+      if (responseBody.isEmpty) {
+        return 'API Error: Status Code $statusCode (No response body)';
+      }
 
-    if (errorJson.containsKey('detail') && errorJson['detail'] is List) {
-      final List<dynamic> detailList = errorJson['detail'] as List<dynamic>;
-      if (detailList.isNotEmpty) {
-        final firstErrorObject = detailList[0];
-        if (firstErrorObject is Map<String, dynamic> &&
-            firstErrorObject.containsKey('msg')) {
-          // Successfully extracted the specific message
-          return firstErrorObject['msg'].toString(); // Ensure it's a string
+      final Map<String, dynamic> errorJson = jsonDecode(responseBody);
+
+      if (errorJson.containsKey('detail') && errorJson['detail'] is List) {
+        final List<dynamic> detailList = errorJson['detail'] as List<dynamic>;
+        if (detailList.isNotEmpty) {
+          final firstErrorObject = detailList[0];
+          if (firstErrorObject is Map<String, dynamic> &&
+              firstErrorObject.containsKey('msg')) {
+            // Successfully extracted the specific message
+            return firstErrorObject['msg'].toString(); // Ensure it's a string
+          }
         }
       }
+      // If the specific 'msg' isn't found in the expected structure,
+      // return a more generic message including the status code and a hint of the body.
+      // You might want to truncate responseBody if it's too long for an exception message.
+      String truncatedBody = responseBody.length > 100
+          ? '${responseBody.substring(0, 100)}...'
+          : responseBody;
+      return 'API Error ($statusCode): Unexpected error format. Response: $truncatedBody';
+    } catch (e) {
+      // If JSON decoding fails or any other error during parsing
+      String truncatedBody = responseBody.length > 100
+          ? '${responseBody.substring(0, 100)}...'
+          : responseBody;
+      return 'API Error ($statusCode): Could not parse error response. Raw response: $truncatedBody';
     }
-    // If the specific 'msg' isn't found in the expected structure,
-    // return a more generic message including the status code and a hint of the body.
-    // You might want to truncate responseBody if it's too long for an exception message.
-    String truncatedBody = responseBody.length > 100
-        ? '${responseBody.substring(0, 100)}...'
-        : responseBody;
-    return 'API Error ($statusCode): Unexpected error format. Response: $truncatedBody';
-  } catch (e) {
-    // If JSON decoding fails or any other error during parsing
-    String truncatedBody = responseBody.length > 100
-        ? '${responseBody.substring(0, 100)}...'
-        : responseBody;
-    return 'API Error ($statusCode): Could not parse error response. Raw response: $truncatedBody';
   }
 }

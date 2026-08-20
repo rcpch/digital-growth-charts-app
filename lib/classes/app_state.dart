@@ -61,6 +61,28 @@ class AppState with ChangeNotifier {
 
   AuthData? get authData => _authData;
 
+  Future<void> _fetchCentileDataIfNeeded(MeasurementMethod method) async {
+    final bool isCentileDataCached =
+        _organizedCentileLines[_sex!]?.containsKey(method) ?? false;
+
+    if (!isCentileDataCached) {
+      final apiResponse = await _dgcApi.getChartCoordinates(
+        sex: _sex!,
+        measurementMethod: method,
+      );
+
+      // Process and merge the new centile data into the organized map
+      if (apiResponse.centileData != null) {
+        final newOrganizedData = organizeCentileLines(apiResponse);
+        // Merge new data. Prioritize new data for the same sex and measurement method
+        if (newOrganizedData[_sex!]?.containsKey(method) ?? false) {
+          _organizedCentileLines[_sex!]![method] =
+              newOrganizedData[_sex!]![method]!;
+        }
+      }
+    }
+  }
+
   Future<void> addMeasurement({
     required String observationDate,
     required MeasurementMethod method,
@@ -84,25 +106,7 @@ class AppState with ChangeNotifier {
       observationValue: value,
     );
 
-    final bool isCentileDataCached =
-        _organizedCentileLines[_sex!]?.containsKey(method) ?? false;
-
-    if (!isCentileDataCached) {
-      final apiResponse = await _dgcApi.getChartCoordinates(
-        sex: _sex!,
-        measurementMethod: method,
-      );
-
-      // Process and merge the new centile data into the organized map
-      if (apiResponse.centileData != null) {
-        final newOrganizedData = organizeCentileLines(apiResponse);
-        // Merge new data. Prioritize new data for the same sex and measurement method
-        if (newOrganizedData[_sex!]?.containsKey(method) ?? false) {
-          _organizedCentileLines[_sex!]![method] =
-              newOrganizedData[_sex!]![method]!;
-        }
-      }
-    }
+    await _fetchCentileDataIfNeeded(method);
 
     final apiResponse = await futureApiResponse;
 
@@ -111,6 +115,45 @@ class AppState with ChangeNotifier {
       (list) => list..add(apiResponse),
       ifAbsent: () => [apiResponse],
     );
+
+    notifyListeners();
+  }
+
+  Future<void> generateFictionalData({
+    required int gestationWeeks,
+    required int gestationDays,
+    required Sex sex,
+    required double startChronologicalAge,
+    required double endAge,
+    required double measurementIntervalNumber,
+    required String measurementIntervalType,
+    required MeasurementMethod measurementMethod,
+  }) async {
+    final apiResponse = await _dgcApi.generateFictionalChildData(
+      gestationWeeks: gestationWeeks,
+      gestationDays: gestationDays,
+      sex: sex,
+      startChronologicalAge: startChronologicalAge,
+      endAge: endAge,
+      measurementIntervalNumber: measurementIntervalNumber,
+      measurementIntervalType: measurementIntervalType,
+      measurementMethod: measurementMethod,
+    );
+
+    _sex = sex;
+    _gestationWeeks = gestationWeeks;
+    _gestationDays = gestationDays;
+
+    final birthDateStr = apiResponse[0].birthData?.birthDate;
+    if (birthDateStr == null) {
+      throw Exception('Generated fictional data is missing birth_date');
+    }
+    _dob = DateFormat('yyyy-MM-dd').parse(birthDateStr);
+
+    _organizedGrowthData.clear();
+    _organizedGrowthData[measurementMethod] = apiResponse;
+
+    await _fetchCentileDataIfNeeded(measurementMethod);
 
     notifyListeners();
   }
