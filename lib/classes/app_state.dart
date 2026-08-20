@@ -127,6 +127,61 @@ class AppState with ChangeNotifier {
     required double endAge,
     required double measurementIntervalNumber,
     required String measurementIntervalType,
+  }) async {
+    final tasks =
+        [
+          MeasurementMethod.height,
+          MeasurementMethod.weight,
+          MeasurementMethod.ofc,
+        ].map((method) {
+          return _dgcApi.generateFictionalChildData(
+            gestationWeeks: gestationWeeks,
+            gestationDays: gestationDays,
+            sex: sex,
+            startChronologicalAge: startChronologicalAge,
+            endAge: endAge,
+            measurementIntervalNumber: measurementIntervalNumber,
+            measurementIntervalType: measurementIntervalType,
+            measurementMethod: method,
+          );
+        });
+
+    final [heightResponse, weightResponse, ofcResponse] = await Future.wait(
+      tasks,
+    );
+
+    _sex = sex;
+    _gestationWeeks = gestationWeeks;
+    _gestationDays = gestationDays;
+
+    final birthDateStr = heightResponse[0].birthData?.birthDate;
+    if (birthDateStr == null) {
+      throw Exception('Generated fictional data is missing birth_date');
+    }
+    _dob = DateFormat('yyyy-MM-dd').parse(birthDateStr);
+
+    _organizedGrowthData.clear();
+    _organizedGrowthData[MeasurementMethod.height] = heightResponse;
+    _organizedGrowthData[MeasurementMethod.weight] = weightResponse;
+    _organizedGrowthData[MeasurementMethod.ofc] = ofcResponse;
+
+    await Future.wait([
+      _fetchCentileDataIfNeeded(MeasurementMethod.height),
+      _fetchCentileDataIfNeeded(MeasurementMethod.weight),
+      _fetchCentileDataIfNeeded(MeasurementMethod.ofc),
+    ]);
+
+    notifyListeners();
+  }
+
+  Future<void> generateSingleSeriesOfFictionalData({
+    required int gestationWeeks,
+    required int gestationDays,
+    required Sex sex,
+    required double startChronologicalAge,
+    required double endAge,
+    required double measurementIntervalNumber,
+    required String measurementIntervalType,
     required MeasurementMethod measurementMethod,
   }) async {
     final apiResponse = await _dgcApi.generateFictionalChildData(

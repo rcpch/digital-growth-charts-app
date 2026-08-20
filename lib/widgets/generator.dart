@@ -7,6 +7,8 @@ import '../widgets/enum_radio_group.dart';
 import '../classes/app_state.dart';
 import './results.dart';
 
+enum GeneratorMeasurementMethod { height, weight, ofc, bmi, all }
+
 class GeneratorFormState extends State<GeneratorForm> {
   // A GlobalKey to uniquely identify the Form widget
   final _formKey = GlobalKey<FormState>();
@@ -31,7 +33,8 @@ class GeneratorFormState extends State<GeneratorForm> {
   final TextEditingController _interval = TextEditingController(text: '1');
   String _intervalUnit = 'Years';
 
-  MeasurementMethod _measurementMethod = MeasurementMethod.height;
+  GeneratorMeasurementMethod _measurementMethod =
+      GeneratorMeasurementMethod.height;
 
   bool _loading = false;
 
@@ -52,39 +55,74 @@ class GeneratorFormState extends State<GeneratorForm> {
 
     var appState = Provider.of<AppState>(context, listen: false);
 
-    await appState.generateFictionalData(
-      gestationWeeks: _selectedGestationWeeks,
-      gestationDays: _selectedGestationDays,
-      sex: _selectedSex,
-      startChronologicalAge: double.parse(_startAge.text),
-      endAge: double.parse(_endAge.text),
-      measurementIntervalNumber: double.parse(_interval.text),
-      measurementIntervalType: _intervalUnit.toLowerCase(),
-      measurementMethod: _measurementMethod,
-    );
+    var measurementMethodToNavigateTo = MeasurementMethod.height;
+
+    switch (_measurementMethod) {
+      case GeneratorMeasurementMethod.height:
+        measurementMethodToNavigateTo = MeasurementMethod.height;
+        break;
+      case GeneratorMeasurementMethod.weight:
+        measurementMethodToNavigateTo = MeasurementMethod.weight;
+        break;
+      case GeneratorMeasurementMethod.ofc:
+        measurementMethodToNavigateTo = MeasurementMethod.ofc;
+        break;
+      case GeneratorMeasurementMethod.bmi:
+        measurementMethodToNavigateTo = MeasurementMethod.bmi;
+        break;
+      case GeneratorMeasurementMethod.all:
+        measurementMethodToNavigateTo = MeasurementMethod.height;
+        break;
+    }
+
+    if (_measurementMethod == GeneratorMeasurementMethod.all) {
+      await appState.generateFictionalData(
+        gestationWeeks: _selectedGestationWeeks,
+        gestationDays: _selectedGestationDays,
+        sex: _selectedSex,
+        startChronologicalAge: double.parse(_startAge.text),
+        endAge: double.parse(_endAge.text),
+        measurementIntervalNumber: double.parse(_interval.text),
+        measurementIntervalType: _intervalUnit.toLowerCase(),
+      );
+    } else {
+      await appState.generateSingleSeriesOfFictionalData(
+        gestationWeeks: _selectedGestationWeeks,
+        gestationDays: _selectedGestationDays,
+        sex: _selectedSex,
+        startChronologicalAge: double.parse(_startAge.text),
+        endAge: double.parse(_endAge.text),
+        measurementIntervalNumber: double.parse(_interval.text),
+        measurementIntervalType: _intervalUnit.toLowerCase(),
+        measurementMethod: measurementMethodToNavigateTo,
+      );
+    }
 
     if (!mounted) return;
 
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            ResultsPage(initialMeasurementMethod: _measurementMethod),
+        builder: (context) => ResultsPage(
+          initialMeasurementMethod: measurementMethodToNavigateTo,
+        ),
       ),
       (route) => route.isFirst,
     );
   }
 
-  String _measurementMethodToString(MeasurementMethod method) {
+  String _measurementMethodToString(GeneratorMeasurementMethod method) {
     switch (method) {
-      case MeasurementMethod.height:
+      case GeneratorMeasurementMethod.height:
         return 'Height';
-      case MeasurementMethod.weight:
+      case GeneratorMeasurementMethod.weight:
         return 'Weight';
-      case MeasurementMethod.ofc:
+      case GeneratorMeasurementMethod.ofc:
         return 'Head Cm.';
-      case MeasurementMethod.bmi:
+      case GeneratorMeasurementMethod.bmi:
         return 'BMI';
+      case GeneratorMeasurementMethod.all:
+        return 'All';
     }
   }
 
@@ -346,7 +384,7 @@ class GeneratorFormState extends State<GeneratorForm> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        EnumRadioGroup<MeasurementMethod>(
+                        EnumRadioGroup<GeneratorMeasurementMethod>(
                           groupValue: _measurementMethod,
                           onChanged: (value) {
                             setState(() {
@@ -354,7 +392,7 @@ class GeneratorFormState extends State<GeneratorForm> {
                             });
                             _checkFormValidity();
                           },
-                          values: MeasurementMethod.values,
+                          values: GeneratorMeasurementMethod.values,
                           labelBuilder: _measurementMethodToString,
                         ),
                         const SizedBox(height: 16),
