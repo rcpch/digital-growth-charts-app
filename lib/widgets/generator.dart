@@ -63,6 +63,8 @@ class GeneratorFormState extends State<GeneratorForm> {
       measurementMethod: _measurementMethod,
     );
 
+    if (!mounted) return;
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
