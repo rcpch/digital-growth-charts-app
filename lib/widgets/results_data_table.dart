@@ -135,6 +135,8 @@ class _MeasurementOccasion {
     if (ageLabel.isNotEmpty) ageLabel,
     if (correctedAgeLabel != null) 'corrected $correctedAgeLabel',
   ].join('  ·  ');
+
+  String get dateSummary => dateLabel.isEmpty ? 'Unknown date' : dateLabel;
 }
 
 // ---------------------------------------------------------------------------
@@ -200,8 +202,10 @@ List<_MeasurementOccasion> _groupOccasions(
       _MeasurementOccasion(
         sortKey: entry.key,
         dateLabel: _formatDate(dates?.observationDate),
-        ageLabel: dates?.chronologicalCalendarAge ?? '',
-        correctedAgeLabel: dates?.correctedCalendarAge,
+        ageLabel: _abbreviateAge(dates?.chronologicalCalendarAge ?? ''),
+        correctedAgeLabel: _abbreviateAge(
+          dates?.correctedCalendarAge ?? '',
+        ),
         correctedAgeComment:
             dates?.comments?.clinicianCorrectedDecimalAgeComment,
         measurements: entry.value,
@@ -220,6 +224,25 @@ String _formatDate(String? observationDate) {
   final parsed = DateTime.tryParse(observationDate);
   if (parsed == null) return observationDate;
   return DateFormat.yMMMd().format(parsed);
+}
+
+/// Compacts a RCPCH calendar-age string for use as a card title.
+///
+/// The API returns ages like `"18 years, 11 months, 3 weeks and 5 days"`,
+/// which is accurate but too wide to lead a card with. This rewrites each
+/// unit to its initial and glues it to its number, so the same age reads
+/// `18y, 11m, 3w & 5d`. Unparseable input is returned untouched.
+String _abbreviateAge(String age) {
+  if (age.isEmpty) return age;
+  // number, optional spaces, unit word → number + unit initial
+  var out = age.replaceAllMapped(
+    RegExp(r'(\d+)\s*\b(year|month|week|day)s?\b'),
+    (m) => '${m[1]}${m[2]![0]}',
+  );
+  // tidy the remaining punctuation
+  out = out.replaceAll(RegExp(r',\s*'), ', ');
+  out = out.replaceAll(RegExp(r'\s+and\s+'), ' & ');
+  return out;
 }
 
 String _formatValue(MeasurementMethod method, double? value) {
@@ -346,8 +369,8 @@ class _OccasionCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _OccasionHeader(
-                  dateLabel: occasion.dateLabel,
                   ageSummary: occasion.ageSummary,
+                  dateSummary: occasion.dateSummary,
                   showChevron: onTap != null,
                 ),
                 const SizedBox(height: 8),
@@ -370,13 +393,13 @@ class _OccasionCard extends StatelessWidget {
 
 class _OccasionHeader extends StatelessWidget {
   const _OccasionHeader({
-    required this.dateLabel,
     required this.ageSummary,
+    required this.dateSummary,
     required this.showChevron,
   });
 
-  final String dateLabel;
   final String ageSummary;
+  final String dateSummary;
   final bool showChevron;
 
   @override
@@ -390,12 +413,12 @@ class _OccasionHeader extends StatelessWidget {
             TextSpan(
               children: [
                 TextSpan(
-                  text: dateLabel,
+                  text: ageSummary.isEmpty ? 'Unknown age' : ageSummary,
                   style: theme.textTheme.titleSmall,
                 ),
-                if (ageSummary.isNotEmpty)
+                if (dateSummary.isNotEmpty)
                   TextSpan(
-                    text: '  ·  $ageSummary',
+                    text: '  ·  $dateSummary',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
