@@ -155,9 +155,7 @@ class AppState with ChangeNotifier {
 
     await _fetchCentileDataIfNeeded(measurementMethod);
 
-    print(
-      'Generated fictional data for $measurementMethod: ${apiResponse.length} entries',
-    );
+    notifyListeners();
   }
 
   bool isFeatureFlagEnabled(FeatureFlag flag) {

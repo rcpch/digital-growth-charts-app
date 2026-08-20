@@ -341,6 +341,22 @@ class InputFormState extends State<InputForm> {
   Widget build(BuildContext context) {
     var appState = context.watch<AppState>();
 
+    // Sync demographics from AppState in case they changed after initState
+    // (e.g. after generating fictional test data from another route).
+    if (appState.dob != null && appState.dob != _selectedDob) {
+      _selectedDob = appState.dob;
+      _dobController.text = DateFormat('yyyy-MM-dd').format(appState.dob!);
+    }
+    if (appState.sex != null && appState.sex != _selectedSex) {
+      _selectedSex = appState.sex!;
+    }
+    if (appState.gestationWeeks != null &&
+        appState.gestationWeeks != _selectedGestationWeeks) {
+      _selectedGestationWeeks = appState.gestationWeeks!;
+      _selectedGestationDays = appState.gestationDays!;
+      _showGestationFields = true;
+    }
+
     return Form(
       // Wrap form content in a Form widget
       key: _formKey, // Assign the GlobalKey
