@@ -89,9 +89,7 @@ class AppState with ChangeNotifier {
     required String value,
   }) async {
     if (_dob == null ||
-        _sex == null ||
-        _gestationWeeks == null ||
-        _gestationDays == null) {
+        _sex == null) {
       throw Exception('Missing demographics in app state');
     }
 
@@ -100,8 +98,8 @@ class AppState with ChangeNotifier {
       birthDate: DateFormat('yyyy-MM-dd').format(_dob!),
       observationDate: observationDate,
       sex: _sex!,
-      gestationWeeks: _gestationWeeks!,
-      gestationDays: _gestationDays!,
+      gestationWeeks: _gestationWeeks,
+      gestationDays: _gestationDays,
       measurementMethod: method,
       observationValue: value,
     );
@@ -120,13 +118,13 @@ class AppState with ChangeNotifier {
   }
 
   Future<void> generateFictionalData({
-    required int gestationWeeks,
-    required int gestationDays,
     required Sex sex,
     required double startChronologicalAge,
     required double endAge,
     required double measurementIntervalNumber,
     required String measurementIntervalType,
+    int? gestationWeeks,
+    int? gestationDays,
   }) async {
     final tasks =
         [
@@ -175,14 +173,14 @@ class AppState with ChangeNotifier {
   }
 
   Future<void> generateSingleSeriesOfFictionalData({
-    required int gestationWeeks,
-    required int gestationDays,
     required Sex sex,
     required double startChronologicalAge,
     required double endAge,
     required double measurementIntervalNumber,
     required String measurementIntervalType,
     required MeasurementMethod measurementMethod,
+    int? gestationWeeks,
+    int? gestationDays,
   }) async {
     final apiResponse = await _dgcApi.generateFictionalChildData(
       gestationWeeks: gestationWeeks,

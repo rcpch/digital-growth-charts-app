@@ -16,8 +16,8 @@ class GeneratorFormState extends State<GeneratorForm> {
 
   final List<String> _ageUnits = ['Years', 'Months', 'Weeks', 'Days'];
 
-  int _selectedGestationWeeks = 40;
-  int _selectedGestationDays = 0;
+  int? _selectedGestationWeeks;
+  int? _selectedGestationDays;
   Sex _selectedSex = Sex.male;
 
   final TextEditingController _startAge = TextEditingController(text: '0');

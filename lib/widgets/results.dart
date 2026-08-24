@@ -23,7 +23,7 @@ enum ResultsTab { height, weight, ofc, data }
 
 class _ResultsPageState extends State<ResultsPage>
     with SingleTickerProviderStateMixin {
-  AgeCorrectionMethod _ageCorrectionMethod = AgeCorrectionMethod.chronological;
+  AgeCorrectionMethod _ageCorrectionMethod = AgeCorrectionMethod.corrected;
 
   Widget buildPlaceholder(MeasurementMethod? method) {
     return Column(
@@ -52,7 +52,7 @@ class _ResultsPageState extends State<ResultsPage>
       sex: appState.sex!,
       growthDataForMethod: appState.organizedGrowthData[method]!,
       dob: appState.dob!,
-      ageCorrectionMethod: _ageCorrectionMethod,
+      ageCorrectionMethod: _effectiveAgeCorrectionMethod(appState),
       gestationWeeks: appState.gestationWeeks,
       gestationDays: appState.gestationDays,
     );
@@ -69,7 +69,7 @@ class _ResultsPageState extends State<ResultsPage>
       case ResultsTab.data:
         return ResultsDataTable(
           organizedGrowthData: appState.organizedGrowthData,
-          ageCorrectionMethod: _ageCorrectionMethod,
+          ageCorrectionMethod: _effectiveAgeCorrectionMethod(appState),
         );
     }
   }
@@ -108,6 +108,19 @@ class _ResultsPageState extends State<ResultsPage>
     }
   }
 
+  /// The age-correction method actually applied to the charts and table.
+  /// The toggle is only offered when gestation has been recorded; without it
+  /// there is nothing to correct against, so we fall back to chronological.
+  /// For term children the API returns identical chronological and corrected
+  /// values, so honouring a "corrected" selection is a no-op rather than
+  /// wrong — we don't override the user's choice.
+  AgeCorrectionMethod _effectiveAgeCorrectionMethod(AppState appState) {
+    if (appState.gestationWeeks != null && appState.gestationDays != null) {
+      return _ageCorrectionMethod;
+    }
+    return AgeCorrectionMethod.chronological;
+  }
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<AppState>();
@@ -136,54 +149,57 @@ class _ResultsPageState extends State<ResultsPage>
           'Growth Chart - ${appState.sex != null ? toBeginningOfSentenceCase(appState.sex!.name) : ''}',
         ),
         actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.display_settings),
-            onPressed: () => showDialog<String>(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  content: Column(
-                    children: [
-                      Text(
-                        'Age correction',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+          if (appState.gestationWeeks != null &&
+              appState.gestationDays != null)
+            IconButton(
+              icon: const Icon(Icons.display_settings),
+              onPressed: () => showDialog<String>(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Age correction',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      StatefulBuilder(
-                        builder:
-                            (BuildContext context, StateSetter setDialogState) {
-                              return EnumRadioGroup<AgeCorrectionMethod>(
-                                groupValue: _ageCorrectionMethod,
-                                itemsPerRow: 1,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _ageCorrectionMethod = value!;
-                                  });
-                                  setDialogState(
-                                    () {},
-                                  ); // Update the dialog state
-                                },
-                                values: AgeCorrectionMethod.values,
-                                labelBuilder: (m) {
-                                  return toBeginningOfSentenceCase(m.name);
-                                },
-                              );
-                            },
+                        StatefulBuilder(
+                          builder:
+                              (BuildContext context, StateSetter setDialogState) {
+                                return EnumRadioGroup<AgeCorrectionMethod>(
+                                  groupValue: _ageCorrectionMethod,
+                                  itemsPerRow: 1,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _ageCorrectionMethod = value!;
+                                    });
+                                    setDialogState(
+                                      () {},
+                                    ); // Update the dialog state
+                                  },
+                                  values: AgeCorrectionMethod.values,
+                                  labelBuilder: (m) {
+                                    return toBeginningOfSentenceCase(m.name);
+                                  },
+                                );
+                              },
+                        ),
+                      ],
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, 'OK'),
+                        child: const Text('OK'),
                       ),
                     ],
-                  ),
-                  actions: <Widget>[
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, 'OK'),
-                      child: const Text('OK'),
-                    ),
-                  ],
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
         ],
       ),
       body: SafeArea(

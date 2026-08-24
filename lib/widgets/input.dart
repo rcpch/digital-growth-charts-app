@@ -36,8 +36,8 @@ class InputFormState extends State<InputForm> {
 
   // State variables for the collapsable gestation section
   bool _showGestationFields = false;
-  int _selectedGestationWeeks = 40; // Default to 40 weeks
-  int _selectedGestationDays = 0; // Default to 0 days
+  int? _selectedGestationWeeks;
+  int? _selectedGestationDays; // Default to 0 days
 
   bool _loading = false;
 
@@ -95,6 +95,9 @@ class InputFormState extends State<InputForm> {
     if (appState.gestationWeeks != null) {
       // Populate Gestation fields and state
       _selectedGestationWeeks = appState.gestationWeeks!;
+      _showGestationFields = true; // Expand gestation section if data exists
+    }
+    if (appState.gestationDays != null) {
       _selectedGestationDays = appState.gestationDays!;
       _showGestationFields = true; // Expand gestation section if data exists
     }
@@ -353,6 +356,10 @@ class InputFormState extends State<InputForm> {
     if (appState.gestationWeeks != null &&
         appState.gestationWeeks != _selectedGestationWeeks) {
       _selectedGestationWeeks = appState.gestationWeeks!;
+      _showGestationFields = true;
+    }
+    if (appState.gestationDays != null &&
+        appState.gestationDays != _selectedGestationDays) {
       _selectedGestationDays = appState.gestationDays!;
       _showGestationFields = true;
     }
