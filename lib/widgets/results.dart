@@ -21,7 +21,7 @@ enum ResultsTab { data, height, weight, bmi, ofc }
 
 class _ResultsPageState extends State<ResultsPage>
     with SingleTickerProviderStateMixin {
-  AgeCorrectionMethod _ageCorrectionMethod = AgeCorrectionMethod.corrected;
+  AgeCorrectionMethod _ageCorrectionMethod = AgeCorrectionMethod.chronological;
 
   Widget buildPlaceholder(MeasurementMethod? method) {
     String placeholder;
