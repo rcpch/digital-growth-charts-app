@@ -88,10 +88,7 @@ class AppState with ChangeNotifier {
     required MeasurementMethod method,
     required String value,
   }) async {
-    if (_dob == null ||
-        _sex == null ||
-        _gestationWeeks == null ||
-        _gestationDays == null) {
+    if (_dob == null || _sex == null) {
       throw Exception('Missing demographics in app state');
     }
 
@@ -100,8 +97,8 @@ class AppState with ChangeNotifier {
       birthDate: DateFormat('yyyy-MM-dd').format(_dob!),
       observationDate: observationDate,
       sex: _sex!,
-      gestationWeeks: _gestationWeeks!,
-      gestationDays: _gestationDays!,
+      gestationWeeks: _gestationWeeks,
+      gestationDays: _gestationDays,
       measurementMethod: method,
       observationValue: value,
     );
@@ -120,19 +117,20 @@ class AppState with ChangeNotifier {
   }
 
   Future<void> generateFictionalData({
-    required int gestationWeeks,
-    required int gestationDays,
     required Sex sex,
     required double startChronologicalAge,
     required double endAge,
     required double measurementIntervalNumber,
     required String measurementIntervalType,
+    int? gestationWeeks,
+    int? gestationDays,
   }) async {
     final tasks =
         [
           MeasurementMethod.height,
           MeasurementMethod.weight,
           MeasurementMethod.ofc,
+          MeasurementMethod.bmi,
         ].map((method) {
           return _dgcApi.generateFictionalChildData(
             gestationWeeks: gestationWeeks,
@@ -146,9 +144,8 @@ class AppState with ChangeNotifier {
           );
         });
 
-    final [heightResponse, weightResponse, ofcResponse] = await Future.wait(
-      tasks,
-    );
+    final [heightResponse, weightResponse, ofcResponse, bmiResponse] =
+        await Future.wait(tasks);
 
     _sex = sex;
     _gestationWeeks = gestationWeeks;
@@ -164,25 +161,27 @@ class AppState with ChangeNotifier {
     _organizedGrowthData[MeasurementMethod.height] = heightResponse;
     _organizedGrowthData[MeasurementMethod.weight] = weightResponse;
     _organizedGrowthData[MeasurementMethod.ofc] = ofcResponse;
+    _organizedGrowthData[MeasurementMethod.bmi] = bmiResponse;
 
     await Future.wait([
       _fetchCentileDataIfNeeded(MeasurementMethod.height),
       _fetchCentileDataIfNeeded(MeasurementMethod.weight),
       _fetchCentileDataIfNeeded(MeasurementMethod.ofc),
+      _fetchCentileDataIfNeeded(MeasurementMethod.bmi),
     ]);
 
     notifyListeners();
   }
 
   Future<void> generateSingleSeriesOfFictionalData({
-    required int gestationWeeks,
-    required int gestationDays,
     required Sex sex,
     required double startChronologicalAge,
     required double endAge,
     required double measurementIntervalNumber,
     required String measurementIntervalType,
     required MeasurementMethod measurementMethod,
+    int? gestationWeeks,
+    int? gestationDays,
   }) async {
     final apiResponse = await _dgcApi.generateFictionalChildData(
       gestationWeeks: gestationWeeks,

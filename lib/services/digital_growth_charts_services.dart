@@ -22,8 +22,8 @@ class DigitalGrowthChartsService {
     required Sex sex,
     required MeasurementMethod measurementMethod,
     required String observationValue,
-    required int gestationWeeks,
-    required int gestationDays,
+    int? gestationWeeks,
+    int? gestationDays,
   }) async {
     final url = Uri.parse('$_baseUrl/uk-who/calculation');
     final String sexString = sex == Sex.male ? 'male' : 'female';
@@ -36,9 +36,15 @@ class DigitalGrowthChartsService {
       'sex': sexString,
       'measurement_method': measurementMethodString,
       'observation_value': observationValue,
-      'gestation_weeks': gestationWeeks,
-      'gestation_days': gestationDays,
     };
+
+    if (gestationWeeks != null) {
+      requestBody['gestation_weeks'] = gestationWeeks;
+    }
+
+    if (gestationDays != null) {
+      requestBody['gestation_days'] = gestationDays;
+    }
 
     switch (measurementMethod) {
       case MeasurementMethod.height:
@@ -148,14 +154,14 @@ class DigitalGrowthChartsService {
   }
 
   Future<List<GrowthDataResponse>> generateFictionalChildData({
-    required int gestationWeeks,
-    required int gestationDays,
     required Sex sex,
     required double startChronologicalAge,
     required double endAge,
     required double measurementIntervalNumber,
     required String measurementIntervalType,
     required MeasurementMethod measurementMethod,
+    int? gestationWeeks,
+    int? gestationDays,
   }) async {
     final url = Uri.parse(
       '$_baseUrl/uk-who/fictional-child-data',
@@ -164,8 +170,6 @@ class DigitalGrowthChartsService {
     final String sexString = sex.name;
 
     final Map<String, dynamic> requestBody = {
-      'gestation_weeks': gestationWeeks,
-      'gestation_days': gestationDays,
       'sex': sexString,
       'start_chronological_age': startChronologicalAge,
       'end_age': endAge,
@@ -173,6 +177,14 @@ class DigitalGrowthChartsService {
       'measurement_interval_type': measurementIntervalType,
       'measurement_method': measurementMethodString,
     };
+
+    if (gestationWeeks != null) {
+      requestBody['gestation_weeks'] = gestationWeeks;
+    }
+
+    if (gestationDays != null) {
+      requestBody['gestation_days'] = gestationDays;
+    }
 
     try {
       final response = await http.post(

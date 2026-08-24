@@ -6,4 +6,4 @@ enum Sex { male, female }
 
 enum AgeCorrectionMethod { chronological, corrected, both }
 
-enum FeatureFlag { login }
+enum FeatureFlag { login, bmiChart }

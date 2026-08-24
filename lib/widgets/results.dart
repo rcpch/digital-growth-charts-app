@@ -11,26 +11,65 @@ import '../classes/app_state.dart';
 import '../widgets/enum_radio_group.dart';
 
 class ResultsPage extends StatefulWidget {
-  const ResultsPage({super.key, this.initialMeasurementMethod});
-
-  final MeasurementMethod? initialMeasurementMethod;
+  const ResultsPage({super.key});
 
   @override
   State<ResultsPage> createState() => _ResultsPageState();
 }
 
-enum ResultsTab { height, weight, ofc, data }
+enum ResultsTab { data, height, weight, bmi, ofc }
 
 class _ResultsPageState extends State<ResultsPage>
     with SingleTickerProviderStateMixin {
   AgeCorrectionMethod _ageCorrectionMethod = AgeCorrectionMethod.chronological;
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(
+      length: ResultsTab.values.length,
+      vsync: this,
+    );
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  bool get _isOnTableTab =>
+      ResultsTab.values[_tabController.index] == ResultsTab.data;
 
   Widget buildPlaceholder(MeasurementMethod? method) {
+    String placeholder;
+
+    switch (method) {
+      case MeasurementMethod.height:
+        placeholder = 'No height data yet';
+        break;
+      case MeasurementMethod.weight:
+        placeholder = 'No weight data yet';
+        break;
+      case MeasurementMethod.ofc:
+        placeholder = 'No head circumference data yet';
+        break;
+      case MeasurementMethod.bmi:
+        placeholder = 'No BMI data yet';
+        break;
+      default:
+        placeholder = 'No measurement data yet';
+    }
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text('No ${method?.name ?? ''} data yet.'),
+        Text(placeholder),
         ElevatedButton(
           onPressed: () {
             Navigator.of(context).pop();
@@ -52,7 +91,7 @@ class _ResultsPageState extends State<ResultsPage>
       sex: appState.sex!,
       growthDataForMethod: appState.organizedGrowthData[method]!,
       dob: appState.dob!,
-      ageCorrectionMethod: _ageCorrectionMethod,
+      ageCorrectionMethod: _effectiveAgeCorrectionMethod(appState),
       gestationWeeks: appState.gestationWeeks,
       gestationDays: appState.gestationDays,
     );
@@ -66,6 +105,20 @@ class _ResultsPageState extends State<ResultsPage>
         return buildChart(MeasurementMethod.weight, appState);
       case ResultsTab.ofc:
         return buildChart(MeasurementMethod.ofc, appState);
+      case ResultsTab.bmi:
+        if (appState.isFeatureFlagEnabled(FeatureFlag.bmiChart)) {
+          return buildChart(MeasurementMethod.bmi, appState);
+        }
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Text(
+              'BMI charts coming soon',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
       case ResultsTab.data:
         return ResultsDataTable(
           organizedGrowthData: appState.organizedGrowthData,
@@ -81,30 +134,24 @@ class _ResultsPageState extends State<ResultsPage>
         return const Tab(text: 'Weight');
       case ResultsTab.ofc:
         return const Tab(text: 'Head Cm.');
+      case ResultsTab.bmi:
+        return const Tab(text: 'BMI');
       case ResultsTab.data:
         return const Tab(text: 'Table');
     }
   }
 
-  ResultsTab getFirstTab(AppState appState) {
-    var measurementMethod = MeasurementMethod.height;
-
-    if (widget.initialMeasurementMethod != null &&
-        appState.organizedGrowthData.containsKey(
-          widget.initialMeasurementMethod,
-        )) {
-      measurementMethod = widget.initialMeasurementMethod!;
+  /// The age-correction method actually applied to the charts and table.
+  /// The toggle is only offered when gestation has been recorded; without it
+  /// there is nothing to correct against, so we fall back to chronological.
+  /// For term children the API returns identical chronological and corrected
+  /// values, so honouring a "corrected" selection is a no-op rather than
+  /// wrong — we don't override the user's choice.
+  AgeCorrectionMethod _effectiveAgeCorrectionMethod(AppState appState) {
+    if (appState.gestationWeeks != null && appState.gestationDays != null) {
+      return _ageCorrectionMethod;
     }
-
-    switch (measurementMethod) {
-      case MeasurementMethod.weight:
-        return ResultsTab.weight;
-      case MeasurementMethod.ofc:
-        return ResultsTab.ofc;
-      case MeasurementMethod.height:
-      default:
-        return ResultsTab.height;
-    }
+    return AgeCorrectionMethod.chronological;
   }
 
   @override
@@ -127,79 +174,82 @@ class _ResultsPageState extends State<ResultsPage>
       );
     }
 
-    var currentTab = ResultsTab.values.indexOf(getFirstTab(appState));
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Growth Chart - ${appState.sex != null ? toBeginningOfSentenceCase(appState.sex!.name) : ''}',
         ),
         actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.display_settings),
-            onPressed: () => showDialog<String>(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  content: Column(
-                    children: [
-                      Text(
-                        'Age correction',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+          if (appState.gestationWeeks != null &&
+              appState.gestationDays != null &&
+              !_isOnTableTab)
+            IconButton(
+              icon: const Icon(Icons.display_settings),
+              onPressed: () => showDialog<String>(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Age correction',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      StatefulBuilder(
-                        builder:
-                            (BuildContext context, StateSetter setDialogState) {
-                              return EnumRadioGroup<AgeCorrectionMethod>(
-                                groupValue: _ageCorrectionMethod,
-                                itemsPerRow: 1,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _ageCorrectionMethod = value!;
-                                  });
-                                  setDialogState(
-                                    () {},
-                                  ); // Update the dialog state
-                                },
-                                values: AgeCorrectionMethod.values,
-                                labelBuilder: (m) {
-                                  return toBeginningOfSentenceCase(m.name);
-                                },
-                              );
-                            },
+                        StatefulBuilder(
+                          builder:
+                              (
+                                BuildContext context,
+                                StateSetter setDialogState,
+                              ) {
+                                return EnumRadioGroup<AgeCorrectionMethod>(
+                                  groupValue: _ageCorrectionMethod,
+                                  itemsPerRow: 1,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _ageCorrectionMethod = value!;
+                                    });
+                                    setDialogState(
+                                      () {},
+                                    ); // Update the dialog state
+                                  },
+                                  values: AgeCorrectionMethod.values,
+                                  labelBuilder: (m) {
+                                    return toBeginningOfSentenceCase(m.name);
+                                  },
+                                );
+                              },
+                        ),
+                      ],
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, 'OK'),
+                        child: const Text('OK'),
                       ),
                     ],
-                  ),
-                  actions: <Widget>[
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, 'OK'),
-                      child: const Text('OK'),
-                    ),
-                  ],
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
         ],
       ),
       body: SafeArea(
-        child: DefaultTabController(
-          length: ResultsTab.values.length,
-          initialIndex: currentTab,
-          child: Scaffold(
-            body: TabBarView(
-              children: [
-                for (var tab in ResultsTab.values) buildTab(tab, appState),
-              ],
-            ),
-            bottomNavigationBar: TabBar(
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              tabs: [for (var tab in ResultsTab.values) buildTabLink(tab)],
-            ),
+        child: Scaffold(
+          body: TabBarView(
+            controller: _tabController,
+            children: [
+              for (var tab in ResultsTab.values) buildTab(tab, appState),
+            ],
+          ),
+          bottomNavigationBar: TabBar(
+            controller: _tabController,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            tabs: [for (var tab in ResultsTab.values) buildTabLink(tab)],
           ),
         ),
       ),

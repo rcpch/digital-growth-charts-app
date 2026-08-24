@@ -36,8 +36,8 @@ class InputFormState extends State<InputForm> {
 
   // State variables for the collapsable gestation section
   bool _showGestationFields = false;
-  int _selectedGestationWeeks = 40; // Default to 40 weeks
-  int _selectedGestationDays = 0; // Default to 0 days
+  int? _selectedGestationWeeks;
+  int? _selectedGestationDays; // Default to 0 days
 
   bool _loading = false;
 
@@ -95,6 +95,9 @@ class InputFormState extends State<InputForm> {
     if (appState.gestationWeeks != null) {
       // Populate Gestation fields and state
       _selectedGestationWeeks = appState.gestationWeeks!;
+      _showGestationFields = true; // Expand gestation section if data exists
+    }
+    if (appState.gestationDays != null) {
       _selectedGestationDays = appState.gestationDays!;
       _showGestationFields = true; // Expand gestation section if data exists
     }
@@ -161,11 +164,15 @@ class InputFormState extends State<InputForm> {
     _ofcController.clear();
     _bmiController.clear();
     _dobController.clear();
-    _selectedClinicDate = null;
-    _selectedDob = null;
-    _selectedSex = Sex.male;
+
     setState(() {
       _selectedClinicDate = null;
+      _selectedDob = null;
+      _selectedSex = Sex.male;
+
+      _selectedGestationDays = null;
+      _selectedGestationWeeks = null;
+      _showGestationFields = false;
     });
   }
 
@@ -210,72 +217,38 @@ class InputFormState extends State<InputForm> {
 
       setState(() => _loading = true);
 
-      final List<Future> tasks = [];
-      MeasurementMethod? firstMeasurementMethod;
+      final Iterable<Future> tasks = MeasurementMethod.values.expand((method) {
+        String value;
 
-      if (_heightController.text.isNotEmpty) {
-        firstMeasurementMethod ??= MeasurementMethod.height;
+        switch (method) {
+          case MeasurementMethod.height:
+            value = _heightController.text;
+            break;
+          case MeasurementMethod.weight:
+            value = _weightController.text;
+            break;
+          case MeasurementMethod.ofc:
+            value = _ofcController.text;
+            break;
+          case MeasurementMethod.bmi:
+            value = _bmiController.text.isNotEmpty
+                ? _bmiController.text
+                : _derivedBmiController.text;
+            break;
+        }
 
-        tasks.add(
-          appState.addMeasurement(
-            observationDate: clinicDate,
-            method: MeasurementMethod.height,
-            value: _heightController.text,
-          ),
-        );
-      }
-
-      if (_weightController.text.isNotEmpty) {
-        firstMeasurementMethod ??= MeasurementMethod.weight;
-
-        tasks.add(
-          appState.addMeasurement(
-            observationDate: clinicDate,
-            method: MeasurementMethod.weight,
-            value: _weightController.text,
-          ),
-        );
-      }
-
-      if (_ofcController.text.isNotEmpty) {
-        firstMeasurementMethod ??= MeasurementMethod.ofc;
-
-        tasks.add(
-          appState.addMeasurement(
-            observationDate: clinicDate,
-            method: MeasurementMethod.ofc,
-            value: _ofcController.text,
-          ),
-        );
-      }
-
-      if (_bmiController.text.isNotEmpty) {
-        firstMeasurementMethod ??= MeasurementMethod.bmi;
-
-        tasks.add(
-          appState.addMeasurement(
-            observationDate: clinicDate,
-            method: MeasurementMethod.bmi,
-            value: _bmiController.text,
-          ),
-        );
-      } else if (_weightController.text.isNotEmpty &&
-          _heightController.text.isNotEmpty) {
-        final bmi = calculateBmi(
-          double.tryParse(_weightController.text) ?? 0,
-          double.tryParse(_heightController.text) ?? 0,
-        );
-
-        if (bmi != null) {
-          tasks.add(
+        if (value.isNotEmpty) {
+          return [
             appState.addMeasurement(
               observationDate: clinicDate,
-              method: MeasurementMethod.bmi,
-              value: bmi.toStringAsFixed(2),
+              method: method,
+              value: value,
             ),
-          );
+          ];
+        } else {
+          return [];
         }
-      }
+      });
 
       try {
         await Future.wait(tasks);
@@ -286,10 +259,7 @@ class InputFormState extends State<InputForm> {
         if (mounted) {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  ResultsPage(initialMeasurementMethod: firstMeasurementMethod),
-            ),
+            MaterialPageRoute(builder: (context) => ResultsPage()),
           );
         }
       } catch (e) {
@@ -353,6 +323,10 @@ class InputFormState extends State<InputForm> {
     if (appState.gestationWeeks != null &&
         appState.gestationWeeks != _selectedGestationWeeks) {
       _selectedGestationWeeks = appState.gestationWeeks!;
+      _showGestationFields = true;
+    }
+    if (appState.gestationDays != null &&
+        appState.gestationDays != _selectedGestationDays) {
       _selectedGestationDays = appState.gestationDays!;
       _showGestationFields = true;
     }
@@ -473,7 +447,7 @@ class InputFormState extends State<InputForm> {
                         items:
                             List.generate(
                                   19,
-                                  (index) => index + 24,
+                                  (index) => 42 - index,
                                 ) // Weeks 24 to 42
                                 .map((int weeks) {
                                   return DropdownMenuItem<int>(

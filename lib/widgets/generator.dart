@@ -16,8 +16,8 @@ class GeneratorFormState extends State<GeneratorForm> {
 
   final List<String> _ageUnits = ['Years', 'Months', 'Weeks', 'Days'];
 
-  int _selectedGestationWeeks = 40;
-  int _selectedGestationDays = 0;
+  int? _selectedGestationWeeks;
+  int? _selectedGestationDays;
   Sex _selectedSex = Sex.male;
 
   final TextEditingController _startAge = TextEditingController(text: '0');
@@ -102,11 +102,7 @@ class GeneratorFormState extends State<GeneratorForm> {
 
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (context) => ResultsPage(
-          initialMeasurementMethod: measurementMethodToNavigateTo,
-        ),
-      ),
+      MaterialPageRoute(builder: (context) => ResultsPage()),
       (route) => route.isFirst,
     );
   }
@@ -169,7 +165,7 @@ class GeneratorFormState extends State<GeneratorForm> {
                               items:
                                   List.generate(
                                         19,
-                                        (index) => index + 24,
+                                        (index) => 42 - index,
                                       ) // Weeks 24 to 42
                                       .map((int weeks) {
                                         return DropdownMenuItem<int>(
