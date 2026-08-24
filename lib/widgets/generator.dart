@@ -167,7 +167,7 @@ class GeneratorFormState extends State<GeneratorForm> {
                               items:
                                   List.generate(
                                         19,
-                                        (index) => index + 24,
+                                        (index) => 42 - index,
                                       ) // Weeks 24 to 42
                                       .map((int weeks) {
                                         return DropdownMenuItem<int>(
