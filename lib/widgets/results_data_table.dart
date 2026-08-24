@@ -135,21 +135,6 @@ class _MeasurementOccasion {
   final List<_TaggedMeasurement> measurements;
 
   String get dateSummary => dateLabel.isEmpty ? 'Unknown date' : dateLabel;
-
-  /// Age to show on the card header, honouring the page's age-correction
-  /// selection. Corrected age falls back to chronological when it wasn't
-  /// computed (e.g. term child), so the header never reads "Unknown age".
-  String displayAge(AgeCorrectionMethod method) {
-    switch (method) {
-      case AgeCorrectionMethod.corrected:
-        return correctedAgeLabel?.isNotEmpty == true
-            ? correctedAgeLabel!
-            : ageLabel;
-      case AgeCorrectionMethod.both:
-      case AgeCorrectionMethod.chronological:
-        return ageLabel;
-    }
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -161,17 +146,7 @@ class ResultsDataTable extends StatelessWidget {
   /// regroups them by observation date for display.
   final Map<MeasurementMethod, List<GrowthDataResponse>> organizedGrowthData;
 
-  /// Which age the card header should show: the chronological age, the
-  /// corrected age (falling back to chronological when there's no
-  /// correction), or both. Mirrors the toggle in [ResultsPage]'s header
-  /// dialog.
-  final AgeCorrectionMethod ageCorrectionMethod;
-
-  const ResultsDataTable({
-    super.key,
-    required this.organizedGrowthData,
-    this.ageCorrectionMethod = AgeCorrectionMethod.chronological,
-  });
+  const ResultsDataTable({super.key, required this.organizedGrowthData});
 
   @override
   Widget build(BuildContext context) {
@@ -192,7 +167,6 @@ class ResultsDataTable extends StatelessWidget {
               final occasion = occasions[index];
               return _OccasionCard(
                 occasion: occasion,
-                ageCorrectionMethod: ageCorrectionMethod,
                 onTap: () => _showDetailsModal(context, occasion),
               );
             },
@@ -363,14 +337,9 @@ class _ColumnHeaderDelegate extends SliverPersistentHeaderDelegate {
 // ---------------------------------------------------------------------------
 
 class _OccasionCard extends StatelessWidget {
-  const _OccasionCard({
-    required this.occasion,
-    required this.ageCorrectionMethod,
-    this.onTap,
-  });
+  const _OccasionCard({required this.occasion, this.onTap});
 
   final _MeasurementOccasion occasion;
-  final AgeCorrectionMethod ageCorrectionMethod;
   final VoidCallback? onTap;
 
   @override
@@ -397,7 +366,7 @@ class _OccasionCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _OccasionHeader(
-                  ageLabel: occasion.displayAge(ageCorrectionMethod),
+                  ageLabel: occasion.ageLabel,
                   dateSummary: occasion.dateSummary,
                   showChevron: onTap != null,
                 ),
@@ -492,44 +461,95 @@ class _MeasurementRow extends StatelessWidget {
       color: theme.colorScheme.onSurfaceVariant,
     );
 
+    final hasCorrected = _hasCorrectedValues(values);
+
     return Semantics(
       label: _semanticsLabel(method, observation, values),
       excludeSemantics: true,
-      child: Padding(
-        // Padding rather than a fixed height so the row grows with text scale.
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                method.label,
-                style: body,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Chronological — the primary row.
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    method.label,
+                    style: body,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                _cell(
+                  context,
+                  _formatValue(method, observation),
+                  GrowthListMetrics.valueColumn,
+                  numeric,
+                ),
+                const SizedBox(width: GrowthListMetrics.columnGap),
+                _cell(
+                  context,
+                  formatCentile(values?.chronologicalCentile),
+                  GrowthListMetrics.centileColumn,
+                  centileStyle,
+                ),
+                const SizedBox(width: GrowthListMetrics.columnGap),
+                _cell(
+                  context,
+                  formatSds(values?.chronologicalSds),
+                  GrowthListMetrics.sdsColumn,
+                  sdsStyle,
+                ),
+              ],
+            ),
+          ),
+          // Corrected — only when it actually differs from chronological.
+          // For term children the API returns identical values, so we skip
+          // this row rather than show a duplicate.
+          if (hasCorrected)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '(age corrected)',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  _cell(
+                    context,
+                    '',
+                    GrowthListMetrics.valueColumn,
+                    numeric,
+                  ),
+                  const SizedBox(width: GrowthListMetrics.columnGap),
+                  _cell(
+                    context,
+                    formatCentile(values?.correctedCentile),
+                    GrowthListMetrics.centileColumn,
+                    centileStyle?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: GrowthListMetrics.columnGap),
+                  _cell(
+                    context,
+                    formatSds(values?.correctedSds),
+                    GrowthListMetrics.sdsColumn,
+                    sdsStyle,
+                  ),
+                ],
               ),
             ),
-            _cell(
-              context,
-              _formatValue(method, observation),
-              GrowthListMetrics.valueColumn,
-              numeric,
-            ),
-            const SizedBox(width: GrowthListMetrics.columnGap),
-            _cell(
-              context,
-              formatCentile(values?.chronologicalCentile),
-              GrowthListMetrics.centileColumn,
-              centileStyle,
-            ),
-            const SizedBox(width: GrowthListMetrics.columnGap),
-            _cell(
-              context,
-              formatSds(values?.chronologicalSds),
-              GrowthListMetrics.sdsColumn,
-              sdsStyle,
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -545,6 +565,20 @@ class _MeasurementRow extends StatelessWidget {
       child: Text(text, textAlign: TextAlign.end, style: style, maxLines: 1),
     );
   }
+}
+
+/// `true` when the corrected values differ from the chronological ones and
+/// are worth showing as a separate row.
+bool _hasCorrectedValues(MeasurementCalculatedValues? values) {
+  if (values == null) return false;
+  final c = values.correctedCentile;
+  final s = values.correctedSds;
+  if (c == null && s == null) return false;
+  // Skip when the API returned identical values (term child).
+  if (c == values.chronologicalCentile && s == values.chronologicalSds) {
+    return false;
+  }
+  return true;
 }
 
 class _EmptyState extends StatelessWidget {

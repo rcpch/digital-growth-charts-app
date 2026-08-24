@@ -22,6 +22,28 @@ enum ResultsTab { data, height, weight, bmi, ofc }
 class _ResultsPageState extends State<ResultsPage>
     with SingleTickerProviderStateMixin {
   AgeCorrectionMethod _ageCorrectionMethod = AgeCorrectionMethod.chronological;
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(
+      length: ResultsTab.values.length,
+      vsync: this,
+    );
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  bool get _isOnTableTab =>
+      ResultsTab.values[_tabController.index] == ResultsTab.data;
 
   Widget buildPlaceholder(MeasurementMethod? method) {
     String placeholder;
@@ -88,7 +110,6 @@ class _ResultsPageState extends State<ResultsPage>
       case ResultsTab.data:
         return ResultsDataTable(
           organizedGrowthData: appState.organizedGrowthData,
-          ageCorrectionMethod: _effectiveAgeCorrectionMethod(appState),
         );
     }
   }
@@ -147,7 +168,9 @@ class _ResultsPageState extends State<ResultsPage>
           'Growth Chart - ${appState.sex != null ? toBeginningOfSentenceCase(appState.sex!.name) : ''}',
         ),
         actions: <Widget>[
-          if (appState.gestationWeeks != null && appState.gestationDays != null)
+          if (appState.gestationWeeks != null &&
+              appState.gestationDays != null &&
+              !_isOnTableTab)
             IconButton(
               icon: const Icon(Icons.display_settings),
               onPressed: () => showDialog<String>(
@@ -203,20 +226,18 @@ class _ResultsPageState extends State<ResultsPage>
         ],
       ),
       body: SafeArea(
-        child: DefaultTabController(
-          length: ResultsTab.values.length,
-          initialIndex: 0,
-          child: Scaffold(
-            body: TabBarView(
-              children: [
-                for (var tab in ResultsTab.values) buildTab(tab, appState),
-              ],
-            ),
-            bottomNavigationBar: TabBar(
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              tabs: [for (var tab in ResultsTab.values) buildTabLink(tab)],
-            ),
+        child: Scaffold(
+          body: TabBarView(
+            controller: _tabController,
+            children: [
+              for (var tab in ResultsTab.values) buildTab(tab, appState),
+            ],
+          ),
+          bottomNavigationBar: TabBar(
+            controller: _tabController,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            tabs: [for (var tab in ResultsTab.values) buildTabLink(tab)],
           ),
         ),
       ),
