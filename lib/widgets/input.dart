@@ -164,11 +164,15 @@ class InputFormState extends State<InputForm> {
     _ofcController.clear();
     _bmiController.clear();
     _dobController.clear();
-    _selectedClinicDate = null;
-    _selectedDob = null;
-    _selectedSex = Sex.male;
+
     setState(() {
       _selectedClinicDate = null;
+      _selectedDob = null;
+      _selectedSex = Sex.male;
+
+      _selectedGestationDays = null;
+      _selectedGestationWeeks = null;
+      _showGestationFields = false;
     });
   }
 
