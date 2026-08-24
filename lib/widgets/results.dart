@@ -19,7 +19,7 @@ class ResultsPage extends StatefulWidget {
   State<ResultsPage> createState() => _ResultsPageState();
 }
 
-enum ResultsTab { height, weight, ofc, data }
+enum ResultsTab { height, weight, ofc, bmi, data }
 
 class _ResultsPageState extends State<ResultsPage>
     with SingleTickerProviderStateMixin {
@@ -66,6 +66,8 @@ class _ResultsPageState extends State<ResultsPage>
         return buildChart(MeasurementMethod.weight, appState);
       case ResultsTab.ofc:
         return buildChart(MeasurementMethod.ofc, appState);
+      case ResultsTab.bmi:
+        return buildChart(MeasurementMethod.bmi, appState);
       case ResultsTab.data:
         return ResultsDataTable(
           organizedGrowthData: appState.organizedGrowthData,
@@ -82,6 +84,8 @@ class _ResultsPageState extends State<ResultsPage>
         return const Tab(text: 'Weight');
       case ResultsTab.ofc:
         return const Tab(text: 'Head Cm.');
+      case ResultsTab.bmi:
+        return const Tab(text: 'BMI');
       case ResultsTab.data:
         return const Tab(text: 'Table');
     }
