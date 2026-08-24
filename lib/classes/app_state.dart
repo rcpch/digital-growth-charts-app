@@ -131,6 +131,7 @@ class AppState with ChangeNotifier {
           MeasurementMethod.height,
           MeasurementMethod.weight,
           MeasurementMethod.ofc,
+          MeasurementMethod.bmi,
         ].map((method) {
           return _dgcApi.generateFictionalChildData(
             gestationWeeks: gestationWeeks,
@@ -144,7 +145,7 @@ class AppState with ChangeNotifier {
           );
         });
 
-    final [heightResponse, weightResponse, ofcResponse] = await Future.wait(
+    final [heightResponse, weightResponse, ofcResponse, bmiResponse] = await Future.wait(
       tasks,
     );
 
@@ -162,11 +163,13 @@ class AppState with ChangeNotifier {
     _organizedGrowthData[MeasurementMethod.height] = heightResponse;
     _organizedGrowthData[MeasurementMethod.weight] = weightResponse;
     _organizedGrowthData[MeasurementMethod.ofc] = ofcResponse;
+    _organizedGrowthData[MeasurementMethod.bmi] = bmiResponse;
 
     await Future.wait([
       _fetchCentileDataIfNeeded(MeasurementMethod.height),
       _fetchCentileDataIfNeeded(MeasurementMethod.weight),
       _fetchCentileDataIfNeeded(MeasurementMethod.ofc),
+      _fetchCentileDataIfNeeded(MeasurementMethod.bmi),
     ]);
 
     notifyListeners();

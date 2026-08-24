@@ -107,7 +107,10 @@ extension MeasurementMethodPresentation on MeasurementMethod {
 /// under. The method is the map key in `organizedGrowthData`, so we carry it
 /// through the grouping rather than re-reading the `measurement_method` string
 /// on the response (which may be null).
-typedef _TaggedMeasurement = ({MeasurementMethod method, GrowthDataResponse response});
+typedef _TaggedMeasurement = ({
+  MeasurementMethod method,
+  GrowthDataResponse response,
+});
 
 /// One date's worth of measurements, grouped for display. Wraps native
 /// [GrowthDataResponse]s rather than replacing them.
@@ -210,9 +213,10 @@ List<_MeasurementOccasion> _groupOccasions(
     final method = entry.key;
     for (final response in entry.value) {
       final key = response.measurementDates?.observationDate ?? '';
-      (byDate[key] ??= <_TaggedMeasurement>[]).add(
-        (method: method, response: response),
-      );
+      (byDate[key] ??= <_TaggedMeasurement>[]).add((
+        method: method,
+        response: response,
+      ));
     }
   }
 
@@ -224,9 +228,7 @@ List<_MeasurementOccasion> _groupOccasions(
         sortKey: entry.key,
         dateLabel: _formatDate(dates?.observationDate),
         ageLabel: _abbreviateAge(dates?.chronologicalCalendarAge ?? ''),
-        correctedAgeLabel: _abbreviateAge(
-          dates?.correctedCalendarAge ?? '',
-        ),
+        correctedAgeLabel: _abbreviateAge(dates?.correctedCalendarAge ?? ''),
         correctedAgeComment:
             dates?.comments?.clinicianCorrectedDecimalAgeComment,
         measurements: entry.value,
@@ -282,8 +284,8 @@ String _semanticsLabel(
   final valuePart = value == null
       ? 'no value'
       : unit == null
-          ? value.toStringAsFixed(method.decimals)
-          : '${value.toStringAsFixed(method.decimals)} $unit';
+      ? value.toStringAsFixed(method.decimals)
+      : '${value.toStringAsFixed(method.decimals)} $unit';
   final centile = values?.chronologicalCentile;
   final sds = values?.chronologicalSds;
   return '${method.label}, $valuePart, '
@@ -643,10 +645,13 @@ class _MeasurementDetail extends StatelessWidget {
             color: theme.colorScheme.primary,
           ),
         ),
-        _labeled('Centile: ', formatCentile(values?.chronologicalCentile), theme),
+        _labeled(
+          'Centile: ',
+          formatCentile(values?.chronologicalCentile),
+          theme,
+        ),
         _labeled('SDS: ', formatSds(values?.chronologicalSds), theme),
-        if (chronoBand != null)
-          _labeled('Interpretation: ', chronoBand, theme),
+        if (chronoBand != null) _labeled('Interpretation: ', chronoBand, theme),
         const SizedBox(height: 8),
         Text(
           'Corrected',
