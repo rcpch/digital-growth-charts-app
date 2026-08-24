@@ -106,7 +106,19 @@ class _ResultsPageState extends State<ResultsPage>
       case ResultsTab.ofc:
         return buildChart(MeasurementMethod.ofc, appState);
       case ResultsTab.bmi:
-        return buildChart(MeasurementMethod.bmi, appState);
+        if (appState.isFeatureFlagEnabled(FeatureFlag.bmiChart)) {
+          return buildChart(MeasurementMethod.bmi, appState);
+        }
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Text(
+              'BMI charts coming soon',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
       case ResultsTab.data:
         return ResultsDataTable(
           organizedGrowthData: appState.organizedGrowthData,
