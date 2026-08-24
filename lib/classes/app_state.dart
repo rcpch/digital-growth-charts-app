@@ -88,8 +88,7 @@ class AppState with ChangeNotifier {
     required MeasurementMethod method,
     required String value,
   }) async {
-    if (_dob == null ||
-        _sex == null) {
+    if (_dob == null || _sex == null) {
       throw Exception('Missing demographics in app state');
     }
 
@@ -145,9 +144,8 @@ class AppState with ChangeNotifier {
           );
         });
 
-    final [heightResponse, weightResponse, ofcResponse, bmiResponse] = await Future.wait(
-      tasks,
-    );
+    final [heightResponse, weightResponse, ofcResponse, bmiResponse] =
+        await Future.wait(tasks);
 
     _sex = sex;
     _gestationWeeks = gestationWeeks;

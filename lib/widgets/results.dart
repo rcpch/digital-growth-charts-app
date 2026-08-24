@@ -48,7 +48,7 @@ class _ResultsPageState extends State<ResultsPage>
   Widget buildPlaceholder(MeasurementMethod? method) {
     String placeholder;
 
-    switch(method) {
+    switch (method) {
       case MeasurementMethod.height:
         placeholder = 'No height data yet';
         break;

@@ -524,12 +524,7 @@ class _MeasurementRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  _cell(
-                    context,
-                    '',
-                    GrowthListMetrics.valueColumn,
-                    numeric,
-                  ),
+                  _cell(context, '', GrowthListMetrics.valueColumn, numeric),
                   const SizedBox(width: GrowthListMetrics.columnGap),
                   _cell(
                     context,

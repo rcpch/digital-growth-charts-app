@@ -220,7 +220,7 @@ class InputFormState extends State<InputForm> {
       final Iterable<Future> tasks = MeasurementMethod.values.expand((method) {
         String value;
 
-        switch(method) {
+        switch (method) {
           case MeasurementMethod.height:
             value = _heightController.text;
             break;
@@ -237,7 +237,7 @@ class InputFormState extends State<InputForm> {
             break;
         }
 
-        if(value.isNotEmpty) {
+        if (value.isNotEmpty) {
           return [
             appState.addMeasurement(
               observationDate: clinicDate,
@@ -259,10 +259,7 @@ class InputFormState extends State<InputForm> {
         if (mounted) {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  ResultsPage(),
-            ),
+            MaterialPageRoute(builder: (context) => ResultsPage()),
           );
         }
       } catch (e) {
