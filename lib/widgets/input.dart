@@ -213,72 +213,38 @@ class InputFormState extends State<InputForm> {
 
       setState(() => _loading = true);
 
-      final List<Future> tasks = [];
-      MeasurementMethod? firstMeasurementMethod;
+      final Iterable<Future> tasks = MeasurementMethod.values.expand((method) {
+        String value;
 
-      if (_heightController.text.isNotEmpty) {
-        firstMeasurementMethod ??= MeasurementMethod.height;
+        switch(method) {
+          case MeasurementMethod.height:
+            value = _heightController.text;
+            break;
+          case MeasurementMethod.weight:
+            value = _weightController.text;
+            break;
+          case MeasurementMethod.ofc:
+            value = _ofcController.text;
+            break;
+          case MeasurementMethod.bmi:
+            value = _bmiController.text.isNotEmpty
+                ? _bmiController.text
+                : _derivedBmiController.text;
+            break;
+        }
 
-        tasks.add(
-          appState.addMeasurement(
-            observationDate: clinicDate,
-            method: MeasurementMethod.height,
-            value: _heightController.text,
-          ),
-        );
-      }
-
-      if (_weightController.text.isNotEmpty) {
-        firstMeasurementMethod ??= MeasurementMethod.weight;
-
-        tasks.add(
-          appState.addMeasurement(
-            observationDate: clinicDate,
-            method: MeasurementMethod.weight,
-            value: _weightController.text,
-          ),
-        );
-      }
-
-      if (_ofcController.text.isNotEmpty) {
-        firstMeasurementMethod ??= MeasurementMethod.ofc;
-
-        tasks.add(
-          appState.addMeasurement(
-            observationDate: clinicDate,
-            method: MeasurementMethod.ofc,
-            value: _ofcController.text,
-          ),
-        );
-      }
-
-      if (_bmiController.text.isNotEmpty) {
-        firstMeasurementMethod ??= MeasurementMethod.bmi;
-
-        tasks.add(
-          appState.addMeasurement(
-            observationDate: clinicDate,
-            method: MeasurementMethod.bmi,
-            value: _bmiController.text,
-          ),
-        );
-      } else if (_weightController.text.isNotEmpty &&
-          _heightController.text.isNotEmpty) {
-        final bmi = calculateBmi(
-          double.tryParse(_weightController.text) ?? 0,
-          double.tryParse(_heightController.text) ?? 0,
-        );
-
-        if (bmi != null) {
-          tasks.add(
+        if(value.isNotEmpty) {
+          return [
             appState.addMeasurement(
               observationDate: clinicDate,
-              method: MeasurementMethod.bmi,
-              value: bmi.toStringAsFixed(2),
+              method: method,
+              value: value,
             ),
-          );
+          ];
+        } else {
+          return [];
         }
-      }
+      });
 
       try {
         await Future.wait(tasks);
@@ -291,7 +257,7 @@ class InputFormState extends State<InputForm> {
             context,
             MaterialPageRoute(
               builder: (context) =>
-                  ResultsPage(initialMeasurementMethod: firstMeasurementMethod),
+                  ResultsPage(),
             ),
           );
         }

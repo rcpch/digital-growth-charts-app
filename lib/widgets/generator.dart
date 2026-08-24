@@ -103,9 +103,7 @@ class GeneratorFormState extends State<GeneratorForm> {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (context) => ResultsPage(
-          initialMeasurementMethod: measurementMethodToNavigateTo,
-        ),
+        builder: (context) => ResultsPage()
       ),
       (route) => route.isFirst,
     );

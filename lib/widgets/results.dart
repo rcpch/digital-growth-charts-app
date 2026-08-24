@@ -11,26 +11,43 @@ import '../classes/app_state.dart';
 import '../widgets/enum_radio_group.dart';
 
 class ResultsPage extends StatefulWidget {
-  const ResultsPage({super.key, this.initialMeasurementMethod});
-
-  final MeasurementMethod? initialMeasurementMethod;
+  const ResultsPage({super.key});
 
   @override
   State<ResultsPage> createState() => _ResultsPageState();
 }
 
-enum ResultsTab { height, weight, ofc, bmi, data }
+enum ResultsTab { data, height, weight, bmi, ofc }
 
 class _ResultsPageState extends State<ResultsPage>
     with SingleTickerProviderStateMixin {
   AgeCorrectionMethod _ageCorrectionMethod = AgeCorrectionMethod.corrected;
 
   Widget buildPlaceholder(MeasurementMethod? method) {
+    String placeholder;
+
+    switch(method) {
+      case MeasurementMethod.height:
+        placeholder = 'No height data yet';
+        break;
+      case MeasurementMethod.weight:
+        placeholder = 'No weight data yet';
+        break;
+      case MeasurementMethod.ofc:
+        placeholder = 'No head circumference data yet';
+        break;
+      case MeasurementMethod.bmi:
+        placeholder = 'No BMI data yet';
+        break;
+      default:
+        placeholder = 'No measurement data yet';
+    }
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text('No ${method?.name ?? ''} data yet.'),
+        Text(placeholder),
         ElevatedButton(
           onPressed: () {
             Navigator.of(context).pop();
@@ -91,27 +108,6 @@ class _ResultsPageState extends State<ResultsPage>
     }
   }
 
-  ResultsTab getFirstTab(AppState appState) {
-    var measurementMethod = MeasurementMethod.height;
-
-    if (widget.initialMeasurementMethod != null &&
-        appState.organizedGrowthData.containsKey(
-          widget.initialMeasurementMethod,
-        )) {
-      measurementMethod = widget.initialMeasurementMethod!;
-    }
-
-    switch (measurementMethod) {
-      case MeasurementMethod.weight:
-        return ResultsTab.weight;
-      case MeasurementMethod.ofc:
-        return ResultsTab.ofc;
-      case MeasurementMethod.height:
-      default:
-        return ResultsTab.height;
-    }
-  }
-
   /// The age-correction method actually applied to the charts and table.
   /// The toggle is only offered when gestation has been recorded; without it
   /// there is nothing to correct against, so we fall back to chronological.
@@ -145,16 +141,13 @@ class _ResultsPageState extends State<ResultsPage>
       );
     }
 
-    var currentTab = ResultsTab.values.indexOf(getFirstTab(appState));
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Growth Chart - ${appState.sex != null ? toBeginningOfSentenceCase(appState.sex!.name) : ''}',
         ),
         actions: <Widget>[
-          if (appState.gestationWeeks != null &&
-              appState.gestationDays != null)
+          if (appState.gestationWeeks != null && appState.gestationDays != null)
             IconButton(
               icon: const Icon(Icons.display_settings),
               onPressed: () => showDialog<String>(
@@ -173,7 +166,10 @@ class _ResultsPageState extends State<ResultsPage>
                         ),
                         StatefulBuilder(
                           builder:
-                              (BuildContext context, StateSetter setDialogState) {
+                              (
+                                BuildContext context,
+                                StateSetter setDialogState,
+                              ) {
                                 return EnumRadioGroup<AgeCorrectionMethod>(
                                   groupValue: _ageCorrectionMethod,
                                   itemsPerRow: 1,
@@ -209,7 +205,7 @@ class _ResultsPageState extends State<ResultsPage>
       body: SafeArea(
         child: DefaultTabController(
           length: ResultsTab.values.length,
-          initialIndex: currentTab,
+          initialIndex: 0,
           child: Scaffold(
             body: TabBarView(
               children: [
